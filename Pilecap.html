@@ -82,13 +82,8 @@
             .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e5e7eb !important; }
             .glass-card { box-shadow: none !important; border: 1px solid #e5e7eb !important; break-inside: avoid; margin-bottom: 24px; }
             
-            /* ซ่อนเมนู ปุ่ม และช่องค้นหา */
             .no-print { display: none !important; }
-            
-            /* ซ่อนการ์ดที่ถูกพับเก็บไว้แบบชัวร์ 100% ผ่านคลาสที่คุมด้วย JS */
             .hide-on-print { display: none !important; }
-            
-            /* กรณีเบราว์เซอร์รองรับ :has() ให้ซ่อนอีกชั้นเพื่อความชัวร์ */
             .glass-card:has(.collapsed) { display: none !important; }
             
             .collapsible-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
@@ -175,7 +170,7 @@
                         <div class="absolute -right-4 -top-4 opacity-5 text-purple-500 text-8xl">🗓️</div>
                     </div>
                 </div>
-                <p class="text-xs text-center text-gray-400 dark:text-gray-500 mt-4">*ตัวเลขภาพรวมได้ทำการหักลบ "ฐาน-แซม" ออกแล้วเพื่อให้แสดงเฉพาะผลงานหลัก</p>
+                
             </div>
         </div>
 
@@ -268,35 +263,6 @@
             </div>
         </div>
 
-        <div class="glass-card p-6 mb-8 border-t-4 border-pink-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">🛠️ สรุปงานอื่นๆ (Other Works)</h3>
-                <button onclick="toggleSection('other-works-content', 'toggle-other-works-btn')" id="toggle-other-works-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
-                    🔽 ซ่อนตาราง
-                </button>
-            </div>
-            
-            <div id="other-works-content" class="collapsible-content">
-                <div class="rounded-lg border border-gray-200 dark:border-slate-700 w-full overflow-x-auto mt-2">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                        <thead class="bg-gray-100 dark:bg-slate-800">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-2/5">ลักษณะงาน (โปรเจคย่อย)</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-1/5">ทั้งหมด</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider w-1/5">แล้วเสร็จ</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-red-500 dark:text-red-400 uppercase tracking-wider w-1/5">คงเหลือ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="otherWorksTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">
-                            <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">กำลังโหลดข้อมูลงานอื่นๆ... ⏳</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         <div class="glass-card p-6 mb-8 border-t-4 border-emerald-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
                 <div>
@@ -342,7 +308,6 @@
     </div>
 
     <script>
-        // เปิดใช้งานปลั๊กอิน DataLabels
         Chart.register(ChartDataLabels);
 
         let globalDatabase = [];
@@ -353,12 +318,8 @@
 
         let currentWeekStart, currentWeekEnd, currentMonthKey;
 
-        // --- ลิงก์ฐานข้อมูลงานฐานราก (ที่ปรับปรุงใหม่) ---
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4dIYwcGhQc26MLY3gV3WCs0ysILjC6uE1NLbwUKEkpx_7989SE0DEpNnqT7KLeiyzxZfgKRY89ci1/pub?gid=921370860&single=true&output=csv";
         
-        // --- ลิงก์ฐานข้อมูลงานอื่นๆ (Other Works) ยังคงลิงก์เดิมไว้ ---
-        const OTHER_WORKS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
-
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
             currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -388,23 +349,19 @@
                 return `${day}/${month}/${year}`;
             };
 
-            // แสดงข้อความ เดือน/ปี และ ช่วงสัปดาห์ปัจจุบัน
             const monthLabelText = `${monthNames[today.getMonth()]} ${today.getFullYear() + 543}`;
             document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
             
-            const weekLabelText = `${formatDateForLabel(currentWeekStart)} ถึง ${formatDateForLabel(currentWeekEnd)}`;
-            document.getElementById('kpi-week-label').innerText = `สัปดาห์ปัจจุบัน (${weekLabelText})`;
+            // นำวันที่ต่อท้ายออก เหลือแค่ "สัปดาห์ปัจจุบัน"
+            document.getElementById('kpi-week-label').innerText = `สัปดาห์ปัจจุบัน`;
 
             document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
             document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
 
-            // เปลี่ยน Key การบันทึกเป็น foundationUrl จะได้ไม่ทับกับของเดิม
             const savedUrl = localStorage.getItem('foundationUrl');
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
             
-            // โหลดข้อมูลทั้งสองส่วนพร้อมกัน
             loadFromUrl();
-            loadOtherWorksData();
         });
 
         function toggleSection(contentId, btnId) {
@@ -413,7 +370,6 @@
             
             container.classList.toggle('collapsed');
 
-            // --- ควบคุมการซ่อนการ์ดทั้งใบเวลาพิมพ์ ---
             const parentCard = container.closest('.glass-card');
             if (parentCard) {
                 if (container.classList.contains('collapsed')) {
@@ -463,104 +419,6 @@
             else if(type === 'ok') st.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/40', 'dark:text-green-400');
             else st.classList.add('bg-gray-100', 'text-gray-800', 'dark:bg-gray-800', 'dark:text-gray-300'); 
         }
-
-        // --- ส่วนดึงข้อมูล Other Works ---
-        function loadOtherWorksData() {
-            Papa.parse(OTHER_WORKS_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    renderOtherWorksTable(results.data);
-                },
-                error: function(err) {
-                    const tbody = document.getElementById('otherWorksTableBody');
-                    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-red-500 font-bold w-full">❌ ไม่สามารถดึงข้อมูลงานอื่นๆ ได้</td></tr>`;
-                }
-            });
-        }
-
-        function renderOtherWorksTable(data) {
-            const tbody = document.getElementById('otherWorksTableBody');
-            if(!tbody) return;
-            const otherWorks = {};
-
-            data.forEach(row => {
-                const projName = row['ชื่อโปรเจค'];
-                const jobType = row['ผู้รับผิดชอบ'] || '';
-                const finishDate = row['วันที่เสร็จงานจริงๆ'];
-                const typeLower = jobType.toLowerCase();
-
-                if (projName && jobType && 
-                    !typeLower.includes('sonic') && 
-                    !typeLower.includes('grout') && 
-                    !typeLower.includes('defective')) { 
-                    
-                    if (!otherWorks[jobType]) {
-                        otherWorks[jobType] = { count: 0, completed: 0, remaining: 0, projects: [] };
-                    }
-                    otherWorks[jobType].count++;
-                    
-                    // เช็คว่ามีวันที่เสร็จหรือไม่ เพื่อแยกนับ Completed / Remaining
-                    const hasDate = !!finishDate && finishDate.toString().trim() !== '';
-                    if (hasDate) {
-                        otherWorks[jobType].completed++;
-                    } else {
-                        otherWorks[jobType].remaining++;
-                    }
-
-                    otherWorks[jobType].projects.push({ name: projName, isCompleted: hasDate });
-                }
-            });
-
-            const sortedItems = Object.entries(otherWorks).sort((a, b) => b[1].count - a[1].count);
-
-            if (sortedItems.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 w-full">ไม่พบข้อมูลงานอื่นๆ</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = '';
-            sortedItems.forEach(([jobName, info]) => {
-                const tags = info.projects.map(p => {
-                    let shortName = p.name;
-                    const diaIndex = shortName.toLowerCase().indexOf('-dia');
-                    if (diaIndex !== -1) {
-                        shortName = shortName.substring(0, diaIndex).trim();
-                    }
-                    
-                    const colorClass = p.isCompleted 
-                        ? "bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700/50"
-                        : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600";
-                        
-                    return `<span class="inline-block text-[11px] ${colorClass} border px-2 py-0.5 rounded shadow-sm m-0.5">${shortName}</span>`;
-                }).join('');
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                        <td class="px-6 py-5 w-2/5">
-                            <div class="flex items-start gap-3">
-                                <span class="text-pink-500 mt-1">📌</span>
-                                <div>
-                                    <div class="font-bold text-slate-800 dark:text-slate-200 mb-2 text-base">${jobName}</div>
-                                    <div class="flex flex-wrap">${tags}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5 text-center align-top font-bold text-slate-700 dark:text-slate-300 text-lg w-1/5">
-                            ${info.count}
-                        </td>
-                        <td class="px-6 py-5 text-center align-top font-bold text-emerald-600 dark:text-emerald-400 text-lg w-1/5">
-                            ${info.completed > 0 ? info.completed : '-'}
-                        </td>
-                        <td class="px-6 py-5 text-center align-top font-bold text-red-500 dark:text-red-400 text-lg w-1/5">
-                            ${info.remaining > 0 ? info.remaining : '-'}
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-        // -------------------------------
 
         function loadFromUrl() {
             const url = document.getElementById('sheetUrl').value.trim();
@@ -659,16 +517,13 @@
                 if (projName) {
                     const zone = getStandardZoneName(rawZone);
                     
-                    if (!zoneCounts[zone]) {
-                        zoneCounts[zone] = { count: 0, projects: [] };
-                    }
-                    zoneCounts[zone].count++;
-                    
-                    if (zone.includes("ฐาน-แซม")) {
-                        zoneCounts[zone].projects.push(projName);
-                    }
-
+                    // ข้ามการคำนวณและเก็บข้อมูลหากเป็นงานแก้/แซม
                     if (!zone.includes("ฐาน-แซม")) {
+                        if (!zoneCounts[zone]) {
+                            zoneCounts[zone] = { count: 0 };
+                        }
+                        zoneCounts[zone].count++;
+                        
                         totalPiles++; 
                         if(dateStr) {
                             const taskDate = parseThaiDate(dateStr);
@@ -793,39 +648,21 @@
             
             const definedOrder = [
                 "Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5", "Zone 6", "Zone 7",
-                "Ramp-N01", "Ramp-OR3", "Ramp-OR4", "Ramp-OR6", "Ramp-OR7", "Ramp-SR1",
-                "ฐาน-แซม (Re-work Foundation)" 
+                "Ramp-N01", "Ramp-OR3", "Ramp-OR4", "Ramp-OR6", "Ramp-OR7", "Ramp-SR1"
             ];
 
             const displayedZones = new Set();
 
             const renderRow = (zone, dataObj) => {
-                let count = dataObj ? dataObj.count : 0;
-                let projects = dataObj ? dataObj.projects : [];
+                // ข้ามการ render "ฐาน-แซม" 
+                if (zone.includes("ฐาน-แซม")) return;
 
+                let count = dataObj ? dataObj.count : 0;
                 let rowClass = "hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors";
                 let textClass = "text-gray-700 dark:text-gray-300 font-medium";
                 let numClass = "font-bold text-indigo-600 dark:text-indigo-400";
-                let extraHTML = "";
                 
-                if (zone.includes("ฐาน-แซม")) {
-                    rowClass = "bg-orange-50 dark:bg-orange-900/20";
-                    textClass = "text-orange-700 dark:text-orange-400 font-bold";
-                    numClass = "font-bold text-orange-600 dark:text-orange-400";
-                    
-                    if (projects.length > 0) {
-                        const tags = projects.map(p => {
-                            let shortName = p;
-                            const diaIndex = shortName.toLowerCase().indexOf('-dia');
-                            if (diaIndex !== -1) {
-                                shortName = shortName.substring(0, diaIndex).trim();
-                            }
-                            return `<span class="inline-block text-[11px] bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700/50 px-2 py-0.5 rounded shadow-sm m-0.5">${shortName}</span>`;
-                        }).join('');
-                        extraHTML = `<div class="mt-2 flex flex-wrap gap-1">${tags}</div>`;
-                    }
-                } 
-                else if (count === 0) {
+                if (count === 0) {
                     textClass = "text-gray-400 dark:text-gray-500";
                     numClass = "font-medium text-gray-400 dark:text-gray-500";
                 }
@@ -834,7 +671,6 @@
                     <tr class="${rowClass}">
                         <td class="px-6 py-4 text-sm ${textClass} w-1/2">
                             ${zone}
-                            ${extraHTML}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm ${numClass} text-right align-top w-1/2">${count.toLocaleString()}</td>
                     </tr>
@@ -847,8 +683,9 @@
                 renderRow(zone, dataObj);
             });
 
+            // คัดกรองตัวที่เหลือและต้องไม่ใช่ฐาน-แซม
             const remainingZones = Object.entries(zoneCounts)
-                .filter(([zone]) => !displayedZones.has(zone))
+                .filter(([zone]) => !displayedZones.has(zone) && !zone.includes("ฐาน-แซม"))
                 .sort((a, b) => b[1].count - a[1].count); 
 
             remainingZones.forEach(([zone, dataObj]) => {
