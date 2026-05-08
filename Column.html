@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Column Dashboard V1.0 - พี่เอ็กซ์</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Sarabun', 'sans-serif'] } } }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { background-color: #f1f5f9; color: #334155; }
+        .glass-card { background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; }
+        .progress-bg { background-color: #e2e8f0; border-radius: 9999px; overflow: hidden; height: 12px; }
+        .progress-bar { height: 100%; transition: width 0.5s ease; }
+        
+        /* Custom Checkbox Toggle */
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+        .toggle-checkbox { right: 0; z-index: 1; border-color: #e2e8f0; transition: all 0.3s; }
+        .toggle-label { background-color: #cbd5e1; transition: all 0.3s; }
+        
+        .hide { display: none !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-indigo-900">🏢 Column Dashboard V1.0</h1>
+            <p class="text-slate-500 mt-1">ระบบติดตามงานเสารายต้น (Elevation Tracking)</p>
+        </div>
+        
+        <!-- แถบเครื่องมือควบคุม (Control Panel) -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4 w-full md:w-auto">
+            <button onclick="loadFromUrl()" id="refreshBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2">
+                🔄 รีเฟรชข้อมูล
+            </button>
+            
+            <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+            
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-600">📍 เลือกโซนพื้นที่:</span>
+                <select id="zoneSelector" onchange="updateDashboard()" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none font-medium min-w-[150px]">
+                    <option value="ALL">ภาพรวมทุกโซน (Summary)</option>
+                    <!-- ตัวเลือก Zone จะถูกสร้างโดย JS -->
+                </select>
+            </div>
+            
+            <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+            
+            <div class="flex items-center gap-2">
+                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="hideCompletedToggle" onchange="updateDashboard()" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer mt-0.5 ml-0.5"/>
+                    <label for="hideCompletedToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+                <span class="text-sm font-bold text-slate-600">ซ่อนต้นที่เสร็จแล้ว</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="loading-status" class="max-w-7xl mx-auto mt-4 mb-6 text-center p-3 rounded-lg font-bold bg-blue-100 text-blue-800 hidden">
+        กำลังโหลดข้อมูล... ⏳
+    </div>
+
+    <div id="mainContent" class="max-w-7xl mx-auto hide">
+        
+        <!-- KPIs -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-slate-400">
+                <div class="text-xs md:text-sm font-bold text-slate-500 mb-1">เสาทั้งหมด <span id="kpi-zone-name" class="text-indigo-600"></span></div>
+                <div class="text-2xl md:text-4xl font-bold text-slate-800" id="kpi-total">0</div>
+            </div>
+            <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-emerald-500">
+                <div class="text-xs md:text-sm font-bold text-slate-500 mb-1">เสร็จสมบูรณ์ 100%</div>
+                <div class="text-2xl md:text-4xl font-bold text-emerald-600" id="kpi-completed">0</div>
+            </div>
+            <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-blue-500">
+                <div class="text-xs md:text-sm font-bold text-slate-500 mb-1">กำลังดำเนินการ (Active)</div>
+                <div class="text-2xl md:text-4xl font-bold text-blue-600" id="kpi-active">0</div>
+            </div>
+            <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-amber-500">
+                <div class="text-xs md:text-sm font-bold text-slate-500 mb-1">รอดำเนินการ (Pending)</div>
+                <div class="text-2xl md:text-4xl font-bold text-amber-600" id="kpi-pending">0</div>
+            </div>
+        </div>
+
+        <!-- แจ้งเตือนกรณีเลือก ALL -->
+        <div id="all-zone-warning" class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl mb-6 shadow-sm hidden flex items-start gap-3">
+            <span class="text-xl">⚠️</span>
+            <div>
+                <p class="font-bold text-sm">กำลังแสดงภาพรวมสรุป (Macro View)</p>
+                <p class="text-sm mt-1">กราฟจะแสดง <b>% ความคืบหน้าของแต่ละโซน</b> แทนการแสดงเสารายต้น กรุณาเลือกเจาะจง Zone จากเมนูด้านบนเพื่อดูกราฟความสูง (Lift) ของเสาแต่ละต้น</p>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="glass-card">
+            <h3 id="chart-title" class="text-lg font-bold text-slate-800 mb-4 flex justify-between items-center">
+                <span>📊 กราฟระดับความสูงเสา</span>
+            </h3>
+            <div class="w-full overflow-x-auto pb-4">
+                <div id="chart-container" class="relative min-w-[800px]" style="height: 400px;">
+                    <canvas id="columnChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Table -->
+        <div class="glass-card">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex justify-between items-center">
+                <span>📋 รายละเอียดเสาในพื้นที่</span>
+                <span id="table-count-badge" class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1 rounded-full font-bold"></span>
+            </h3>
+            <div class="overflow-x-auto" style="max-height: 500px;">
+                <table class="min-w-full divide-y divide-slate-200 relative">
+                    <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-slate-600">ชื่อเสา</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-slate-600">โซนพื้นที่</th>
+                            <th class="px-4 py-3 text-center text-sm font-bold text-slate-600">เป้าหมาย (m)</th>
+                            <th class="px-4 py-3 text-center text-sm font-bold text-slate-600">เทแล้ว (m)</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 w-1/4">ความคืบหน้า (%)</th>
+                            <th class="px-4 py-3 text-center text-sm font-bold text-slate-600">สถานะล่าสุด</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progressTableBody" class="divide-y divide-slate-100 bg-white">
+                        <!-- Data will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- ลิงก์ฐานข้อมูลของพี่เอ็กซ์ ---
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpp6yhnCXCsyG4CHL1uFY1FNd9WudxzZWv8Z0OgsogmR4Sl40atSyElIxyM9TfdGx0bJMIb28T8bPW/pub?gid=1465792644&single=true&output=csv";
+        
+        let globalDatabase = {}; 
+        let ZONES = [];
+        let chartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromUrl();
+        });
+
+        function showStatus(msg, type) {
+            const st = document.getElementById('loading-status');
+            st.classList.remove('hidden');
+            st.innerHTML = msg;
+            st.className = 'max-w-7xl mx-auto mt-4 mb-6 text-center p-3 rounded-lg font-bold ';
+            if(type === 'load') st.classList.add('bg-blue-100', 'text-blue-800');
+            else if(type === 'err') st.classList.add('bg-red-100', 'text-red-800');
+            else if(type === 'ok') st.classList.add('bg-green-100', 'text-green-800');
+        }
+
+        function loadFromUrl() {
+            showStatus('กำลังดึงข้อมูลจาก Google Sheets... ⏳', 'load');
+            document.getElementById('refreshBtn').disabled = true;
+
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if(!results.data || results.data.length === 0) {
+                        showStatus('❌ ไม่พบข้อมูลในลิงก์', 'err');
+                        document.getElementById('refreshBtn').disabled = false;
+                        return;
+                    }
+                    processData(results.data);
+                    showStatus('✅ โหลดข้อมูลสำเร็จ!', 'ok');
+                    document.getElementById('mainContent').classList.remove('hide');
+                    document.getElementById('refreshBtn').disabled = false;
+                    
+                    setTimeout(() => { document.getElementById('loading-status').classList.add('hidden'); }, 2000);
+                },
+                error: function(err) {
+                    showStatus(`❌ ดึงข้อมูลไม่สำเร็จ: ${err.message}`, 'err');
+                    document.getElementById('refreshBtn').disabled = false;
+                }
+            });
+        }
+
+        function processData(csvData) {
+            const data = {};
+            const zonesSet = new Set();
+
+            csvData.forEach(row => {
+                const colName = row['ชื่อเสา'] ? row['ชื่อเสา'].trim() : '';
+                if (!colName) return; // ข้ามแถวว่าง
+
+                const zone = row['โซนพื้นที่'] ? row['โซนพื้นที่'].trim() : 'ไม่ระบุ';
+                if (zone !== 'ไม่ระบุ') zonesSet.add(zone);
+
+                const target = parseFloat(row['ความสูงเป้าหมาย']) || 0;
+                const liftNo = parseInt(row['Lift ที่']) || 0;
+                const startElev = parseFloat(row['ระดับเริ่มต้น']) || 0;
+                const endElev = parseFloat(row['ระดับที่เทจบ']) || 0;
+                const status = row['สถานะล่าสุด'] ? row['สถานะล่าสุด'].trim() : '';
+
+                // สร้าง Object เสาต้นใหม่ถ้ายังไม่มี
+                if (!data[colName]) {
+                    data[colName] = {
+                        zone: zone,
+                        target: target,
+                        currentPouredElev: 0,
+                        lifts: [],
+                        latestStatus: status || 'ยังไม่เริ่ม',
+                        maxLiftNo: 0
+                    };
+                }
+
+                // อัปเดตสถานะล่าสุดอิงจาก Lift ที่สูงที่สุด
+                if (liftNo >= data[colName].maxLiftNo && liftNo > 0) {
+                    data[colName].latestStatus = status;
+                    data[colName].maxLiftNo = liftNo;
+                } else if (data[colName].maxLiftNo === 0 && status) {
+                    data[colName].latestStatus = status;
+                }
+
+                // คำนวณความสูงของ Lift นี้
+                const height = endElev - startElev;
+                
+                if (liftNo > 0 && height > 0) {
+                    data[colName].lifts.push({
+                        liftNo: liftNo,
+                        height: height,
+                        status: status
+                    });
+                    
+                    // นับรวมความสูงเฉพาะที่เทเสร็จแล้ว
+                    if (status.includes('เท') || status.includes('เสร็จ')) {
+                        data[colName].currentPouredElev += height;
+                    }
+                }
+            });
+
+            // ตรวจสอบความถูกต้องและอัปเดตสถานะสุดท้าย
+            Object.keys(data).forEach(col => {
+                // กันเหนียวกรณีหน้างานกรอกเลขเกินเป้าหมาย
+                if (data[col].currentPouredElev > data[col].target && data[col].target > 0) {
+                    data[col].currentPouredElev = data[col].target;
+                }
+                
+                // สรุป Status
+                if (data[col].target > 0 && data[col].currentPouredElev >= data[col].target) {
+                    data[col].latestStatus = 'เสร็จสมบูรณ์';
+                } else if (data[col].currentPouredElev > 0 && !data[col].latestStatus.includes('เท')) {
+                    // ถ้ายก lift ไปแล้วแต่สถานะล่าสุดไม่ชัดเจน ให้ถือว่า Active
+                    // คงสถานะเดิมที่กรอกมาไว้
+                } else if (data[col].currentPouredElev === 0 && data[col].lifts.length === 0) {
+                    data[col].latestStatus = 'ยังไม่เริ่ม';
+                }
+                
+                // เรียง Lift
+                data[col].lifts.sort((a,b) => a.liftNo - b.liftNo);
+            });
+
+            globalDatabase = data;
+            ZONES = Array.from(zonesSet).sort();
+            
+            // อัปเดต Dropdown Zone
+            const select = document.getElementById('zoneSelector');
+            select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน (Summary)</option>';
+            ZONES.forEach(zone => {
+                select.innerHTML += `<option value="${zone}">${zone}</option>`;
+            });
+
+            // เซ็ตค่าเริ่มต้นและวาดหน้าจอ
+            if (ZONES.length > 0) {
+                select.value = ZONES[0]; // เลือกโซนแรกที่มีข้อมูลให้อัตโนมัติ
+            }
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const selectedZone = document.getElementById('zoneSelector').value;
+            const hideCompleted = document.getElementById('hideCompletedToggle').checked;
+            
+            let filteredCols = Object.keys(globalDatabase);
+            if (selectedZone !== 'ALL') {
+                filteredCols = filteredCols.filter(col => globalDatabase[col].zone === selectedZone);
+                document.getElementById('all-zone-warning').classList.add('hidden');
+            } else {
+                document.getElementById('all-zone-warning').classList.remove('hidden');
+            }
+
+            // คำนวณ KPIs
+            let total = filteredCols.length;
+            let completed = 0;
+            let active = 0;
+            let pending = 0;
+
+            filteredCols.forEach(col => {
+                const info = globalDatabase[col];
+                if (info.currentPouredElev >= info.target && info.target > 0) completed++;
+                else if (info.currentPouredElev > 0 || info.lifts.length > 0) active++;
+                else pending++;
+            });
+
+            document.getElementById('kpi-zone-name').innerText = selectedZone === 'ALL' ? '(ทุกพื้นที่)' : `(${selectedZone})`;
+            document.getElementById('kpi-total').innerText = total.toLocaleString();
+            document.getElementById('kpi-completed').innerText = completed.toLocaleString();
+            document.getElementById('kpi-active').innerText = active.toLocaleString();
+            document.getElementById('kpi-pending').innerText = pending.toLocaleString();
+
+            // ตัดเสาที่เสร็จแล้วออกจากการแสดงผล
+            let colsToRender = filteredCols;
+            if (hideCompleted) {
+                colsToRender = colsToRender.filter(col => globalDatabase[col].currentPouredElev < globalDatabase[col].target || globalDatabase[col].target === 0);
+            }
+
+            document.getElementById('table-count-badge').innerText = `แสดงผล ${colsToRender.length} ต้น`;
+
+            // แยกประเภทกราฟ
+            if (selectedZone === 'ALL') {
+                drawSummaryChart();
+                renderTable(colsToRender.slice(0, 150)); // จำกัดแถวตารางในหน้า ALL
+            } else {
+                drawColumnChart(colsToRender);
+                renderTable(colsToRender);
+            }
+        }
+
+        function drawSummaryChart() {
+            if (ZONES.length === 0) return;
+            const zoneStats = {};
+            ZONES.forEach(z => zoneStats[z] = { total: 0, comp: 0, act: 0, pend: 0 });
+
+            Object.values(globalDatabase).forEach(info => {
+                if(zoneStats[info.zone]) {
+                    zoneStats[info.zone].total++;
+                    if (info.currentPouredElev >= info.target && info.target > 0) zoneStats[info.zone].comp++;
+                    else if (info.currentPouredElev > 0 || info.lifts.length > 0) zoneStats[info.zone].act++;
+                    else zoneStats[info.zone].pend++;
+                }
+            });
+
+            const labels = ZONES;
+            const compData = labels.map(z => zoneStats[z].total > 0 ? (zoneStats[z].comp / zoneStats[z].total * 100).toFixed(1) : 0);
+            const actData = labels.map(z => zoneStats[z].total > 0 ? (zoneStats[z].act / zoneStats[z].total * 100).toFixed(1) : 0);
+            const pendData = labels.map(z => zoneStats[z].total > 0 ? (zoneStats[z].pend / zoneStats[z].total * 100).toFixed(1) : 0);
+
+            document.getElementById('chart-title').innerHTML = `<span>📊 ความคืบหน้าภาพรวมแยกตามโซน (100% Stacked)</span> <span class="text-xs bg-slate-100 px-3 py-1 rounded-full">แกน Y = เปอร์เซ็นต์ (%)</span>`;
+            document.getElementById('chart-container').style.width = '100%';
+
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('columnChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'เสร็จ 100%', data: compData, backgroundColor: '#10b981' },
+                        { label: 'กำลังทำ', data: actData, backgroundColor: '#3b82f6' },
+                        { label: 'ยังไม่เริ่ม', data: pendData, backgroundColor: '#cbd5e1' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, ticks: { font: { family: 'Sarabun' } } },
+                        y: { stacked: true, max: 100, ticks: { font: { family: 'Sarabun' } } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Sarabun' } } },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}%` }, titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } }
+                    }
+                }
+            });
+        }
+
+        function drawColumnChart(colNames) {
+            document.getElementById('chart-title').innerHTML = `<span>📊 ระดับความสูงเสารายต้น (Elevation)</span> <span class="text-xs bg-slate-100 px-3 py-1 rounded-full">แกน Y = เมตร (m)</span>`;
+            
+            const minWidth = Math.max(800, colNames.length * 35); // ปรับความกว้างแท่งให้สมดุล
+            document.getElementById('chart-container').style.width = `${minWidth}px`;
+
+            let maxLifts = 0;
+            colNames.forEach(col => {
+                // นับเฉพาะ Lift ที่เทแล้ว
+                const pouredLifts = globalDatabase[col].lifts.filter(l => l.status.includes('เท') || l.status.includes('เสร็จ')).length;
+                if (pouredLifts > maxLifts) maxLifts = pouredLifts;
+            });
+
+            const datasets = [];
+            const liftColors = ['#64748b', '#475569', '#334155', '#1e293b', '#0f172a']; 
+            
+            for (let i = 0; i < maxLifts; i++) {
+                const liftData = colNames.map(col => {
+                    // กรองเอาเฉพาะ Lift ที่เทคอนกรีตแล้วมาวาดกราฟทึบ
+                    const pouredLifts = globalDatabase[col].lifts.filter(l => l.status.includes('เท') || l.status.includes('เสร็จ'));
+                    const lift = pouredLifts[i];
+                    return lift ? lift.height : 0;
+                });
+                datasets.push({
+                    label: `Lift ${i+1}`, data: liftData, backgroundColor: liftColors[i % liftColors.length],
+                    borderWidth: 1, borderColor: '#fff'
+                });
+            }
+
+            const remainingData = colNames.map(col => {
+                const info = globalDatabase[col];
+                const remaining = info.target - info.currentPouredElev;
+                return remaining > 0 ? remaining : 0;
+            });
+            
+            datasets.push({
+                label: 'รอเท (ส่วนที่เหลือ)', data: remainingData, backgroundColor: 'rgba(226, 232, 240, 0.4)',
+                borderWidth: 1, borderColor: '#94a3b8', borderDash: [4, 4]
+            });
+
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('columnChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: colNames, datasets: datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, ticks: { font: { family: 'Sarabun', size: 11 }, maxRotation: 90, minRotation: 90 } },
+                        y: { stacked: true, title: { display: true, text: 'ระดับ (m)', font: { family: 'Sarabun' } }, ticks: { font: { family: 'Sarabun' } } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Sarabun' } } },
+                        tooltip: { 
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw.toFixed(2) + ' เมตร';
+                                }
+                            },
+                            titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } 
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTable(colNames) {
+            const tbody = document.getElementById('progressTableBody');
+            tbody.innerHTML = '';
+
+            if(colNames.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">ไม่พบเสาที่ตรงตามเงื่อนไข</td></tr>`;
+                return;
+            }
+
+            // เรียงลำดับเสาตาม % ความคืบหน้า (น้อยไปมาก)
+            const sortedCols = [...colNames].sort((a, b) => {
+                const pA = globalDatabase[a].target > 0 ? globalDatabase[a].currentPouredElev / globalDatabase[a].target : 0;
+                const pB = globalDatabase[b].target > 0 ? globalDatabase[b].currentPouredElev / globalDatabase[b].target : 0;
+                return pA - pB;
+            });
+
+            let html = '';
+            sortedCols.forEach(col => {
+                const info = globalDatabase[col];
+                const percent = info.target > 0 ? Math.min((info.currentPouredElev / info.target) * 100, 100).toFixed(0) : 0;
+                
+                let badge = `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">⚪ ${info.latestStatus}</span>`;
+                let barColor = 'bg-slate-300';
+
+                if (percent == 100 && info.target > 0) {
+                    badge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">✅ เสร็จสมบูรณ์</span>`;
+                    barColor = 'bg-emerald-500';
+                } else if (info.currentPouredElev > 0 || info.lifts.length > 0) {
+                    badge = `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">⏳ ${info.latestStatus}</span>`;
+                    barColor = 'bg-blue-500';
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${col}</td>
+                        <td class="px-4 py-3 text-slate-500 text-sm whitespace-nowrap">${info.zone}</td>
+                        <td class="px-4 py-3 text-center text-slate-500">+${info.target.toFixed(2)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-800">+${info.currentPouredElev.toFixed(2)}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <div class="progress-bg w-full">
+                                    <div class="progress-bar ${barColor}" style="width: ${percent}%;"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 w-10 text-right">${percent}%</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-center whitespace-nowrap">${badge}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
