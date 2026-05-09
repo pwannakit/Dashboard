@@ -81,63 +81,73 @@
     </main>
 
     <script>
-        // ระบบจัดการโหมดมืด-สว่าง (ส่งต่อไปยัง iframe ด้วย)
+        // ระบบจัดการโหมดมืด-สว่าง (ส่งต่อไปยัง iframe เพื่อให้ธีมตรงกัน)
         function toggleDarkMode() {
             const html = document.documentElement;
             html.classList.toggle('dark');
             const isDark = html.classList.contains('dark');
             document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
 
-            // พยายามสลับโหมดใน iframe ด้วย (ถ้าไฟล์อยู่ในโดเมนเดียวกัน)
+            // พยายามสลับโหมดใน iframe ด้วย (ทำงานได้ดีเมื่อเปิดผ่าน Web Server หรือ Localhost)
             try {
                 const iframe = document.getElementById('content-frame');
-                const iframeHtml = iframe.contentWindow.document.documentElement;
-                if (isDark) {
-                    iframeHtml.classList.add('dark');
-                } else {
-                    iframeHtml.classList.remove('dark');
-                }
-                
-                // เรียกใช้ฟังก์ชันสลับโหมดของไฟล์ลูก (ถ้ามี) เพื่ออัปเดต Chart
-                if(typeof iframe.contentWindow.toggleDarkMode === 'function') {
-                    // ป้องกันการกดทับการทำงาน ให้มันจัดการแค่กราฟ
-                    iframe.contentWindow.toggleDarkMode(); 
-                    // ถ้ามันสลับ class สวนทาง ให้เซ็ตบังคับให้ตรงกับตัวแม่
-                    iframeHtml.className = isDark ? 'dark' : 'light'; 
+                if (iframe.contentWindow) {
+                    const iframeHtml = iframe.contentWindow.document.documentElement;
+                    if (isDark) {
+                        iframeHtml.classList.add('dark');
+                    } else {
+                        iframeHtml.classList.remove('dark');
+                    }
+                    
+                    // เรียกฟังก์ชัน toggleDarkMode() ในไฟล์ย่อย (ถ้ามี) เพื่อให้กราฟอัปเดตสีตาม
+                    if(typeof iframe.contentWindow.toggleDarkMode === 'function') {
+                        // ป้องกันการทำงานซ้ำซ้อน เพราะไฟล์ย่อยอาจจะไปเปลี่ยน class ตัวเองอีกรอบ
+                        // เราใช้วิธีกระตุ้นให้มันเปลี่ยนกราฟ
+                        iframe.contentWindow.toggleDarkMode(); 
+                        iframeHtml.className = isDark ? 'dark' : 'light'; 
+                    }
                 }
             } catch(e) {
-                console.log("ไม่สามารถสั่งเปลี่ยนโหมดใน iframe ได้โดยตรง (อาจติดเรื่อง CORS กรณีเปิดไฟล์แบบไม่ได้ใช้ Live Server)");
+                console.log("ไม่สามารถสั่งเปลี่ยนโหมดใน iframe ได้โดยตรง (อาจติดเรื่องการอ่านไฟล์ Local โดยตรง)");
             }
         }
 
         // ระบบสลับหน้า Dashboard
         function loadDashboard(fileName, btnElement, isMobile = false) {
-            // โหลดเนื้อหาใส่ iframe
+            // 1. โหลดเนื้อหาไฟล์นั้นใส่เข้าไปในพื้นที่ iframe
             const iframe = document.getElementById('content-frame');
             iframe.src = fileName;
 
-            // จัดการสีปุ่ม (Desktop)
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            if(!isMobile && btnElement) {
+            // 2. จัดการสีปุ่มเมนูบน Desktop
+            if (!isMobile && btnElement) {
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
                 btnElement.classList.add('active');
             }
 
-            // จัดการสีปุ่ม (Mobile)
-            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-900/50', 'dark:text-indigo-300');
-                btn.classList.add('text-slate-600', 'dark:text-slate-300');
-            });
-            if(isMobile && btnElement) {
+            // 3. จัดการสีปุ่มเมนูบน Mobile
+            if (isMobile && btnElement) {
+                document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-900/50', 'dark:text-indigo-300');
+                    btn.classList.add('text-slate-600', 'dark:text-slate-300');
+                });
                 btnElement.classList.remove('text-slate-600', 'dark:text-slate-300');
                 btnElement.classList.add('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-900/50', 'dark:text-indigo-300');
-                // ปิดเมนูหลังจากเลือก
+                
+                // ปิดเมนูมือถือหลังจากเลือกเสร็จ
                 document.getElementById('mobile-menu').classList.add('hidden');
+                
+                // อัปเดตสีปุ่ม Desktop ให้ตรงกันด้วย
+                const idx = Array.from(btnElement.parentNode.children).indexOf(btnElement);
+                document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+                    if (i === idx) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
             }
         }
 
-        // ตรวจจับเมื่อ iframe โหลดเสร็จ ให้ซิงค์ Dark mode จากตัวแม่ไปตัวลูก
+        // ตรวจจับเมื่อหน้าใน iframe โหลดเสร็จ ให้ซิงค์ Dark Mode ทันที
         document.getElementById('content-frame').addEventListener('load', function() {
             const isDark = document.documentElement.classList.contains('dark');
             try {
@@ -148,7 +158,7 @@
                     iframeHtml.classList.remove('dark');
                 }
             } catch(e) {
-                // ข้ามไปหากเปิดแบบ File:// ตรงๆ แล้วติด CORS
+                // ข้ามไปหากเปิดไฟล์แบบตรงๆ (Local file) แล้วติดนโยบายความปลอดภัยของเบราว์เซอร์
             }
         });
     </script>
