@@ -6,17 +6,17 @@
     <title>Master Construction Dashboard - พี่เอ็กซ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
-                extend: { fontFamily: { sans: ['Sarabun', 'sans-serif'] } }
+                extend: {
+                    fontFamily: { sans: ['Sarabun', 'sans-serif'] }
+                }
             }
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body { transition: background-color 0.3s, color 0.3s; }
         .glass-card { 
@@ -25,248 +25,294 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
             border: 1px solid rgba(226, 232, 240, 0.8);
         }
-        .dark .glass-card { background: rgba(30, 41, 59, 0.95); border-color: rgba(51, 65, 85, 0.8); }
+        .dark .glass-card { 
+            background: rgba(30, 41, 59, 0.95); 
+            border-color: rgba(51, 65, 85, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
         .dark body { background-color: #0f172a; }
-        .tab-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-        .hide { display: none !important; }
-        .kanban-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        @media (max-width: 1024px) { .kanban-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 768px) { .kanban-grid { grid-template-columns: 1fr; } }
         
-        /* สไตล์สำหรับป้ายแท็ก */
-        .tag-orange { background-color: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
-        .dark .tag-orange { background-color: rgba(194, 65, 12, 0.1); color: #fb923c; border-color: rgba(194, 65, 12, 0.3); }
-        .tag-slate { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-        .dark .tag-slate { background-color: rgba(71, 85, 105, 0.1); color: #94a3b8; border-color: rgba(71, 85, 105, 0.3); }
+        /* ซ่อนเนื้อหา Tab ที่ไม่ได้เลือก */
+        .tab-content { display: none; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        @media print { .no-print { display: none !important; } .tab-content.hide { display: block !important; } }
+        /* สไตล์ปุ่ม Tab */
+        .tab-btn {
+            padding: 12px 24px;
+            font-weight: 700;
+            border-radius: 12px;
+            transition: all 0.3s;
+            color: #64748b;
+            background: transparent;
+        }
+        .tab-btn:hover { background: #f1f5f9; color: #334155; }
+        .dark .tab-btn:hover { background: #334155; color: #e2e8f0; }
+        
+        /* สไตล์เมื่อ Tab ถูกเลือก */
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .dark .tab-btn.active {
+            background: #4f46e5;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        /* ตารางทั่วไป */
+        .data-table-container { max-height: 500px; overflow-y: auto; }
+        .data-table th { position: sticky; top: 0; z-index: 10; }
     </style>
 </head>
-<body class="text-gray-800 bg-slate-50 p-4 md:p-6">
+<body class="text-gray-800 bg-slate-50 p-6">
 
-    <!-- Header Section -->
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Master Dashboard</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">ศูนย์รวมข้อมูลการก่อสร้าง - โครงการของพี่เอ็กซ์</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Master Construction Dashboard</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">ระบบติดตามโครงการแบบรวมศูนย์ข้อมูล</p>
         </div>
-        <div class="flex items-center gap-3 no-print">
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700 text-xl hover:bg-gray-50 transition-colors">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="max-w-7xl mx-auto mb-8 no-print overflow-x-auto">
-        <div class="flex p-1 bg-gray-200/50 dark:bg-slate-800/50 rounded-xl w-max md:w-full">
-            <button onclick="switchTab('overview')" id="btn-overview" class="tab-btn active flex-1 px-4 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2">🏠 ภาพรวม</button>
-            <button onclick="switchTab('pile')" id="btn-pile" class="tab-btn flex-1 px-4 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2">🏗️ เสาเข็ม</button>
-            <button onclick="switchTab('sonic')" id="btn-sonic" class="tab-btn flex-1 px-4 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2">🔊 Sonic & Grout</button>
-            <button onclick="switchTab('foundation')" id="btn-foundation" class="tab-btn flex-1 px-4 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2">🧱 ฐานราก</button>
-            <button onclick="switchTab('column')" id="btn-column" class="tab-btn flex-1 px-4 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2">🏛️ เสา</button>
+    <!-- 🌟 แถบเมนูนำทาง (Tab Navigation) -->
+    <div class="max-w-7xl mx-auto mb-6 flex flex-wrap gap-2 p-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700">
+        <button onclick="switchTab('tab-pile')" id="btn-tab-pile" class="tab-btn active">🏗️ 1. เสาเข็มเจาะ</button>
+        <button onclick="switchTab('tab-sonic')" id="btn-tab-sonic" class="tab-btn">🔊 2. Sonic & Grout</button>
+        <button onclick="switchTab('tab-foundation')" id="btn-tab-foundation" class="tab-btn">🧱 3. ฐานราก</button>
+        <button onclick="switchTab('tab-column')" id="btn-tab-column" class="tab-btn">🏛️ 4. เสา</button>
+    </div>
+
+    <!-- สถานะการโหลดข้อมูล -->
+    <div id="loading-status" class="max-w-7xl mx-auto mb-6 text-center p-4 rounded-xl font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400">
+        กำลังโหลดข้อมูลทั้ง 4 ฐานข้อมูล โปรดรอสักครู่... ⏳
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 📄 ส่วนที่ 1: Dashboard เสาเข็มเจาะ -->
+    <!-- ============================================== -->
+    <div id="tab-pile" class="tab-content active max-w-7xl mx-auto">
+        <div class="glass-card p-6 border-l-8 border-blue-500 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🎯 สรุปผลงานเสาเข็มเจาะ</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 dark:bg-slate-800 p-6 rounded-xl border border-blue-100 dark:border-slate-700 text-center">
+                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">จำนวนทั้งหมด (ที่ดึงได้)</h3>
+                    <div class="text-4xl font-bold text-blue-600 mt-2"><span id="pile-total">0</span> ต้น</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ข้อมูลเสาเข็ม (แสดง 50 รายการล่าสุด)</h3>
+            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
+                    <thead class="bg-gray-100 dark:bg-slate-800" id="pile-table-head"></thead>
+                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="pile-table-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="max-w-7xl mx-auto">
+    <!-- ============================================== -->
+    <!-- 📄 ส่วนที่ 2: Dashboard Sonic & Grouting -->
+    <!-- ============================================== -->
+    <div id="tab-sonic" class="tab-content max-w-7xl mx-auto">
+        <div class="glass-card p-6 border-l-8 border-emerald-500 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🔊 สรุปผลงาน Sonic & Grouting</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-emerald-50 dark:bg-slate-800 p-6 rounded-xl border border-emerald-100 dark:border-slate-700 text-center">
+                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">รายการบันทึกทั้งหมด</h3>
+                    <div class="text-4xl font-bold text-emerald-600 mt-2"><span id="sonic-total">0</span> รายการ</div>
+                </div>
+            </div>
+        </div>
         
-        <!-- Tab: Overview -->
-        <div id="tab-overview" class="tab-content">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Pile Card -->
-                <div class="glass-card p-6 border-l-4 border-blue-500">
-                    <h4 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2">งานเสาเข็มเจาะ</h4>
-                    <div class="text-3xl font-bold text-blue-600 dark:text-blue-400"><span id="sum-pile">0</span> <small class="text-sm font-normal text-gray-400">ต้น</small></div>
-                    <div class="mt-2 text-xs text-gray-400">เป้าหมายทั้งหมดในระบบ</div>
-                </div>
-                <!-- Sonic Card -->
-                <div class="glass-card p-6 border-l-4 border-emerald-500">
-                    <h4 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2">Sonic & Grout</h4>
-                    <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400"><span id="sum-sonic">0</span> <small class="text-sm font-normal text-gray-400">งาน</small></div>
-                    <div class="mt-2 text-xs text-gray-400">ดำเนินการแล้วเสร็จ</div>
-                </div>
-                <!-- Foundation Card -->
-                <div class="glass-card p-6 border-l-4 border-amber-500">
-                    <h4 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2">งานฐานราก</h4>
-                    <div class="text-3xl font-bold text-amber-600 dark:text-amber-400"><span id="sum-foundation">0</span> <small class="text-sm font-normal text-gray-400">ฐาน</small></div>
-                    <div class="mt-2 text-xs text-gray-400">ความก้าวหน้างานโครงสร้าง</div>
-                </div>
-                <!-- Column Card -->
-                <div class="glass-card p-6 border-l-4 border-purple-500">
-                    <h4 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2">งานเสาอาคาร</h4>
-                    <div class="text-3xl font-bold text-purple-600 dark:text-purple-400"><span id="sum-column">0</span> <small class="text-sm font-normal text-gray-400">ต้น</small></div>
-                    <div class="mt-2 text-xs text-gray-400">ดำเนินการตั้งแบบ/เทคอนกรีต</div>
-                </div>
-            </div>
-            
-            <div class="glass-card p-8 text-center bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-900">
-                <h2 class="text-2xl font-bold mb-4 text-indigo-900 dark:text-indigo-300">ยินดีต้อนรับครับพี่เอ็กซ์! 👋</h2>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">นี่คือระบบ Dashboard รวมศูนย์ที่ดึงข้อมูลจาก Google Sheets ทั้ง 4 ส่วนมาแสดงผลแบบเรียลไทม์ พี่สามารถเลือกดูรายละเอียดเชิงลึกของแต่ละหมวดงานได้จากแท็บเมนูด้านบนครับ</p>
-                <div id="loader" class="mt-6 text-indigo-500 font-bold animate-pulse">กำลังซิงค์ข้อมูลจากฐานข้อมูล... ⏳</div>
+        <div class="glass-card p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ฐานข้อมูล Sonic & Grout</h3>
+            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
+                    <thead class="bg-emerald-50 dark:bg-slate-800" id="sonic-table-head"></thead>
+                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="sonic-table-body"></tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <!-- Tab: Pile (เสาเข็ม) -->
-        <div id="tab-pile" class="tab-content hide">
-            <div class="glass-card p-6 mb-8">
-                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">🏗️ รายละเอียดงานเสาเข็มเจาะ</h3>
-                <div id="pile-container">
-                    <p class="text-gray-400">กำลังดึงข้อมูล... หากข้อมูลไม่ขึ้น โปรดรอสักครู่</p>
+    <!-- ============================================== -->
+    <!-- 📄 ส่วนที่ 3: Dashboard ฐานราก -->
+    <!-- ============================================== -->
+    <div id="tab-foundation" class="tab-content max-w-7xl mx-auto">
+        <div class="glass-card p-6 border-l-8 border-purple-500 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🧱 สรุปผลงาน ฐานราก</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-purple-50 dark:bg-slate-800 p-6 rounded-xl border border-purple-100 dark:border-slate-700 text-center">
+                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">รายการบันทึกทั้งหมด</h3>
+                    <div class="text-4xl font-bold text-purple-600 mt-2"><span id="foundation-total">0</span> รายการ</div>
                 </div>
             </div>
         </div>
+        
+        <div class="glass-card p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ฐานข้อมูลฐานราก</h3>
+            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
+                    <thead class="bg-purple-50 dark:bg-slate-800" id="foundation-table-head"></thead>
+                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="foundation-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-        <!-- Tab: Sonic & Grout -->
-        <div id="tab-sonic" class="tab-content hide">
-            <div class="glass-card p-6 mb-8">
-                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">🔊 รายละเอียดงาน Sonic & Grout</h3>
-                <div id="sonic-container" class="overflow-x-auto">
-                    <!-- ตารางงาน Sonic จะมาลงตรงนี้ -->
+    <!-- ============================================== -->
+    <!-- 📄 ส่วนที่ 4: Dashboard เสา -->
+    <!-- ============================================== -->
+    <div id="tab-column" class="tab-content max-w-7xl mx-auto">
+        <div class="glass-card p-6 border-l-8 border-orange-500 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🏛️ สรุปผลงาน เสา</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-orange-50 dark:bg-slate-800 p-6 rounded-xl border border-orange-100 dark:border-slate-700 text-center">
+                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">รายการบันทึกทั้งหมด</h3>
+                    <div class="text-4xl font-bold text-orange-600 mt-2"><span id="column-total">0</span> รายการ</div>
                 </div>
             </div>
         </div>
-
-        <!-- Tab: Foundation (ฐานราก) -->
-        <div id="tab-foundation" class="tab-content hide">
-            <div class="glass-card p-6 mb-8">
-                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">🧱 รายละเอียดงานฐานราก</h3>
-                <div id="foundation-container" class="overflow-x-auto"></div>
+        
+        <div class="glass-card p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ฐานข้อมูลเสา</h3>
+            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
+                    <thead class="bg-orange-50 dark:bg-slate-800" id="column-table-head"></thead>
+                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="column-table-body"></tbody>
+                </table>
             </div>
         </div>
-
-        <!-- Tab: Column (เสา) -->
-        <div id="tab-column" class="tab-content hide">
-            <div class="glass-card p-6 mb-8">
-                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">🏛️ รายละเอียดงานเสา</h3>
-                <div id="column-container" class="overflow-x-auto"></div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // กำหนด URL ของ Google Sheets ทั้ง 4 ส่วน
-        const DATA_SOURCES = {
+        // 🔗 1. กำหนดลิงก์ฐานข้อมูลทั้ง 4 อัน
+        const URLS = {
             pile: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?output=csv",
             sonic: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv",
             foundation: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4dIYwcGhQc26MLY3gV3WCs0ysILjC6uE1NLbwUKEkpx_7989SE0DEpNnqT7KLeiyzxZfgKRY89ci1/pub?gid=921370860&single=true&output=csv",
             column: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpp6yhnCXCsyG4CHL1uFY1FNd9WudxzZWv8Z0OgsogmR4Sl40atSyElIxyM9TfdGx0bJMIb28T8bPW/pub?gid=1465792644&single=true&output=csv"
         };
 
-        let masterData = { pile: [], sonic: [], foundation: [], column: [] };
+        // เริ่มโหลดข้อมูลเมื่อเปิดเว็บ
+        document.addEventListener('DOMContentLoaded', loadAllData);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadAllData();
-        });
-
-        // ฟังก์ชันสลับหน้า Tab
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hide'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById('tab-' + tabId).classList.remove('hide');
-            document.getElementById('btn-' + tabId).classList.add('active');
-        }
-
+        // โหมดมืด
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             document.getElementById('theme-icon').textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
         }
 
-        // โหลดข้อมูลทั้งหมดพร้อมกัน
+        // 🔄 ฟังก์ชันสลับหน้าต่าง (Tabs)
+        function switchTab(tabId) {
+            // ซ่อนทุกหน้า
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // แสดงหน้าที่เลือก
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+
+        // 📥 ฟังก์ชันดึงข้อมูล CSV (คืนค่าเป็น Promise ทำให้ดึงหลายอันพร้อมกันได้)
+        function fetchCSV(url) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(url, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => resolve(results.data),
+                    error: (error) => reject(error)
+                });
+            });
+        }
+
+        // 🚀 โหลดทุกฐานข้อมูลพร้อมกัน!
         async function loadAllData() {
-            const loader = document.getElementById('loader');
             try {
-                const results = await Promise.all(
-                    Object.values(DATA_SOURCES).map(url => 
-                        new Promise((resolve, reject) => {
-                            Papa.parse(url, {
-                                download: true, header: true, skipEmptyLines: true,
-                                complete: resolve, error: reject
-                            });
-                        })
-                    )
-                );
+                // รอจนกว่าจะดึงข้อมูลครบทั้ง 4 ไฟล์
+                const [dataPile, dataSonic, dataFoundation, dataColumn] = await Promise.all([
+                    fetchCSV(URLS.pile),
+                    fetchCSV(URLS.sonic),
+                    fetchCSV(URLS.foundation),
+                    fetchCSV(URLS.column)
+                ]);
 
-                masterData.pile = results[0].data;
-                masterData.sonic = results[1].data;
-                masterData.foundation = results[2].data;
-                masterData.column = results[3].data;
+                // ปิดป้ายโหลด
+                const statusDiv = document.getElementById('loading-status');
+                statusDiv.className = "max-w-7xl mx-auto mb-6 text-center p-4 rounded-xl font-bold bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400";
+                statusDiv.innerHTML = "✅ ดึงข้อมูลสำเร็จครบทั้ง 4 ฐานข้อมูล!";
+                setTimeout(() => statusDiv.style.display = 'none', 3000); // ซ่อนข้อความหลัง 3 วิ
 
-                updateOverview();
-                renderAllSections();
-                loader.innerHTML = "✅ อัปเดตข้อมูลล่าสุดเรียบร้อยครับพี่เอ็กซ์";
-            } catch (error) {
-                console.error("Data loading error:", error);
-                loader.innerHTML = "❌ พบข้อผิดพลาดในการดึงข้อมูล";
+                // โยนข้อมูลให้แต่ละหน้าต่างประมวลผล
+                processPileData(dataPile);
+                processSonicData(dataSonic);
+                processFoundationData(dataFoundation);
+                processColumnData(dataColumn);
+
+            } catch (err) {
+                document.getElementById('loading-status').innerHTML = "❌ เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err;
+                document.getElementById('loading-status').classList.replace('bg-blue-100', 'bg-red-100');
+                document.getElementById('loading-status').classList.replace('text-blue-800', 'text-red-800');
             }
         }
 
-        function updateOverview() {
-            // นับจำนวนแถวที่มีข้อมูล "ชื่อโปรเจค" เพื่อเป็นสถิติเบื้องต้น
-            document.getElementById('sum-pile').innerText = masterData.pile.length;
-            document.getElementById('sum-sonic').innerText = masterData.sonic.filter(r => r['วันที่เสร็จงานจริงๆ']).length;
-            document.getElementById('sum-foundation').innerText = masterData.foundation.length;
-            document.getElementById('sum-column').innerText = masterData.column.length;
-        }
-
-        function renderAllSections() {
-            renderGenericTable('sonic', masterData.sonic, 'sonic-container');
-            renderGenericTable('foundation', masterData.foundation, 'foundation-container');
-            renderGenericTable('column', masterData.column, 'column-container');
+        // 🛠️ ฟังก์ชันสร้างตารางข้อมูลอัตโนมัติ (อ่านหัวคอลัมน์เอง)
+        function renderGenericTable(data, headId, bodyId) {
+            if (!data || data.length === 0) return;
             
-            // สำหรับ Pile ใช้ Logic เดิมของพี่ที่แยกสีแท็ก
-            renderPileSection();
-        }
-
-        function renderGenericTable(type, data, containerId) {
-            const container = document.getElementById(containerId);
-            if (!data.length) { container.innerHTML = "ไม่มีข้อมูล"; return; }
-
-            const headers = Object.keys(data[0]).slice(0, 5); // เอาแค่ 5 คอลัมน์แรกเพื่อความกระชับ
-            let html = `<table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                <thead class="bg-gray-50 dark:bg-slate-800"><tr>`;
+            const headers = Object.keys(data[0]); // ดึงชื่อคอลัมน์จากแถวแรก
             
-            headers.forEach(h => html += `<th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">${h}</th>`);
-            html += `</tr></thead><tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">`;
-            
-            data.forEach(row => {
-                html += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800">`;
-                headers.forEach(h => {
-                    let val = row[h] || '-';
-                    // ถ้าเป็นคอลัมน์ชื่อโปรเจค ให้ทำเป็นป้ายสวยๆ
-                    if (h === 'ชื่อโปรเจค') {
-                        val = `<span class="font-bold text-indigo-600 dark:text-indigo-400">📌 ${val.split('-dia')[0]}</span>`;
-                    }
-                    html += `<td class="px-6 py-4 text-sm">${val}</td>`;
-                });
-                html += `</tr>`;
+            // สร้าง หัวตาราง <th>
+            let headHTML = '<tr>';
+            headers.forEach(h => {
+                headHTML += `<th class="px-4 py-3 text-left font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-b dark:border-slate-700 whitespace-nowrap">${h}</th>`;
             });
+            headHTML += '</tr>';
+            document.getElementById(headId).innerHTML = headHTML;
 
-            html += `</tbody></table>`;
-            container.innerHTML = html;
+            // สร้าง ตัวตาราง <td> (ดึงมาโชว์ 50 รายการล่าสุดเพื่อไม่ให้เว็บอืด)
+            let bodyHTML = '';
+            data.slice(0, 50).forEach(row => {
+                bodyHTML += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800">';
+                headers.forEach(h => {
+                    bodyHTML += `<td class="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">${row[h] || '-'}</td>`;
+                });
+                bodyHTML += '</tr>';
+            });
+            document.getElementById(bodyId).innerHTML = bodyHTML;
         }
 
-        function renderPileSection() {
-            const container = document.getElementById('pile-container');
-            // สร้างสรุปสั้นๆ สำหรับหน้าเสาเข็ม
-            const completed = masterData.pile.filter(r => r['วันที่เสร็จงานจริงๆ']).length;
-            container.innerHTML = `
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
-                        <div class="text-xs text-green-600 font-bold uppercase">เสร็จแล้ว</div>
-                        <div class="text-2xl font-bold">${completed} ต้น</div>
-                    </div>
-                    <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
-                        <div class="text-xs text-amber-600 font-bold uppercase">คงเหลือ</div>
-                        <div class="text-2xl font-bold">${masterData.pile.length - completed} ต้น</div>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-500 mb-4">💡 พี่เอ็กซ์สามารถดูตารางเต็มหรือ Kanban ได้ในแท็บนี้ (ตัวอย่างตาราง 10 แถวล่าสุด)</p>
-            `;
-            renderGenericTable('pile', masterData.pile.slice(0, 10), 'pile-container');
+        // --- ฟังก์ชันจัดการข้อมูลแยกแต่ละส่วน ---
+
+        function processPileData(data) {
+            document.getElementById('pile-total').innerText = data.length.toLocaleString();
+            renderGenericTable(data, 'pile-table-head', 'pile-table-body');
+            // 💡 พี่เอ็กซ์สามารถนำโค้ด Dashboard เสาเข็มตัวเต็ม (กราฟ, ตารางโซน) มาประกอบใส่ในฟังก์ชันนี้ได้เลย
         }
+
+        function processSonicData(data) {
+            document.getElementById('sonic-total').innerText = data.length.toLocaleString();
+            renderGenericTable(data, 'sonic-table-head', 'sonic-table-body');
+        }
+
+        function processFoundationData(data) {
+            document.getElementById('foundation-total').innerText = data.length.toLocaleString();
+            renderGenericTable(data, 'foundation-table-head', 'foundation-table-body');
+        }
+
+        function processColumnData(data) {
+            document.getElementById('column-total').innerText = data.length.toLocaleString();
+            renderGenericTable(data, 'column-table-head', 'column-table-body');
+        }
+
     </script>
 </body>
 </html>
