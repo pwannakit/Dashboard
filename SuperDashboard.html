@@ -3,316 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Construction Dashboard - พี่เอ็กซ์</title>
+    <title>Super Dashboard - ศูนย์บัญชาการโครงการ</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Sarabun', 'sans-serif'] }
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['Sarabun', 'sans-serif'] } } }
         }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { transition: background-color 0.3s, color 0.3s; }
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.95); 
-            border-radius: 16px; 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .dark .glass-card { 
-            background: rgba(30, 41, 59, 0.95); 
-            border-color: rgba(51, 65, 85, 0.8);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-        .dark body { background-color: #0f172a; }
+        body { transition: background-color 0.3s, color 0.3s; margin: 0; padding: 0; overflow: hidden; }
+        .nav-btn { transition: all 0.3s ease; }
+        .nav-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .dark .nav-btn.active { background-color: #6366f1; color: white; border-color: #6366f1; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
         
-        /* ซ่อนเนื้อหา Tab ที่ไม่ได้เลือก */
-        .tab-content { display: none; animation: fadeIn 0.4s; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* สไตล์ปุ่ม Tab */
-        .tab-btn {
-            padding: 12px 24px;
-            font-weight: 700;
-            border-radius: 12px;
-            transition: all 0.3s;
-            color: #64748b;
-            background: transparent;
-        }
-        .tab-btn:hover { background: #f1f5f9; color: #334155; }
-        .dark .tab-btn:hover { background: #334155; color: #e2e8f0; }
-        
-        /* สไตล์เมื่อ Tab ถูกเลือก */
-        .tab-btn.active {
-            background: #3b82f6;
-            color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        .dark .tab-btn.active {
-            background: #4f46e5;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-        }
-
-        /* ตารางทั่วไป */
-        .data-table-container { max-height: 500px; overflow-y: auto; }
-        .data-table th { position: sticky; top: 0; z-index: 10; }
+        /* Iframe styling */
+        #content-frame { width: 100%; height: calc(100vh - 80px); border: none; background-color: transparent; }
     </style>
 </head>
-<body class="text-gray-800 bg-slate-50 p-6">
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 flex flex-col h-screen">
 
-    <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Master Construction Dashboard</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">ระบบติดตามโครงการแบบรวมศูนย์ข้อมูล</p>
-        </div>
+    <header class="bg-white dark:bg-slate-800 shadow-md z-10 h-20 px-4 md:px-8 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
         <div class="flex items-center gap-3">
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700 text-xl hover:bg-gray-50 transition-colors">
+            <div class="bg-indigo-600 text-white p-2.5 rounded-lg text-xl shadow-sm">🏢</div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-indigo-900 dark:text-indigo-400 leading-tight">Super Dashboard</h1>
+                <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400">Project Management Portal</p>
+            </div>
+        </div>
+
+        <div class="hidden md:flex items-center gap-2 lg:gap-3 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <button onclick="loadDashboard('BoredPile_App.html', this)" class="nav-btn active px-4 py-2 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent">
+                🏗️ เสาเข็มเจาะ
+            </button>
+            <button onclick="loadDashboard('Sonic.html', this)" class="nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent">
+                📡 Sonic & Grouting
+            </button>
+            <button onclick="loadDashboard('Pilecap.html', this)" class="nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent">
+                🧱 ฐานราก (Pilecap)
+            </button>
+            <button onclick="loadDashboard('Column.html', this)" class="nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent">
+                🏛️ เสา (Column)
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-700 shadow-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-slate-600 text-lg" title="สลับโหมดมืด/สว่าง">
                 <span id="theme-icon">🌙</span>
+            </button>
+            
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden p-2.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-md absolute w-full z-20 top-20">
+        <div class="flex flex-col p-2 gap-1">
+            <button onclick="loadDashboard('BoredPile_App.html', this, true)" class="mobile-nav-btn active text-left px-4 py-3 rounded-lg text-sm font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                🏗️ เสาเข็มเจาะ
+            </button>
+            <button onclick="loadDashboard('Sonic.html', this, true)" class="mobile-nav-btn text-left px-4 py-3 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                📡 Sonic & Grouting
+            </button>
+            <button onclick="loadDashboard('Pilecap.html', this, true)" class="mobile-nav-btn text-left px-4 py-3 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                🧱 ฐานราก (Pilecap)
+            </button>
+            <button onclick="loadDashboard('Column.html', this, true)" class="mobile-nav-btn text-left px-4 py-3 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                🏛️ เสา (Column)
             </button>
         </div>
     </div>
 
-    <!-- 🌟 แถบเมนูนำทาง (Tab Navigation) -->
-    <div class="max-w-7xl mx-auto mb-6 flex flex-wrap gap-2 p-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700">
-        <button onclick="switchTab('tab-pile')" id="btn-tab-pile" class="tab-btn active">🏗️ 1. เสาเข็มเจาะ</button>
-        <button onclick="switchTab('tab-sonic')" id="btn-tab-sonic" class="tab-btn">🔊 2. Sonic & Grout</button>
-        <button onclick="switchTab('tab-foundation')" id="btn-tab-foundation" class="tab-btn">🧱 3. ฐานราก</button>
-        <button onclick="switchTab('tab-column')" id="btn-tab-column" class="tab-btn">🏛️ 4. เสา</button>
-    </div>
-
-    <!-- สถานะการโหลดข้อมูล -->
-    <div id="loading-status" class="max-w-7xl mx-auto mb-6 text-center p-4 rounded-xl font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400">
-        กำลังโหลดข้อมูลทั้ง 4 ฐานข้อมูล โปรดรอสักครู่... ⏳
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 📄 ส่วนที่ 1: Dashboard เสาเข็มเจาะ -->
-    <!-- ============================================== -->
-    <div id="tab-pile" class="tab-content active max-w-7xl mx-auto">
-        <div class="glass-card p-6 border-l-8 border-blue-500 mb-6">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🎯 สรุปผลงานเสาเข็มเจาะ</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-blue-50 dark:bg-slate-800 p-6 rounded-xl border border-blue-100 dark:border-slate-700 text-center">
-                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">จำนวนทั้งหมด (ที่ดึงได้)</h3>
-                    <div class="text-4xl font-bold text-blue-600 mt-2"><span id="pile-total">0</span> ต้น</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="glass-card p-6 mb-6">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ข้อมูลเสาเข็ม (แสดง 50 รายการล่าสุด)</h3>
-            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
-                    <thead class="bg-gray-100 dark:bg-slate-800" id="pile-table-head"></thead>
-                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="pile-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 📄 ส่วนที่ 2: Dashboard Sonic & Grouting -->
-    <!-- ============================================== -->
-    <div id="tab-sonic" class="tab-content max-w-7xl mx-auto">
-        <div class="glass-card p-6 border-l-8 border-emerald-500 mb-6">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🔊 สรุปผลงาน Sonic & Grouting</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-emerald-50 dark:bg-slate-800 p-6 rounded-xl border border-emerald-100 dark:border-slate-700 text-center">
-                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">รายการบันทึกทั้งหมด</h3>
-                    <div class="text-4xl font-bold text-emerald-600 mt-2"><span id="sonic-total">0</span> รายการ</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="glass-card p-6 mb-6">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ฐานข้อมูล Sonic & Grout</h3>
-            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
-                    <thead class="bg-emerald-50 dark:bg-slate-800" id="sonic-table-head"></thead>
-                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="sonic-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 📄 ส่วนที่ 3: Dashboard ฐานราก -->
-    <!-- ============================================== -->
-    <div id="tab-foundation" class="tab-content max-w-7xl mx-auto">
-        <div class="glass-card p-6 border-l-8 border-purple-500 mb-6">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🧱 สรุปผลงาน ฐานราก</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-purple-50 dark:bg-slate-800 p-6 rounded-xl border border-purple-100 dark:border-slate-700 text-center">
-                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">รายการบันทึกทั้งหมด</h3>
-                    <div class="text-4xl font-bold text-purple-600 mt-2"><span id="foundation-total">0</span> รายการ</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="glass-card p-6 mb-6">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ฐานข้อมูลฐานราก</h3>
-            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
-                    <thead class="bg-purple-50 dark:bg-slate-800" id="foundation-table-head"></thead>
-                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="foundation-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 📄 ส่วนที่ 4: Dashboard เสา -->
-    <!-- ============================================== -->
-    <div id="tab-column" class="tab-content max-w-7xl mx-auto">
-        <div class="glass-card p-6 border-l-8 border-orange-500 mb-6">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🏛️ สรุปผลงาน เสา</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-orange-50 dark:bg-slate-800 p-6 rounded-xl border border-orange-100 dark:border-slate-700 text-center">
-                    <h3 class="text-gray-500 font-bold uppercase mb-1 text-sm">รายการบันทึกทั้งหมด</h3>
-                    <div class="text-4xl font-bold text-orange-600 mt-2"><span id="column-total">0</span> รายการ</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="glass-card p-6 mb-6">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📋 ฐานข้อมูลเสา</h3>
-            <div class="data-table-container rounded-lg border border-gray-200 dark:border-slate-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 data-table text-sm">
-                    <thead class="bg-orange-50 dark:bg-slate-800" id="column-table-head"></thead>
-                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800" id="column-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <main class="flex-1 w-full bg-slate-200 dark:bg-slate-900/50 relative">
+        <iframe id="content-frame" src="BoredPile_App.html" title="Dashboard Viewer" allowfullscreen></iframe>
+    </main>
 
     <script>
-        // 🔗 1. กำหนดลิงก์ฐานข้อมูลทั้ง 4 อัน
-        const URLS = {
-            pile: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?output=csv",
-            sonic: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv",
-            foundation: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4dIYwcGhQc26MLY3gV3WCs0ysILjC6uE1NLbwUKEkpx_7989SE0DEpNnqT7KLeiyzxZfgKRY89ci1/pub?gid=921370860&single=true&output=csv",
-            column: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpp6yhnCXCsyG4CHL1uFY1FNd9WudxzZWv8Z0OgsogmR4Sl40atSyElIxyM9TfdGx0bJMIb28T8bPW/pub?gid=1465792644&single=true&output=csv"
-        };
-
-        // เริ่มโหลดข้อมูลเมื่อเปิดเว็บ
-        document.addEventListener('DOMContentLoaded', loadAllData);
-
-        // โหมดมืด
+        // ระบบจัดการโหมดมืด-สว่าง (ส่งต่อไปยัง iframe ด้วย)
         function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            document.getElementById('theme-icon').textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
-        }
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
 
-        // 🔄 ฟังก์ชันสลับหน้าต่าง (Tabs)
-        function switchTab(tabId) {
-            // ซ่อนทุกหน้า
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            // แสดงหน้าที่เลือก
-            document.getElementById(tabId).classList.add('active');
-            document.getElementById('btn-' + tabId).classList.add('active');
-        }
-
-        // 📥 ฟังก์ชันดึงข้อมูล CSV (คืนค่าเป็น Promise ทำให้ดึงหลายอันพร้อมกันได้)
-        function fetchCSV(url) {
-            return new Promise((resolve, reject) => {
-                Papa.parse(url, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: (results) => resolve(results.data),
-                    error: (error) => reject(error)
-                });
-            });
-        }
-
-        // 🚀 โหลดทุกฐานข้อมูลพร้อมกัน!
-        async function loadAllData() {
+            // พยายามสลับโหมดใน iframe ด้วย (ถ้าไฟล์อยู่ในโดเมนเดียวกัน)
             try {
-                // รอจนกว่าจะดึงข้อมูลครบทั้ง 4 ไฟล์
-                const [dataPile, dataSonic, dataFoundation, dataColumn] = await Promise.all([
-                    fetchCSV(URLS.pile),
-                    fetchCSV(URLS.sonic),
-                    fetchCSV(URLS.foundation),
-                    fetchCSV(URLS.column)
-                ]);
-
-                // ปิดป้ายโหลด
-                const statusDiv = document.getElementById('loading-status');
-                statusDiv.className = "max-w-7xl mx-auto mb-6 text-center p-4 rounded-xl font-bold bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400";
-                statusDiv.innerHTML = "✅ ดึงข้อมูลสำเร็จครบทั้ง 4 ฐานข้อมูล!";
-                setTimeout(() => statusDiv.style.display = 'none', 3000); // ซ่อนข้อความหลัง 3 วิ
-
-                // โยนข้อมูลให้แต่ละหน้าต่างประมวลผล
-                processPileData(dataPile);
-                processSonicData(dataSonic);
-                processFoundationData(dataFoundation);
-                processColumnData(dataColumn);
-
-            } catch (err) {
-                document.getElementById('loading-status').innerHTML = "❌ เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err;
-                document.getElementById('loading-status').classList.replace('bg-blue-100', 'bg-red-100');
-                document.getElementById('loading-status').classList.replace('text-blue-800', 'text-red-800');
+                const iframe = document.getElementById('content-frame');
+                const iframeHtml = iframe.contentWindow.document.documentElement;
+                if (isDark) {
+                    iframeHtml.classList.add('dark');
+                } else {
+                    iframeHtml.classList.remove('dark');
+                }
+                
+                // เรียกใช้ฟังก์ชันสลับโหมดของไฟล์ลูก (ถ้ามี) เพื่ออัปเดต Chart
+                if(typeof iframe.contentWindow.toggleDarkMode === 'function') {
+                    // ป้องกันการกดทับการทำงาน ให้มันจัดการแค่กราฟ
+                    iframe.contentWindow.toggleDarkMode(); 
+                    // ถ้ามันสลับ class สวนทาง ให้เซ็ตบังคับให้ตรงกับตัวแม่
+                    iframeHtml.className = isDark ? 'dark' : 'light'; 
+                }
+            } catch(e) {
+                console.log("ไม่สามารถสั่งเปลี่ยนโหมดใน iframe ได้โดยตรง (อาจติดเรื่อง CORS กรณีเปิดไฟล์แบบไม่ได้ใช้ Live Server)");
             }
         }
 
-        // 🛠️ ฟังก์ชันสร้างตารางข้อมูลอัตโนมัติ (อ่านหัวคอลัมน์เอง)
-        function renderGenericTable(data, headId, bodyId) {
-            if (!data || data.length === 0) return;
-            
-            const headers = Object.keys(data[0]); // ดึงชื่อคอลัมน์จากแถวแรก
-            
-            // สร้าง หัวตาราง <th>
-            let headHTML = '<tr>';
-            headers.forEach(h => {
-                headHTML += `<th class="px-4 py-3 text-left font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-b dark:border-slate-700 whitespace-nowrap">${h}</th>`;
+        // ระบบสลับหน้า Dashboard
+        function loadDashboard(fileName, btnElement, isMobile = false) {
+            // โหลดเนื้อหาใส่ iframe
+            const iframe = document.getElementById('content-frame');
+            iframe.src = fileName;
+
+            // จัดการสีปุ่ม (Desktop)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
             });
-            headHTML += '</tr>';
-            document.getElementById(headId).innerHTML = headHTML;
+            if(!isMobile && btnElement) {
+                btnElement.classList.add('active');
+            }
 
-            // สร้าง ตัวตาราง <td> (ดึงมาโชว์ 50 รายการล่าสุดเพื่อไม่ให้เว็บอืด)
-            let bodyHTML = '';
-            data.slice(0, 50).forEach(row => {
-                bodyHTML += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800">';
-                headers.forEach(h => {
-                    bodyHTML += `<td class="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">${row[h] || '-'}</td>`;
-                });
-                bodyHTML += '</tr>';
+            // จัดการสีปุ่ม (Mobile)
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-900/50', 'dark:text-indigo-300');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
             });
-            document.getElementById(bodyId).innerHTML = bodyHTML;
+            if(isMobile && btnElement) {
+                btnElement.classList.remove('text-slate-600', 'dark:text-slate-300');
+                btnElement.classList.add('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-900/50', 'dark:text-indigo-300');
+                // ปิดเมนูหลังจากเลือก
+                document.getElementById('mobile-menu').classList.add('hidden');
+            }
         }
 
-        // --- ฟังก์ชันจัดการข้อมูลแยกแต่ละส่วน ---
-
-        function processPileData(data) {
-            document.getElementById('pile-total').innerText = data.length.toLocaleString();
-            renderGenericTable(data, 'pile-table-head', 'pile-table-body');
-            // 💡 พี่เอ็กซ์สามารถนำโค้ด Dashboard เสาเข็มตัวเต็ม (กราฟ, ตารางโซน) มาประกอบใส่ในฟังก์ชันนี้ได้เลย
-        }
-
-        function processSonicData(data) {
-            document.getElementById('sonic-total').innerText = data.length.toLocaleString();
-            renderGenericTable(data, 'sonic-table-head', 'sonic-table-body');
-        }
-
-        function processFoundationData(data) {
-            document.getElementById('foundation-total').innerText = data.length.toLocaleString();
-            renderGenericTable(data, 'foundation-table-head', 'foundation-table-body');
-        }
-
-        function processColumnData(data) {
-            document.getElementById('column-total').innerText = data.length.toLocaleString();
-            renderGenericTable(data, 'column-table-head', 'column-table-body');
-        }
-
+        // ตรวจจับเมื่อ iframe โหลดเสร็จ ให้ซิงค์ Dark mode จากตัวแม่ไปตัวลูก
+        document.getElementById('content-frame').addEventListener('load', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            try {
+                const iframeHtml = this.contentWindow.document.documentElement;
+                if (isDark) {
+                    iframeHtml.classList.add('dark');
+                } else {
+                    iframeHtml.classList.remove('dark');
+                }
+            } catch(e) {
+                // ข้ามไปหากเปิดแบบ File:// ตรงๆ แล้วติด CORS
+            }
+        });
     </script>
 </body>
 </html>
