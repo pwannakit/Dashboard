@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.12 - พี่เอ็กซ์</title>
+    <title>Column Dashboard V3.13 - พี่เอ็กซ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -89,8 +89,8 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.12</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Full View Zone Summary)</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.13</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Full View Zone & Pending Status)</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
@@ -329,6 +329,16 @@
                                 <th id="sum-actual-footer" class="px-4 py-3 text-center text-base font-bold text-emerald-600 dark:text-emerald-400">0</th>
                                 <th id="sum-diff-footer" class="px-4 py-3 text-center text-base font-bold text-amber-600 dark:text-amber-400">0</th>
                                 <th id="sum-percent-footer" class="px-4 py-3 text-left text-base font-bold text-slate-800 dark:text-white">0%</th>
+                            </tr>
+                            <tr class="bg-white dark:bg-slate-800 border-t border-dashed border-slate-300 dark:border-slate-600">
+                                <th class="px-4 py-3 text-right flex items-center justify-end gap-2">
+                                    <span class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-400 text-[11px] px-2.5 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800 whitespace-nowrap uppercase tracking-wider">Column Project</span>
+                                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400">รอดำเนินการ:</span>
+                                </th>
+                                <th class="px-4 py-3 text-center text-slate-400">-</th>
+                                <th class="px-4 py-3 text-center text-slate-400">-</th>
+                                <th id="sum-pending-footer" class="px-4 py-3 text-center text-base font-bold text-slate-700 dark:text-slate-300">0</th>
+                                <th class="px-4 py-3 text-left text-xs font-normal text-slate-500 dark:text-slate-400">ต้น (ยังไม่เริ่มเท)</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -736,6 +746,7 @@
             let html = '';
             let totalTarget = 0;
             let totalActualCompleted = 0; 
+            let globalPending = 0; // 🌟 เพิ่มตัวแปรคำนวณจำนวนเสาที่รอดำเนินการทั้งโปรเจค
 
             const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
             const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
@@ -770,6 +781,17 @@
                 `;
             });
 
+            // 🌟 คำนวณรอดำเนินการ (ยังไม่เริ่ม) จากฐานข้อมูลทั้งหมด
+            Object.values(globalDatabase).forEach(info => {
+                if (info.currentPouredElev >= info.target && info.target > 0) {
+                    // เสร็จแล้ว
+                } else if (info.currentPouredElev > 0) {
+                    // กำลังเท
+                } else {
+                    globalPending++; // รอดำเนินการ
+                }
+            });
+
             tbody.innerHTML = html;
             
             document.getElementById('sum-target-footer').innerText = totalTarget;
@@ -780,6 +802,12 @@
             
             const totalPercent = totalTarget > 0 ? ((totalActualCompleted / totalTarget) * 100).toFixed(1) : 0;
             document.getElementById('sum-percent-footer').innerText = `${totalPercent}%`;
+
+            // 🌟 อัปเดตตัวเลขลงในแถว รอดำเนินการ 
+            const pendingFooter = document.getElementById('sum-pending-footer');
+            if (pendingFooter) {
+                pendingFooter.innerText = globalPending;
+            }
         }
 
         function renderTable(colNames) {
