@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.13 - พี่เอ็กซ์</title>
+    <title>Column Dashboard V3.19 - พี่เอ็กซ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -89,8 +89,8 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.13</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Full View Zone & Pending Status)</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.19</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Interactive Charts Fixed)</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
@@ -330,15 +330,14 @@
                                 <th id="sum-diff-footer" class="px-4 py-3 text-center text-base font-bold text-amber-600 dark:text-amber-400">0</th>
                                 <th id="sum-percent-footer" class="px-4 py-3 text-left text-base font-bold text-slate-800 dark:text-white">0%</th>
                             </tr>
-                            <tr class="bg-white dark:bg-slate-800 border-t border-dashed border-slate-300 dark:border-slate-600">
-                                <th class="px-4 py-3 text-right flex items-center justify-end gap-2">
-                                    <span class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-400 text-[11px] px-2.5 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800 whitespace-nowrap uppercase tracking-wider">Column Project</span>
-                                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400">รอดำเนินการ:</span>
-                                </th>
-                                <th class="px-4 py-3 text-center text-slate-400">-</th>
-                                <th class="px-4 py-3 text-center text-slate-400">-</th>
-                                <th id="sum-pending-footer" class="px-4 py-3 text-center text-base font-bold text-slate-700 dark:text-slate-300">0</th>
-                                <th class="px-4 py-3 text-left text-xs font-normal text-slate-500 dark:text-slate-400">ต้น (ยังไม่เริ่มเท)</th>
+                            <tr class="bg-orange-50/80 dark:bg-[#1a1a24] border-t border-slate-200 dark:border-slate-700">
+                                <td colspan="5" class="px-5 py-4">
+                                    <div class="flex flex-col gap-3">
+                                        <div class="text-orange-600 dark:text-[#f97316] font-bold text-base" id="pending-count-text">รอดำเนินการ (Pending Columns)</div>
+                                        <div id="pending-tags-container" class="flex flex-wrap gap-2 items-center">
+                                            </div>
+                                    </div>
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -348,26 +347,28 @@
 
         <div class="glass-card section-wrapper mt-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
                 <div class="flex flex-wrap items-center gap-3 no-print w-full md:w-auto">
-                    <button onclick="window.print()" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-600 flex-1 md:flex-none">🖨️ พิมพ์รายงาน</button>
-                    <button onclick="toggleSection('exec-content', 'toggle-exec-btn')" id="toggle-exec-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold border border-blue-200 dark:border-slate-600 flex-1 md:flex-none">🔽 ซ่อนเนื้อหา</button>
+                    <button onclick="window.print()" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-600 flex-1 md:flex-none flex justify-center gap-2">🖨️ พิมพ์รายงาน</button>
+                    <button onclick="toggleSection('exec-content', 'toggle-exec-btn')" id="toggle-exec-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold border border-blue-200 dark:border-slate-600 flex-1 md:flex-none flex justify-center gap-2">🔽 ซ่อนเนื้อหา</button>
                 </div>
             </div>
 
             <div id="exec-content" class="collapsible-content">
-                <div class="flex flex-wrap items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-6 no-print">
-                    <span class="font-bold text-slate-700 dark:text-slate-300">⚖️ เปรียบเทียบ:</span>
-                    <select id="monthSelect1" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px]"></select>
+                <div class="flex flex-wrap items-center gap-3 bg-emerald-50/60 dark:bg-slate-800/50 p-4 rounded-xl border border-emerald-100 dark:border-slate-700 mb-6 no-print">
+                    <span class="font-bold text-slate-700 dark:text-slate-300">⚖️ เปรียบเทียบผลงาน:</span>
+                    <select id="monthSelect1" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px] outline-none focus:border-emerald-500"></select>
                     <span class="font-bold text-slate-500">VS</span>
-                    <select id="monthSelect2" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px]"></select>
-                    <button onclick="compareMonthsAction(false)" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors">เปรียบเทียบ</button>
-                    <button onclick="resetMonthlyChart()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-bold text-sm ml-auto shadow-sm transition-colors">แสดงทั้งหมด</button>
+                    <select id="monthSelect2" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px] outline-none focus:border-emerald-500"></select>
+                    <button onclick="compareMonthsAction(false)" class="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors">เปรียบเทียบ</button>
+                    <button onclick="resetMonthlyChart()" class="bg-[#94a3b8] hover:bg-[#64748b] text-white dark:bg-[#475569] dark:hover:bg-[#334155] px-5 py-2 rounded-lg font-bold text-sm ml-auto shadow-sm transition-colors">แสดงทั้งหมด</button>
                 </div>
 
-                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 mb-8 shadow-md text-white">
-                    <h4 class="font-bold mb-2 flex items-center gap-2 text-lg">📝 บทสรุปผู้บริหาร:</h4>
-                    <div id="exec-summary-text" class="text-slate-200 text-sm md:text-base leading-relaxed">กำลังประมวลผล...</div>
+                <div class="bg-[#ebf9f1] dark:bg-slate-800 p-5 md:p-6 rounded-xl border border-emerald-200 dark:border-slate-700 mb-8 shadow-sm transition-all">
+                    <h4 class="font-bold mb-3 flex items-center gap-2 text-lg text-slate-700 dark:text-slate-200">
+                        📝 รายงานสรุปสำหรับผู้บริหาร:
+                    </h4>
+                    <div id="exec-summary-text" class="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">กำลังประมวลผล...</div>
                 </div>
 
                 <div class="w-full overflow-x-auto pb-4">
@@ -746,7 +747,8 @@
             let html = '';
             let totalTarget = 0;
             let totalActualCompleted = 0; 
-            let globalPending = 0; // 🌟 เพิ่มตัวแปรคำนวณจำนวนเสาที่รอดำเนินการทั้งโปรเจค
+            
+            let pendingColumnsList = []; 
 
             const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
             const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
@@ -781,14 +783,16 @@
                 `;
             });
 
-            // 🌟 คำนวณรอดำเนินการ (ยังไม่เริ่ม) จากฐานข้อมูลทั้งหมด
-            Object.values(globalDatabase).forEach(info => {
+            // ดึงชื่อเสาที่ยังไม่เริ่มเท
+            Object.keys(globalDatabase).forEach(colName => {
+                const info = globalDatabase[colName];
                 if (info.currentPouredElev >= info.target && info.target > 0) {
                     // เสร็จแล้ว
                 } else if (info.currentPouredElev > 0) {
                     // กำลังเท
                 } else {
-                    globalPending++; // รอดำเนินการ
+                    // รอดำเนินการ
+                    pendingColumnsList.push(colName);
                 }
             });
 
@@ -803,10 +807,22 @@
             const totalPercent = totalTarget > 0 ? ((totalActualCompleted / totalTarget) * 100).toFixed(1) : 0;
             document.getElementById('sum-percent-footer').innerText = `${totalPercent}%`;
 
-            // 🌟 อัปเดตตัวเลขลงในแถว รอดำเนินการ 
-            const pendingFooter = document.getElementById('sum-pending-footer');
-            if (pendingFooter) {
-                pendingFooter.innerText = globalPending;
+            const pendingCountText = document.getElementById('pending-count-text');
+            const pendingTagsContainer = document.getElementById('pending-tags-container');
+
+            if (pendingCountText && pendingTagsContainer) {
+                if (pendingColumnsList.length > 0) {
+                    pendingCountText.innerHTML = `รอดำเนินการ ${pendingColumnsList.length} ต้น :`;
+                    
+                    let tagsHtml = pendingColumnsList.map(name => {
+                        return `<span class="bg-orange-100 border border-orange-300 text-orange-700 dark:bg-[#432010] dark:border-[#a13b11] dark:text-[#f97316] text-xs px-3 py-1.5 rounded-md font-bold shadow-sm flex items-center justify-center min-w-[50px] transition-transform hover:scale-105 cursor-default">${name}</span>`;
+                    }).join('');
+                    
+                    pendingTagsContainer.innerHTML = tagsHtml;
+                } else {
+                    pendingCountText.innerHTML = `รอดำเนินการ 0 ต้น :`;
+                    pendingTagsContainer.innerHTML = `<span class="text-orange-400 dark:text-slate-500 text-sm italic ml-2">ไม่มีเสาที่รอดำเนินการ</span>`;
+                }
             }
         }
 
@@ -878,6 +894,7 @@
             tbody.innerHTML = html;
         }
 
+        // 🌟 แก้ไข: นำฟังก์ชัน onClick และ onHover กลับมาใส่ในกราฟเสารายต้น
         function drawColumnChart(colNames) {
             document.getElementById('chart-title').innerHTML = `📈 กราฟระดับความสูงเสารายต้น <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อค้นหาเสา 👆)</span>`;
             
@@ -941,6 +958,7 @@
                             titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }
                         }
                     },
+                    // 🌟 เพิ่มกลับมาตรงนี้: ฟังก์ชันคลิกกราฟเสารายต้น
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
@@ -962,6 +980,7 @@
             });
         }
 
+        // 🌟 แก้ไข: นำฟังก์ชัน onClick และ onHover กลับมาใส่ในกราฟสรุปโซน
         function drawSummaryChart() {
             document.getElementById('chart-title').innerHTML = `📊 ความคืบหน้าภาพรวมแยกตามโซน <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อดูรายโซน 👆)</span>`;
             
@@ -1034,6 +1053,7 @@
                             }
                         }
                     },
+                    // 🌟 เพิ่มกลับมาตรงนี้: ฟังก์ชันคลิกกราฟภาพรวม
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
@@ -1041,6 +1061,7 @@
                             document.getElementById('zoneSelector').value = zoneName;
                             document.getElementById('tableSearchInput').value = '';
                             updateDashboard();
+                            document.getElementById('chart-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     },
                     onHover: (event, elements) => {
@@ -1136,15 +1157,17 @@
             if (!d1 || !d2) return;
 
             const diff = d2.count - d1.count;
-            const pct = d1.count > 0 ? (Math.abs(diff)/d1.count*100).toFixed(1) : (d2.count > 0 ? 100 : 0);
+            const pct = d1.count > 0 ? (Math.abs(diff)/d1.count*100).toFixed(2) : (d2.count > 0 ? 100 : 0);
             
             let statusText = diff > 0 ? 'เพิ่มขึ้น 📈' : diff < 0 ? 'ลดลง 📉' : 'คงที่ ➖';
-            let statusColor = diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-slate-300';
+            let statusColor = diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : diff < 0 ? 'text-red-500 dark:text-[#f87171]' : 'text-slate-600 dark:text-slate-400';
+            
+            const hlColor = 'text-slate-800 dark:text-white';
 
             if (idx1 === idx2) {
-                document.getElementById('exec-summary-text').innerHTML = `เดือน <b class="text-white">${d2.label}</b> สามารถทำผลงานการเทคอนกรีตได้ทั้งหมด <b class="text-white">${d2.count} ครั้ง (Lifts)</b>`;
+                document.getElementById('exec-summary-text').innerHTML = `ผลการดำเนินงานเดือน <b class="${hlColor}">${d2.label}</b> สามารถทำผลงานได้ <b class="${hlColor}">${d2.count} ต้น</b>`;
             } else {
-                document.getElementById('exec-summary-text').innerHTML = `เดือน <b class="text-white">${d2.label}</b> ทำได้ <b class="text-white">${d2.count} ครั้ง</b> เทียบกับเดือน <b class="text-white">${d1.label}</b> (ทำได้ ${d1.count} ครั้ง) พบว่าปริมาณงาน <b class="${statusColor}">${statusText} ${Math.abs(diff)} ครั้ง</b> คิดเป็น <b class="${statusColor}">${pct}%</b>`;
+                document.getElementById('exec-summary-text').innerHTML = `ผลการดำเนินงานเดือน <b class="${hlColor}">${d2.label}</b> สามารถทำผลงานได้ <b class="${hlColor}">${d2.count} ต้น</b> เมื่อนำมาเปรียบเทียบกับเดือน <b class="${hlColor}">${d1.label}</b> (ที่ทำได้ ${d1.count} ต้น)<br>พบว่าปริมาณงาน <b class="${statusColor}">${statusText} จำนวน ${Math.abs(diff)} ต้น</b> คิดเป็น <b class="${hlColor}">${pct}%</b>`;
             }
             
             renderMonthlyChart(init ? monthlyStatsData : (idx1===idx2 ? [d1] : [d1, d2]));
@@ -1176,13 +1199,13 @@
 
             monthlyChartInstance = new Chart(document.getElementById('monthlyChart'), {
                 type: 'bar',
-                data: { labels: data.map(d=>d.label), datasets: [{ label: 'จำนวนครั้งที่เทคอนกรีต (Lifts)', data: data.map(d=>d.count), backgroundColor: '#10b981', borderRadius: 4 }] },
+                data: { labels: data.map(d=>d.label), datasets: [{ label: 'จำนวนผลงานเสาเข็มดำเนินการแล้ว (ต้น)', data: data.map(d=>d.count), backgroundColor: '#22c55e', borderRadius: 4 }] },
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
                     scales: {
                         x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } },
-                        y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun', stepSize: 1 } }, grid: { color: gridColor } }
+                        y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun', stepSize: 10 } }, grid: { color: gridColor } }
                     },
                     plugins: {
                         legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun' } } }
