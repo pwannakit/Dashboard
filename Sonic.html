@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sonic & Grouting Dashboard - พี่เอ็กซ์</title>
-    <!-- โหลดฟอนต์ Sarabun -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- โหลด Tailwind CSS และเปิดใช้งาน Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -18,7 +16,6 @@
             }
         }
     </script>
-    <!-- โหลด Chart.js, ChartDataLabels และ PapaParse -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -82,7 +79,6 @@
 </head>
 <body class="text-gray-800 bg-slate-50 p-6">
 
-    <!-- Header Section -->
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 Dashboard Sonic Logging & Grouting</h1>
@@ -98,7 +94,6 @@
         </div>
     </div>
 
-    <!-- Data Source Section -->
     <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
@@ -126,14 +121,9 @@
         </div>
     </div>
 
-    <!-- Dashboard Content -->
     <div id="dashboardContent" class="max-w-7xl mx-auto hide">
         
-        <!-- ======================= -->
-        <!-- 1. KPI Cards: SONIC & GROUTING (MERGED) -->
-        <!-- ======================= -->
         <div class="glass-card p-6 mb-8 relative overflow-hidden">
-            <!-- แถบ Gradient ด้านบนสื่อถึง 2 งาน (น้ำเงิน Sonic -> ส้ม Grout) -->
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-400 to-orange-500"></div>
             
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3 mt-1">
@@ -146,7 +136,6 @@
             <div id="kpi-merged-content" class="collapsible-content">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    <!-- Card 1: Total -->
                     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
                         <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-gray-200 dark:border-slate-700">
                             <h3 class="text-gray-600 dark:text-gray-300 font-bold uppercase tracking-widest text-xs md:text-sm">รวมทั้งหมด (Total)</h3>
@@ -167,7 +156,6 @@
                         </div>
                     </div>
 
-                    <!-- Card 2: Month -->
                     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
                         <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-gray-200 dark:border-slate-700 relative overflow-hidden">
                             <h3 class="text-gray-600 dark:text-gray-300 font-bold uppercase tracking-widest text-xs md:text-sm relative z-10">เดือนปัจจุบัน</h3>
@@ -189,7 +177,6 @@
                         </div>
                     </div>
 
-                    <!-- Card 3: Week -->
                     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
                         <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-gray-200 dark:border-slate-700 relative overflow-hidden">
                             <h3 class="text-gray-600 dark:text-gray-300 font-bold uppercase tracking-widest text-xs md:text-sm relative z-10">สัปดาห์ปัจจุบัน</h3>
@@ -213,7 +200,6 @@
 
                 </div>
 
-                <!-- Footer Note -->
                 <div class="flex flex-col md:flex-row justify-center gap-2 md:gap-6 text-xs text-gray-500 dark:text-gray-400 mt-5 bg-gray-50 dark:bg-slate-800/80 p-2.5 rounded-lg border border-gray-200 dark:border-slate-700 w-fit mx-auto shadow-sm">
                     <span class="flex items-center gap-1.5"><b class="text-blue-600 dark:text-blue-400">📡 Sonic:</b> อ้างอิงข้อมูลจาก <u class="font-bold border-b border-gray-400">วันที่เริ่มงาน</u></span>
                     <span class="hidden md:inline border-l border-gray-300 dark:border-slate-600"></span>
@@ -222,7 +208,46 @@
             </div>
         </div>
 
-        <!-- 3. ระบบค้นหาชื่อโปรเจค -->
+        <div class="glass-card p-6 mb-8 border-t-4 border-indigo-500">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSection('kanban-content', 'toggle-kanban-btn')" id="toggle-kanban-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
+                        🔽 ซ่อนเนื้อหา
+                    </button>
+                </div>
+            </div>
+
+            <div id="kanban-content" class="collapsible-content">
+                <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm w-fit mb-4">
+                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
+                    <input type="date" id="startDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
+                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">ถึง</label>
+                    <input type="date" id="endDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
+                    <button onclick="filterKanban()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
+                </div>
+
+                <div id="kanban-status" class="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-6 border border-green-200 dark:border-green-800 shadow-sm">
+                    ✅ โปรดระบุวันที่และกดค้นหาเพื่อแสดงข้อมูล
+                </div>
+
+                <div class="mb-8 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 bg-blue-50/50 dark:bg-slate-800/50 shadow-sm">
+                    <h4 class="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-2">
+                        <span class="text-xl">📡</span> ตารางงาน Sonic Logging Test <span class="text-sm font-normal text-blue-500 dark:text-blue-500">(อิงตาม วันที่เริ่มงาน)</span>
+                    </h4>
+                    <div class="kanban-grid" id="kanban-sonic-board"></div>
+                </div>
+
+                <div class="border border-orange-200 dark:border-orange-900/50 rounded-xl p-4 bg-orange-50/50 dark:bg-slate-800/50 shadow-sm">
+                    <h4 class="text-lg font-bold text-orange-700 dark:text-orange-400 mb-2 flex items-center gap-2">
+                        <span class="text-xl">🧱</span> ตารางงาน Grouting <span class="text-sm font-normal text-orange-500 dark:text-orange-500">(อิงตาม วันที่เสร็จงานจริงๆ)</span>
+                    </h4>
+                    <div class="kanban-grid" id="kanban-grout-board"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="glass-card p-6 mb-8 border-t-4 border-purple-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <div>
@@ -261,50 +286,6 @@
             </div>
         </div>
 
-        <!-- 4. Kanban Board Section -->
-        <div class="glass-card p-6 mb-8 border-t-4 border-indigo-500">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
-                
-                <div class="flex items-center gap-3">
-                    <button onclick="toggleSection('kanban-content', 'toggle-kanban-btn')" id="toggle-kanban-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
-                        🔽 ซ่อนเนื้อหา
-                    </button>
-                </div>
-            </div>
-
-            <div id="kanban-content" class="collapsible-content">
-                <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm w-fit mb-4">
-                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
-                    <input type="date" id="startDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
-                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">ถึง</label>
-                    <input type="date" id="endDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
-                    <button onclick="filterKanban()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
-                </div>
-
-                <div id="kanban-status" class="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-6 border border-green-200 dark:border-green-800 shadow-sm">
-                    ✅ โปรดระบุวันที่และกดค้นหาเพื่อแสดงข้อมูล
-                </div>
-
-                <!-- 🔴 บอร์ดของ Sonic -->
-                <div class="mb-8 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 bg-blue-50/50 dark:bg-slate-800/50 shadow-sm">
-                    <h4 class="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-2">
-                        <span class="text-xl">📡</span> ตารางงาน Sonic Logging Test <span class="text-sm font-normal text-blue-500 dark:text-blue-500">(อิงตาม วันที่เริ่มงาน)</span>
-                    </h4>
-                    <div class="kanban-grid" id="kanban-sonic-board"></div>
-                </div>
-
-                <!-- 🔴 บอร์ดของ Grouting -->
-                <div class="border border-orange-200 dark:border-orange-900/50 rounded-xl p-4 bg-orange-50/50 dark:bg-slate-800/50 shadow-sm">
-                    <h4 class="text-lg font-bold text-orange-700 dark:text-orange-400 mb-2 flex items-center gap-2">
-                        <span class="text-xl">🧱</span> ตารางงาน Grouting <span class="text-sm font-normal text-orange-500 dark:text-orange-500">(อิงตาม วันที่เสร็จงานจริงๆ)</span>
-                    </h4>
-                    <div class="kanban-grid" id="kanban-grout-board"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. Summary Table Section (ตารางคู่ Sonic vs Grout) -->
         <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white">📋 สรุปเปรียบเทียบผลงานแยกตามบริเวณ (Zone)</h3>
@@ -314,7 +295,12 @@
             </div>
             
             <div id="zone-content" class="collapsible-content">
-                <div class="rounded-lg border border-gray-200 dark:border-slate-700 w-full overflow-hidden mt-2 shadow-sm">
+                
+                <div class="w-full relative mb-6 mt-2" style="height: 350px;">
+                    <canvas id="zoneChart"></canvas>
+                </div>
+                
+                <div class="rounded-lg border border-gray-200 dark:border-slate-700 w-full overflow-hidden shadow-sm">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                         <thead class="bg-gray-100 dark:bg-slate-800 hidden md:table-header-group">
                             <tr>
@@ -330,7 +316,6 @@
             </div>
         </div>
 
-        <!-- 5.5 Other Works Table (ตารางแยกเฉพาะงานอื่นๆ พร้อมโชว์ชื่อโปรเจค) -->
         <div class="glass-card p-6 mb-8 border-t-4 border-gray-400 dark:border-gray-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white">📌 สรุปผลงานอื่นๆ (Other Works)</h3>
@@ -355,7 +340,6 @@
             </div>
         </div>
 
-        <!-- 6. Monthly Executive Report Section -->
         <div class="glass-card p-6 mb-8 border-t-4 border-emerald-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
                 <div>
@@ -393,7 +377,6 @@
 
     </div>
 
-    <!-- Script ควบคุมการทำงาน -->
     <script>
         // เปิดใช้งานปลั๊กอิน DataLabels
         Chart.register(ChartDataLabels);
@@ -401,6 +384,7 @@
         let globalDatabase = [];
         let globalMonthlyData = {}; 
         let monthlyChartInstance = null;
+        let zoneChartInstance = null; // 🟢 ตัวแปรสำหรับกราฟ Zone
         const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
         let currentWeekStart, currentWeekEnd, currentMonthKey;
@@ -480,6 +464,15 @@
                 monthlyChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
                 monthlyChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
                 monthlyChartInstance.update();
+            }
+
+            if (zoneChartInstance) {
+                zoneChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569';
+                zoneChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155';
+                zoneChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                zoneChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                zoneChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                zoneChartInstance.update();
             }
         }
 
@@ -574,7 +567,6 @@
                     
                     const zoneLower = rawZone.toLowerCase();
 
-                    // --- 1. จัดการฝั่ง Sonic ---
                     if (zoneLower.includes("sonic")) {
                         totalSonic++; 
                         
@@ -591,7 +583,6 @@
                             }
                         }
                     }
-                    // --- 2. จัดการฝั่ง Grout ---
                     else if (zoneLower.includes("grout")) {
                         if(finishDateStr && finishDateStr.trim().length > 2) {
                             totalGrout++;
@@ -608,7 +599,6 @@
                             }
                         }
                     }
-                    // --- 3. จัดการฝั่ง งานอื่นๆ ---
                     else {
                         if (!otherZoneCounts[rawZone]) {
                             otherZoneCounts[rawZone] = { count: 0, projects: [] };
@@ -619,6 +609,32 @@
                 }
             });
 
+            // ==========================================
+            // 🟢 โลจิกการกรอง Defective-Pile ไม่ให้ซ้ำซ้อน 🟢
+            // ==========================================
+            let overridingProjects = new Set();
+            
+            Object.keys(otherZoneCounts).forEach(jobType => {
+                const typeLower = jobType.toLowerCase();
+                if (typeLower.includes("high strain") || typeLower.includes("re-drilling") || typeLower.includes("dynamic")) {
+                    otherZoneCounts[jobType].projects.forEach(proj => overridingProjects.add(proj));
+                }
+            });
+
+            Object.keys(otherZoneCounts).forEach(jobType => {
+                if (jobType.toLowerCase().includes("defective")) {
+                    const filteredProjects = otherZoneCounts[jobType].projects.filter(proj => !overridingProjects.has(proj));
+                    
+                    otherZoneCounts[jobType].projects = filteredProjects;
+                    otherZoneCounts[jobType].count = filteredProjects.length;
+                    
+                    if (otherZoneCounts[jobType].count === 0) {
+                        delete otherZoneCounts[jobType];
+                    }
+                }
+            });
+            // ==========================================
+
             document.getElementById('kpi-sonic-total').innerText = totalSonic.toLocaleString();
             document.getElementById('kpi-sonic-month').innerText = currentMonthSonic.toLocaleString();
             document.getElementById('kpi-sonic-week').innerText = currentWeekSonic.toLocaleString();
@@ -628,6 +644,8 @@
             document.getElementById('kpi-grout-week').innerText = currentWeekGrout.toLocaleString();
 
             renderZoneTable(zoneStats);
+            drawZoneChart(zoneStats); 
+            
             renderOtherZoneTable(otherZoneCounts);
             
             document.getElementById('searchInput').value = '';
@@ -737,7 +755,7 @@
                         : `<span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
                     
                     sonicContainer.innerHTML += `
-                        <div class="k-card card-${dayIndex}">
+                        <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-blue-400" onclick="triggerSearch('${baseName}', 'sonic')">
                             <div class="font-bold text-sm mb-1.5 text-gray-800 dark:text-gray-100 break-words">📌 ${baseName}</div>
                             <div class="mb-2">${badgeHTML}</div>
                             <div class="text-xs text-blue-600 dark:text-blue-400 font-bold border-t border-gray-100 dark:border-slate-700 pt-2 mt-1">
@@ -753,7 +771,7 @@
                         : `<span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
                     
                     groutContainer.innerHTML += `
-                        <div class="k-card card-${dayIndex}" style="border-left-color: #e67e22;">
+                        <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-orange-400" style="border-left-color: #e67e22;" onclick="triggerSearch('${baseName}', 'grout')">
                             <div class="font-bold text-sm mb-1.5 text-gray-800 dark:text-gray-100 break-words">📌 ${baseName}</div>
                             <div class="mb-2">${badgeHTML}</div>
                             <div class="text-xs text-orange-600 dark:text-orange-400 font-bold border-t border-gray-100 dark:border-slate-700 pt-2 mt-1">
@@ -774,8 +792,10 @@
             }
         }
 
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase().trim();
+        // ==========================================
+        // 1. ระบบค้นหา 
+        // ==========================================
+        function executeSearch(keyword, filterType = 'all') {
             const tbody = document.getElementById('searchTableBody');
             
             if (keyword === '') {
@@ -784,8 +804,16 @@
             }
 
             const results = globalDatabase.filter(row => {
-                const name = row['ชื่อโปรเจค'] || '';
-                return name.toLowerCase().includes(keyword);
+                const name = (row['ชื่อโปรเจค'] || '').toLowerCase();
+                const jobType = (row['ผู้รับผิดชอบ'] || '').toLowerCase();
+                
+                const matchName = name.includes(keyword);
+                
+                let matchType = true;
+                if (filterType === 'sonic') matchType = jobType.includes('sonic');
+                if (filterType === 'grout') matchType = jobType.includes('grout');
+
+                return matchName && matchType;
             });
 
             if (results.length === 0) {
@@ -811,7 +839,121 @@
                     </tr>
                 `;
             });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            executeSearch(e.target.value.toLowerCase().trim(), 'all');
         });
+
+        function triggerSearch(projectName, jobType) {
+            const searchContainer = document.getElementById('search-content');
+            if (searchContainer.classList.contains('collapsed')) {
+                toggleSection('search-content', 'toggle-search-btn');
+            }
+            
+            const searchInput = document.getElementById('searchInput');
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            searchInput.value = projectName;
+            executeSearch(projectName.toLowerCase(), jobType);
+        }
+
+        // 🟢 ฟังก์ชันวาดกราฟสำหรับเมนู Zone
+        function drawZoneChart(zoneStats) {
+            const sortedKeys = Object.keys(zoneStats).sort((a, b) => {
+                const getRank = (name) => {
+                    if (name.startsWith('Zone')) return 1;
+                    if (name.startsWith('Ramp')) return 2;
+                    return 3;
+                };
+                
+                const rankA = getRank(a);
+                const rankB = getRank(b);
+                
+                if (rankA !== rankB) return rankA - rankB; 
+                
+                const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0;
+                const numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
+                const textA = a.replace(/[\d]/g, '');
+                const textB = b.replace(/[\d]/g, '');
+                
+                if (textA === textB) return numA - numB;
+                return a.localeCompare(b);
+            });
+
+            const labels = sortedKeys;
+            const sonicCounts = sortedKeys.map(key => zoneStats[key].sonic);
+            const groutCounts = sortedKeys.map(key => zoneStats[key].grout);
+
+            const ctx = document.getElementById('zoneChart').getContext('2d');
+            if(zoneChartInstance) zoneChartInstance.destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+
+            zoneChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '📡 Sonic Logging Test',
+                            data: sonicCounts,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)', 
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: '🧱 Grouting',
+                            data: groutCounts,
+                            backgroundColor: 'rgba(249, 115, 22, 0.8)', 
+                            borderColor: 'rgb(249, 115, 22)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: isDark ? '#cbd5e1' : '#475569', font: { family: 'Sarabun', size: 14 } }
+                        },
+                        tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: isDark ? '#f8fafc' : '#334155',
+                            font: {
+                                family: 'Sarabun',
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value) {
+                                return value > 0 ? value : '';
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 30
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Sarabun' } },
+                            grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Sarabun', size: 12 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
 
         function renderZoneTable(zoneStats) {
             const tbody = document.getElementById('zoneTableBody');
