@@ -111,7 +111,7 @@
                 <span>📊 ปริมาณฐานรากทั้งโครงการ</span>
             </button>
             <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
-                <span>⚙️ ซ่อนการตั้งค่าข้อมูล</span>
+                <span>⚙️ ตั้งค่าฐานข้อมูล</span>
             </button>
             <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
                 <span id="theme-icon">🌙</span>
@@ -119,7 +119,7 @@
         </div>
     </div>
 
-    <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content no-print">
+    <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content no-print collapsed hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
                 <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
