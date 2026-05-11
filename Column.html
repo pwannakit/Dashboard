@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.19 - พี่เอ็กซ์</title>
+    <title>Column Dashboard V3.22 - พี่เอ็กซ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -89,8 +89,8 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.19</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Interactive Charts Fixed)</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.22</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Kanban Weekly Controls)</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
@@ -229,6 +229,10 @@
                     <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">ถึง</label>
                     <input type="date" id="endDate" class="p-1.5 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none text-sm">
                     <button onclick="filterKanban()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
+                    
+                    <div class="h-6 w-px bg-slate-300 dark:bg-slate-600 mx-1 hidden sm:block"></div>
+                    <button onclick="setLastWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm">⏪ สัปดาห์ก่อน</button>
+                    <button onclick="setThisWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm">▶️ สัปดาห์นี้</button>
                 </div>
                 <div id="kanban-status" class="hidden text-center font-bold mb-4"></div>
                 <div class="kanban-grid" id="kanban-board"></div>
@@ -321,7 +325,7 @@
                             </tr>
                         </thead>
                         <tbody id="zoneSummaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
-                            </tbody>
+                        </tbody>
                         <tfoot class="bg-slate-50 dark:bg-slate-700/50 sticky bottom-0 border-t-2 border-slate-200 dark:border-slate-600">
                             <tr>
                                 <th class="px-4 py-3 text-right text-sm font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</th>
@@ -335,7 +339,7 @@
                                     <div class="flex flex-col gap-3">
                                         <div class="text-orange-600 dark:text-[#f97316] font-bold text-base" id="pending-count-text">รอดำเนินการ (Pending Columns)</div>
                                         <div id="pending-tags-container" class="flex flex-wrap gap-2 items-center">
-                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -400,7 +404,7 @@
                         </tr>
                     </thead>
                     <tbody id="target-tbody" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800">
-                        </tbody>
+                    </tbody>
                     <tfoot class="bg-slate-50 dark:bg-slate-700/50 sticky bottom-0 border-t-2 border-slate-200 dark:border-slate-600">
                         <tr>
                             <th class="py-3 px-4 text-right font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</th>
@@ -416,9 +420,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🌟 ตั้งค่าเป้าหมายปริมาณเสาแต่ละโซน 
-        // ==========================================
         const PROJECT_COLUMN_TARGETS = {
             "Zone 1": 12,
             "Zone 2": 47,
@@ -434,7 +435,6 @@
             "Ramp-OR7": 18,
             "Ramp-SR1": 8
         };
-        // ==========================================
 
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpp6yhnCXCsyG4CHL1uFY1FNd9WudxzZWv8Z0OgsogmR4Sl40atSyElIxyM9TfdGx0bJMIb28T8bPW/pub?gid=1465792644&single=true&output=csv";
         
@@ -464,14 +464,38 @@
             const monthLabelText = `${monthNames[today.getMonth()]} ${today.getFullYear() + 543}`;
             document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
 
-            const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            document.getElementById('startDate').value = formatDate(currentWeekStart);
-            document.getElementById('endDate').value = formatDate(currentWeekEnd);
+            // 🌟 เปลี่ยนการตั้งค่าเริ่มต้นของกล่องวันที่ให้ไปเรียกใช้ฟังก์ชัน formatDateForInput แทน
+            document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
+            document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
 
             const savedUrl = localStorage.getItem('columnDbUrl') || DEFAULT_URL;
             document.getElementById('sheetUrl').value = savedUrl;
             loadFromUrl(savedUrl);
         });
+
+        // 🌟 เพิ่มฟังก์ชันตัวช่วยสำหรับแปลงวันที่ลงใน Input type="date"
+        function formatDateForInput(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        // 🌟 เพิ่มฟังก์ชันตั้งค่าให้เป็น "สัปดาห์ก่อน" (ลบไป 7 วันจากสัปดาห์ปัจจุบัน)
+        function setLastWeek() {
+            const lastWeekStart = new Date(currentWeekStart);
+            lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+            const lastWeekEnd = new Date(currentWeekEnd);
+            lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
+            
+            document.getElementById('startDate').value = formatDateForInput(lastWeekStart);
+            document.getElementById('endDate').value = formatDateForInput(lastWeekEnd);
+            filterKanban();
+        }
+
+        // 🌟 เพิ่มฟังก์ชันตั้งค่าให้เป็น "สัปดาห์นี้" (ใช้ค่า currentWeek ที่คำนวณไว้ตอนโหลดหน้าเว็บ)
+        function setThisWeek() {
+            document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
+            document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
+            filterKanban();
+        }
 
         function parseThaiDate(dateStr) {
             if (!dateStr) return null;
@@ -783,15 +807,13 @@
                 `;
             });
 
-            // ดึงชื่อเสาที่ยังไม่เริ่มเท
             Object.keys(globalDatabase).forEach(colName => {
                 const info = globalDatabase[colName];
                 if (info.currentPouredElev >= info.target && info.target > 0) {
-                    // เสร็จแล้ว
+                    
                 } else if (info.currentPouredElev > 0) {
-                    // กำลังเท
+                    
                 } else {
-                    // รอดำเนินการ
                     pendingColumnsList.push(colName);
                 }
             });
@@ -894,7 +916,6 @@
             tbody.innerHTML = html;
         }
 
-        // 🌟 แก้ไข: นำฟังก์ชัน onClick และ onHover กลับมาใส่ในกราฟเสารายต้น
         function drawColumnChart(colNames) {
             document.getElementById('chart-title').innerHTML = `📈 กราฟระดับความสูงเสารายต้น <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อค้นหาเสา 👆)</span>`;
             
@@ -958,7 +979,6 @@
                             titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }
                         }
                     },
-                    // 🌟 เพิ่มกลับมาตรงนี้: ฟังก์ชันคลิกกราฟเสารายต้น
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
@@ -980,7 +1000,6 @@
             });
         }
 
-        // 🌟 แก้ไข: นำฟังก์ชัน onClick และ onHover กลับมาใส่ในกราฟสรุปโซน
         function drawSummaryChart() {
             document.getElementById('chart-title').innerHTML = `📊 ความคืบหน้าภาพรวมแยกตามโซน <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อดูรายโซน 👆)</span>`;
             
@@ -1053,7 +1072,6 @@
                             }
                         }
                     },
-                    // 🌟 เพิ่มกลับมาตรงนี้: ฟังก์ชันคลิกกราฟภาพรวม
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
@@ -1082,13 +1100,28 @@
             });
 
             Object.keys(globalDatabase).forEach(col => {
-                globalDatabase[col].lifts.forEach(l => {
+                const info = globalDatabase[col];
+                const percent = info.target > 0 ? Math.min((info.currentPouredElev / info.target) * 100, 100).toFixed(0) : 0;
+                const statusClass = percent == 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400';
+
+                info.lifts.forEach(l => {
                     if (l.date && l.date >= start && l.date <= end && (l.status.includes('เท')||l.status.includes('เสร็จ'))) {
                         const day = l.date.getDay();
+                        const displayDate = l.date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                        
                         document.getElementById(`k-tasks-${day}`).innerHTML += `
                             <div class="k-card card-${day} cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all" onclick="searchFromKanban('${col}')" title="คลิกเพื่อดูรายละเอียดเสาต้นนี้">
-                                <div class="font-bold text-sm">📌 ${col}</div>
-                                <div class="text-xs text-indigo-500 font-bold">Lift ${l.liftNo} (+${l.height}m)</div>
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-base drop-shadow-sm text-pink-500">📌</span>
+                                    <span class="font-bold text-base text-slate-800 dark:text-slate-100">${col}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-[11px] font-bold px-2 py-0.5 rounded ${statusClass}">${info.latestStatus}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm drop-shadow-sm text-blue-400">📅</span>
+                                    <span class="text-sm font-medium text-slate-500 dark:text-slate-400">${displayDate}</span>
+                                </div>
                             </div>`;
                     }
                 });
