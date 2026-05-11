@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.23 - พี่เอ็กซ์</title>
+    <title>Column Dashboard V3.25 - พี่เอ็กซ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -89,8 +89,8 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.23</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Recursive Previous Week)</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.25</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Full Executive Summary)</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
@@ -100,7 +100,7 @@
             <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2">
                 <span>⚙️ ตั้งค่าฐานข้อมูล</span>
             </button>
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
@@ -193,7 +193,7 @@
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-slate-400 dark:border-slate-500">
-                        <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">เสาพร้อมดำเนินการ <span id="kpi-zone-name" class="text-indigo-600 dark:text-indigo-400"></span></div>
+                        <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">เสาทั้งหมด <span id="kpi-zone-name" class="text-indigo-600 dark:text-indigo-400"></span></div>
                         <div class="text-2xl md:text-4xl font-bold text-slate-800 dark:text-slate-100" id="kpi-total">0</div>
                     </div>
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-emerald-500">
@@ -368,16 +368,31 @@
                     <button onclick="resetMonthlyChart()" class="bg-[#94a3b8] hover:bg-[#64748b] text-white dark:bg-[#475569] dark:hover:bg-[#334155] px-5 py-2 rounded-lg font-bold text-sm ml-auto shadow-sm transition-colors">แสดงทั้งหมด</button>
                 </div>
 
-                <div class="bg-[#ebf9f1] dark:bg-slate-800 p-5 md:p-6 rounded-xl border border-emerald-200 dark:border-slate-700 mb-8 shadow-sm transition-all">
+                <div class="bg-[#ebf9f1] dark:bg-slate-800 p-5 md:p-6 rounded-xl border border-emerald-200 dark:border-slate-700 mb-4 shadow-sm transition-all">
                     <h4 class="font-bold mb-3 flex items-center gap-2 text-lg text-slate-700 dark:text-slate-200">
-                        📝 รายงานสรุปสำหรับผู้บริหาร:
+                        📝 รายงานสรุปตามการเทคอนกรีต (Pouring Lifts):
                     </h4>
                     <div id="exec-summary-text" class="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">กำลังประมวลผล...</div>
                 </div>
 
-                <div class="w-full overflow-x-auto pb-4">
-                    <div class="relative min-w-[600px]" style="height: 350px;">
+                <div class="w-full overflow-x-auto pb-8">
+                    <div class="relative min-w-[600px]" style="height: 300px;">
                         <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="h-px bg-slate-200 dark:bg-slate-700 my-8"></div>
+
+                <div class="bg-[#ebf9f1] dark:bg-slate-800 p-5 md:p-6 rounded-xl border border-emerald-200 dark:border-slate-700 mb-4 shadow-sm transition-all">
+                    <h4 class="font-bold mb-3 flex items-center gap-2 text-lg text-slate-700 dark:text-slate-200">
+                        ✅ รายงานสรุปเสาที่แล้วเสร็จ 100% (Completed Columns):
+                    </h4>
+                    <div id="exec-summary-completed-text" class="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">กำลังประมวลผล...</div>
+                </div>
+
+                <div class="w-full overflow-x-auto pb-4">
+                    <div class="relative min-w-[600px]" style="height: 300px;">
+                        <canvas id="monthlyCompletedChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -421,19 +436,8 @@
 
     <script>
         const PROJECT_COLUMN_TARGETS = {
-            "Zone 1": 12,
-            "Zone 2": 47,
-            "Zone 3": 42,
-            "Zone 4": 11,
-            "Zone 5": 6,
-            "Zone 6": 20,
-            "Zone 7": 76,
-            "Ramp-N01": 10,
-            "Ramp-OR3": 24,
-            "Ramp-OR4": 63,
-            "Ramp-OR6": 41,
-            "Ramp-OR7": 18,
-            "Ramp-SR1": 8
+            "Zone 1": 12, "Zone 2": 47, "Zone 3": 42, "Zone 4": 11, "Zone 5": 6, "Zone 6": 20, "Zone 7": 76,
+            "Ramp-N01": 10, "Ramp-OR3": 24, "Ramp-OR4": 63, "Ramp-OR6": 41, "Ramp-OR7": 18, "Ramp-SR1": 8
         };
 
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpp6yhnCXCsyG4CHL1uFY1FNd9WudxzZWv8Z0OgsogmR4Sl40atSyElIxyM9TfdGx0bJMIb28T8bPW/pub?gid=1465792644&single=true&output=csv";
@@ -442,7 +446,9 @@
         let ZONES = [];
         let chartInstance = null;
         let monthlyChartInstance = null;
+        let monthlyCompletedChartInstance = null; // 🌟 เพิ่มตัวแปรเก็บกราฟใหม่
         let monthlyStatsData = [];
+        let monthlyCompletedStatsData = []; // 🌟 เพิ่มตัวแปรเก็บข้อมูลสถิติเสาเสร็จ 100%
 
         let currentWeekStart, currentWeekEnd, currentMonthKey;
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -451,7 +457,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
             currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-            
             const currentDay = today.getDay(); 
             const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
             currentWeekStart = new Date(today);
@@ -460,38 +465,27 @@
             currentWeekEnd = new Date(currentWeekStart);
             currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
             currentWeekEnd.setHours(23,59,59,999);
-
             const monthLabelText = `${monthNames[today.getMonth()]} ${today.getFullYear() + 543}`;
             document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
-
             document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
             document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
-
             const savedUrl = localStorage.getItem('columnDbUrl') || DEFAULT_URL;
             document.getElementById('sheetUrl').value = savedUrl;
             loadFromUrl(savedUrl);
         });
 
-        function formatDateForInput(d) {
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
+        function formatDateForInput(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
-        // 🌟 แก้ไขฟังก์ชันให้ดึงวันที่ปัจจุบันในช่องมาคำนวณ เพื่อให้กดถอยหลังได้เรื่อยๆ (Recursive) 🌟
         function setLastWeek() {
             const startInput = document.getElementById('startDate').value;
             const endInput = document.getElementById('endDate').value;
-            
             if(!startInput || !endInput) return;
-
             const [sYear, sMonth, sDay] = startInput.split('-');
             const currentStart = new Date(parseInt(sYear), parseInt(sMonth) - 1, parseInt(sDay));
-            
             const [eYear, eMonth, eDay] = endInput.split('-');
             const currentEnd = new Date(parseInt(eYear), parseInt(eMonth) - 1, parseInt(eDay));
-            
             currentStart.setDate(currentStart.getDate() - 7);
             currentEnd.setDate(currentEnd.getDate() - 7);
-            
             document.getElementById('startDate').value = formatDateForInput(currentStart);
             document.getElementById('endDate').value = formatDateForInput(currentEnd);
             filterKanban();
@@ -531,13 +525,11 @@
             const container = document.getElementById(contentId);
             const btn = document.getElementById(btnId);
             container.classList.toggle('collapsed');
-            
             const wrapper = container.closest('.section-wrapper');
             if (wrapper) {
                 if (container.classList.contains('collapsed')) wrapper.classList.add('print-hide-section');
                 else wrapper.classList.remove('print-hide-section');
             }
-
             if (btn) {
                 if(container.classList.contains('collapsed')) btn.innerHTML = '▶️ แสดงเนื้อหา';
                 else btn.innerHTML = '🔽 ซ่อนเนื้อหา';
@@ -548,27 +540,16 @@
             const modal = document.getElementById('target-modal');
             const tbody = document.getElementById('target-tbody');
             tbody.innerHTML = '';
-            
             let sumTarget = 0;
-
             for (const [zone, target] of Object.entries(PROJECT_COLUMN_TARGETS)) {
                 sumTarget += target;
-                
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <td class="py-2 px-4 font-medium">${zone}</td>
-                        <td class="py-2 px-4 text-center text-blue-600 dark:text-blue-400 font-bold">${target}</td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="py-2 px-4 font-medium">${zone}</td><td class="py-2 px-4 text-center text-blue-600 dark:text-blue-400 font-bold">${target}</td></tr>`;
             }
-
             document.getElementById('target-sum').innerText = sumTarget;
             modal.classList.remove('hidden');
         }
 
-        function closeTotalColumnsModal() {
-            document.getElementById('target-modal').classList.add('hidden');
-        }
+        function closeTotalColumnsModal() { document.getElementById('target-modal').classList.add('hidden'); }
 
         function showStatus(msg, type) {
             const st = document.getElementById('loading-status');
@@ -606,7 +587,6 @@
         function processData(csvData) {
             const data = {};
             const zonesSet = new Set();
-            
             csvData.forEach(row => {
                 const colName = row['ชื่อเสา'] ? row['ชื่อเสา'].trim() : '';
                 if (!colName) return; 
@@ -619,15 +599,9 @@
                 const status = row['สถานะล่าสุด'] ? row['สถานะล่าสุด'].trim() : '';
                 const dateStr = row['วันที่อัปเดต'] ? row['วันที่อัปเดต'].trim() : '';
                 const remark = row['หมายเหตุ'] ? row['หมายเหตุ'].trim() : '';
-
                 if (!data[colName]) {
-                    data[colName] = { 
-                        zone, target, currentPouredElev: 0, lifts: [], 
-                        latestStatus: status || 'ยังไม่เริ่ม', maxLiftNo: 0, 
-                        latestDateStr: dateStr, remarksList: [] 
-                    };
+                    data[colName] = { zone, target, currentPouredElev: 0, lifts: [], latestStatus: status || 'ยังไม่เริ่ม', maxLiftNo: 0, latestDateStr: dateStr, remarksList: [] };
                 }
-
                 if (liftNo >= data[colName].maxLiftNo && liftNo > 0) {
                     data[colName].latestStatus = status;
                     data[colName].maxLiftNo = liftNo;
@@ -636,73 +610,43 @@
                     data[colName].latestStatus = status;
                     if(dateStr) data[colName].latestDateStr = dateStr;
                 }
-
-                if (remark) {
-                    data[colName].remarksList.push({
-                        liftNo: liftNo,
-                        date: dateStr,
-                        text: remark
-                    });
-                }
-
+                if (remark) { data[colName].remarksList.push({ liftNo: liftNo, date: dateStr, text: remark }); }
                 const height = endElev - startElev;
                 if (liftNo > 0 && height > 0) {
                     const parsedDate = parseThaiDate(dateStr);
                     data[colName].lifts.push({ liftNo, height, status, date: parsedDate, rawDate: dateStr });
-                    if (status.includes('เท') || status.includes('เสร็จ')) {
-                        data[colName].currentPouredElev += height;
-                    }
+                    if (status.includes('เท') || status.includes('เสร็จ')) { data[colName].currentPouredElev += height; }
                 }
             });
-
             Object.keys(data).forEach(col => {
-                if (data[col].currentPouredElev > data[col].target && data[col].target > 0) {
-                    data[col].currentPouredElev = data[col].target;
-                }
-                if (data[col].target > 0 && data[col].currentPouredElev >= data[col].target) {
-                    data[col].latestStatus = 'เสร็จสมบูรณ์';
-                } else if (data[col].currentPouredElev === 0 && data[col].lifts.length === 0) {
-                    data[col].latestStatus = 'ยังไม่เริ่ม';
-                }
-                
+                if (data[col].currentPouredElev > data[col].target && data[col].target > 0) { data[col].currentPouredElev = data[col].target; }
+                if (data[col].target > 0 && data[col].currentPouredElev >= data[col].target) { data[col].latestStatus = 'เสร็จสมบูรณ์'; }
+                else if (data[col].currentPouredElev === 0 && data[col].lifts.length === 0) { data[col].latestStatus = 'ยังไม่เริ่ม'; }
                 data[col].lifts.sort((a,b) => a.liftNo - b.liftNo);
                 data[col].remarksList.sort((a,b) => a.liftNo - b.liftNo);
             });
-
             globalDatabase = data;
             ZONES = Array.from(zonesSet).sort();
-            
             const select = document.getElementById('zoneSelector');
             select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน (Summary)</option>';
-            
             const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
             const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
             const allSortedZones = [...configZones, ...otherZones];
-
             allSortedZones.forEach(zone => select.innerHTML += `<option value="${zone}">${zone}</option>`);
-            
             select.value = 'ALL'; 
-            
             updateDashboard();
             updateExecutiveSummary(Object.keys(globalDatabase));
         }
 
         function searchFromKanban(colName) {
             document.getElementById('tableSearchInput').value = colName;
-            
             const tableContent = document.getElementById('table-content-wrapper');
-            if (tableContent.classList.contains('collapsed')) {
-                toggleSection('table-content-wrapper', 'toggle-table-btn');
-            }
-            
+            if (tableContent.classList.contains('collapsed')) { toggleSection('table-content-wrapper', 'toggle-table-btn'); }
             updateDashboard();
             document.getElementById('table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function clearSearchAndUpdate() {
-            document.getElementById('tableSearchInput').value = '';
-            updateDashboard();
-        }
+        function clearSearchAndUpdate() { document.getElementById('tableSearchInput').value = ''; updateDashboard(); }
 
         function showAllZonesSummary() {
             document.getElementById('zoneSelector').value = 'ALL';
@@ -716,17 +660,14 @@
             const hideChartCompleted = document.getElementById('hideCompletedToggle').checked;
             const searchQuery = document.getElementById('tableSearchInput').value.trim().toLowerCase();
             const summaryBtn = document.getElementById('btn-show-summary');
-
             let baseCols = Object.keys(globalDatabase);
             if (selectedZone !== 'ALL') baseCols = baseCols.filter(col => globalDatabase[col].zone === selectedZone);
-
             let total = baseCols.length, completed = 0, active = 0, pending = 0, monthLifts = 0, weekLifts = 0;
             baseCols.forEach(col => {
                 const info = globalDatabase[col];
                 if (info.currentPouredElev >= info.target && info.target > 0) completed++;
                 else if (info.currentPouredElev > 0) active++;
                 else pending++;
-                
                 info.lifts.forEach(l => {
                     if (l.status.includes('เท') || l.status.includes('เสร็จ')) {
                         if (l.date) {
@@ -737,19 +678,14 @@
                     }
                 });
             });
-
             document.getElementById('kpi-month').innerText = monthLifts;
             document.getElementById('kpi-week').innerText = weekLifts;
             document.getElementById('kpi-total').innerText = total;
             document.getElementById('kpi-completed').innerText = completed;
             document.getElementById('kpi-active').innerText = active;
             document.getElementById('kpi-pending').innerText = pending;
-
             let displayCols = baseCols;
-            if (hideChartCompleted) {
-                displayCols = displayCols.filter(c => globalDatabase[c].currentPouredElev < globalDatabase[c].target);
-            }
-            
+            if (hideChartCompleted) { displayCols = displayCols.filter(c => globalDatabase[c].currentPouredElev < globalDatabase[c].target); }
             if (searchQuery) {
                 displayCols = displayCols.filter(c => {
                     const matchName = c.toLowerCase().includes(searchQuery);
@@ -758,15 +694,8 @@
                     return matchName || matchDate;
                 });
             }
-
-            if (selectedZone === 'ALL' && !searchQuery) {
-                drawSummaryChart();
-                if (summaryBtn) summaryBtn.classList.add('hidden');
-            } else {
-                drawColumnChart(displayCols);
-                if (summaryBtn) summaryBtn.classList.remove('hidden');
-            }
-
+            if (selectedZone === 'ALL' && !searchQuery) { drawSummaryChart(); if (summaryBtn) summaryBtn.classList.add('hidden'); }
+            else { drawColumnChart(displayCols); if (summaryBtn) summaryBtn.classList.remove('hidden'); }
             renderTable(displayCols);
             filterKanban();
             renderZoneSummaryTable();
@@ -775,77 +704,39 @@
         function renderZoneSummaryTable() {
             const tbody = document.getElementById('zoneSummaryTableBody');
             let html = '';
-            let totalTarget = 0;
-            let totalActualCompleted = 0; 
-            
+            let totalTarget = 0, totalActualCompleted = 0; 
             let pendingColumnsList = []; 
-
             const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
             const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
             const sortedZones = [...configZones, ...otherZones];
-
             sortedZones.forEach(zone => {
                 const target = PROJECT_COLUMN_TARGETS[zone] || 0;
                 const actualCompleted = Object.values(globalDatabase).filter(c => c.zone === zone && c.currentPouredElev >= c.target && c.target > 0).length;
-                
                 totalTarget += target;
                 totalActualCompleted += actualCompleted;
-
                 const diff = target - actualCompleted;
                 const displayRemaining = diff > 0 ? diff : 0; 
                 const statusColor = actualCompleted >= target && target > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-bold';
-                
                 const percent = target > 0 ? Math.min((actualCompleted / target) * 100, 100).toFixed(1) : (actualCompleted > 0 ? 100 : 0);
-
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">${zone}</td>
-                        <td class="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-bold">${target}</td>
-                        <td class="px-4 py-3 text-center ${statusColor}">${actualCompleted}</td>
-                        <td class="px-4 py-3 text-center text-amber-600 dark:text-amber-400">${displayRemaining}</td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2">
-                                <div class="progress-bg w-full min-w-[100px]"><div class="progress-bar ${actualCompleted >= target && target > 0 ? 'bg-emerald-500' : 'bg-blue-500'}" style="width: ${percent}%;"></div></div>
-                                <span class="text-xs font-bold w-12 text-right">${percent}%</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"><td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">${zone}</td><td class="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-bold">${target}</td><td class="px-4 py-3 text-center ${statusColor}">${actualCompleted}</td><td class="px-4 py-3 text-center text-amber-600 dark:text-amber-400">${displayRemaining}</td><td class="px-4 py-3"><div class="flex items-center gap-2"><div class="progress-bg w-full min-w-[100px]"><div class="progress-bar ${actualCompleted >= target && target > 0 ? 'bg-emerald-500' : 'bg-blue-500'}" style="width: ${percent}%;"></div></div><span class="text-xs font-bold w-12 text-right">${percent}%</span></div></td></tr>`;
             });
-
             Object.keys(globalDatabase).forEach(colName => {
                 const info = globalDatabase[colName];
-                if (info.currentPouredElev >= info.target && info.target > 0) {
-                    
-                } else if (info.currentPouredElev > 0) {
-                    
-                } else {
-                    pendingColumnsList.push(colName);
-                }
+                if (!(info.currentPouredElev >= info.target && info.target > 0) && !(info.currentPouredElev > 0)) { pendingColumnsList.push(colName); }
             });
-
             tbody.innerHTML = html;
-            
             document.getElementById('sum-target-footer').innerText = totalTarget;
             document.getElementById('sum-actual-footer').innerText = totalActualCompleted;
-            
             const totalDiff = totalTarget - totalActualCompleted;
             document.getElementById('sum-diff-footer').innerText = totalDiff > 0 ? totalDiff : 0;
-            
             const totalPercent = totalTarget > 0 ? ((totalActualCompleted / totalTarget) * 100).toFixed(1) : 0;
             document.getElementById('sum-percent-footer').innerText = `${totalPercent}%`;
-
             const pendingCountText = document.getElementById('pending-count-text');
             const pendingTagsContainer = document.getElementById('pending-tags-container');
-
             if (pendingCountText && pendingTagsContainer) {
                 if (pendingColumnsList.length > 0) {
                     pendingCountText.innerHTML = `รอดำเนินการ ${pendingColumnsList.length} ต้น :`;
-                    
-                    let tagsHtml = pendingColumnsList.map(name => {
-                        return `<span class="bg-orange-100 border border-orange-300 text-orange-700 dark:bg-[#432010] dark:border-[#a13b11] dark:text-[#f97316] text-xs px-3 py-1.5 rounded-md font-bold shadow-sm flex items-center justify-center min-w-[50px] transition-transform hover:scale-105 cursor-default">${name}</span>`;
-                    }).join('');
-                    
+                    let tagsHtml = pendingColumnsList.map(name => `<span class="bg-orange-100 border border-orange-300 text-orange-700 dark:bg-[#432010] dark:border-[#a13b11] dark:text-[#f97316] text-xs px-3 py-1.5 rounded-md font-bold shadow-sm flex items-center justify-center min-w-[50px] transition-transform hover:scale-105 cursor-default">${name}</span>`).join('');
                     pendingTagsContainer.innerHTML = tagsHtml;
                 } else {
                     pendingCountText.innerHTML = `รอดำเนินการ 0 ต้น :`;
@@ -857,240 +748,96 @@
         function renderTable(colNames) {
             const tbody = document.getElementById('progressTableBody');
             document.getElementById('table-count-badge').innerText = `แสดง ${colNames.length} ต้น`;
-            
             const isSearching = document.getElementById('tableSearchInput').value.trim() !== '';
-
             let html = '';
-            
-            if (colNames.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 font-bold">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
-                return;
-            }
-
+            if (colNames.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 font-bold">ไม่พบข้อมูลที่ค้นหา</td></tr>`; return; }
             colNames.sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(col => {
                 const info = globalDatabase[col];
                 const percent = info.target > 0 ? Math.min((info.currentPouredElev / info.target) * 100, 100).toFixed(0) : 0;
-                
                 let datesHtml = '';
-                if (info.lifts && info.lifts.length > 0) {
-                    datesHtml = info.lifts.map(l => `<div class="whitespace-nowrap text-[11px] leading-tight mb-1"><span class="font-bold text-indigo-500 dark:text-indigo-400">L${l.liftNo}:</span> <span class="text-slate-600 dark:text-slate-300">${l.rawDate}</span></div>`).join('');
-                } else if (info.latestDateStr) {
-                    datesHtml = `<div class="whitespace-nowrap text-[11px] leading-tight text-slate-600 dark:text-slate-300">${info.latestDateStr}</div>`;
-                } else {
-                    datesHtml = '-';
-                }
-                
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isSearching ? '' : 'border-b'} border-t border-slate-100 dark:border-slate-800">
-                        <td class="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400">${col}</td>
-                        <td class="px-4 py-3 text-sm">${info.zone}</td>
-                        <td class="px-4 py-3 text-center">+${info.target.toFixed(2)}</td>
-                        <td class="px-4 py-3 text-center font-bold">+${info.currentPouredElev.toFixed(2)}</td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2">
-                                <div class="progress-bg w-full"><div class="progress-bar bg-blue-500" style="width: ${percent}%;"></div></div>
-                                <span class="text-xs font-bold w-10 text-right">${percent}%</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 text-center"><span class="text-xs font-bold px-2 py-1 rounded ${percent==100?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400':'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'}">${info.latestStatus}</span></td>
-                        <td class="px-4 py-3 text-left text-xs">${datesHtml}</td>
-                    </tr>`;
-                
+                if (info.lifts && info.lifts.length > 0) { datesHtml = info.lifts.map(l => `<div class="whitespace-nowrap text-[11px] leading-tight mb-1"><span class="font-bold text-indigo-500 dark:text-indigo-400">L${l.liftNo}:</span> <span class="text-slate-600 dark:text-slate-300">${l.rawDate}</span></div>`).join(''); }
+                else if (info.latestDateStr) { datesHtml = `<div class="whitespace-nowrap text-[11px] leading-tight text-slate-600 dark:text-slate-300">${info.latestDateStr}</div>`; }
+                else { datesHtml = '-'; }
+                html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isSearching ? '' : 'border-b'} border-t border-slate-100 dark:border-slate-800"><td class="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400">${col}</td><td class="px-4 py-3 text-sm">${info.zone}</td><td class="px-4 py-3 text-center">+${info.target.toFixed(2)}</td><td class="px-4 py-3 text-center font-bold">+${info.currentPouredElev.toFixed(2)}</td><td class="px-4 py-3"><div class="flex items-center gap-2"><div class="progress-bg w-full"><div class="progress-bar bg-blue-500" style="width: ${percent}%;"></div></div><span class="text-xs font-bold w-10 text-right">${percent}%</span></div></td><td class="px-4 py-3 text-center"><span class="text-xs font-bold px-2 py-1 rounded ${percent==100?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400':'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'}">${info.latestStatus}</span></td><td class="px-4 py-3 text-left text-xs">${datesHtml}</td></tr>`;
                 if (isSearching) {
                     if (info.remarksList && info.remarksList.length > 0) {
                         info.remarksList.forEach(rmk => {
                             const liftLabel = rmk.liftNo > 0 ? `Lift ${rmk.liftNo}` : 'ทั่วไป';
                             const dateLabel = rmk.date ? ` - ${rmk.date}` : '';
-                            html += `
-                                <tr class="bg-amber-50/40 dark:bg-amber-900/10 border-b border-slate-200 dark:border-slate-700">
-                                    <td colspan="7" class="px-4 py-2 text-sm text-slate-700 dark:text-slate-300">
-                                        <span class="font-bold text-amber-600 dark:text-amber-500 ml-2">📝 หมายเหตุ (${liftLabel}${dateLabel}):</span> ${rmk.text}
-                                    </td>
-                                </tr>`;
+                            html += `<tr class="bg-amber-50/40 dark:bg-amber-900/10 border-b border-slate-200 dark:border-slate-700"><td colspan="7" class="px-4 py-2 text-sm text-slate-700 dark:text-slate-300"><span class="font-bold text-amber-600 dark:text-amber-500 ml-2">📝 หมายเหตุ (${liftLabel}${dateLabel}):</span> ${rmk.text}</td></tr>`;
                         });
                     } else {
-                        html += `
-                                <tr class="bg-slate-50/40 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800">
-                                    <td colspan="7" class="px-4 py-2 text-sm text-slate-400 dark:text-slate-500 italic">
-                                        <span class="ml-2">ไม่มีข้อมูลหมายเหตุ</span>
-                                    </td>
-                                </tr>`;
+                        html += `<tr class="bg-slate-50/40 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800"><td colspan="7" class="px-4 py-2 text-sm text-slate-400 dark:text-slate-500 italic"><span class="ml-2">ไม่มีข้อมูลหมายเหตุ</span></td></tr>`;
                     }
                 }
             });
-            
             tbody.innerHTML = html;
         }
 
         function drawColumnChart(colNames) {
+            colNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             document.getElementById('chart-title').innerHTML = `📈 กราฟระดับความสูงเสารายต้น <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อค้นหาเสา 👆)</span>`;
-            
             const minWidth = Math.max(800, colNames.length * 35); 
             document.getElementById('chart-container').style.width = `${minWidth}px`;
             let maxLifts = 0;
             colNames.forEach(col => { if(globalDatabase[col].lifts.length > maxLifts) maxLifts = globalDatabase[col].lifts.length; });
-
             const isDark = document.documentElement.classList.contains('dark');
             const datasets = [];
-            
             for (let i = 0; i < maxLifts; i++) {
-                datasets.push({
-                    label: `Lift ${i+1}`,
-                    data: colNames.map(col => {
-                        const l = globalDatabase[col].lifts.filter(x => x.status.includes('เท')||x.status.includes('เสร็จ'))[i];
-                        return l ? l.height : 0;
-                    }),
-                    backgroundColor: `hsl(${210 + (i*30)}, 70%, ${isDark ? 60 : 40}%)`,
-                    stack: 'Stack 0'
-                });
+                datasets.push({ label: `Lift ${i+1}`, data: colNames.map(col => { const l = globalDatabase[col].lifts.filter(x => x.status.includes('เท')||x.status.includes('เสร็จ'))[i]; return l ? l.height : 0; }), backgroundColor: `hsl(${210 + (i*30)}, 70%, ${isDark ? 60 : 40}%)`, stack: 'Stack 0' });
             }
-
-            datasets.push({
-                label: 'คงเหลือ (รอเท)',
-                data: colNames.map(col => {
-                    const info = globalDatabase[col];
-                    let remaining = info.target - info.currentPouredElev;
-                    return remaining > 0 ? remaining : 0;
-                }),
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1',
-                borderWidth: 1,
-                borderDash: [4, 4],
-                stack: 'Stack 0'
-            });
-
+            datasets.push({ label: 'คงเหลือ (รอเท)', data: colNames.map(col => { const info = globalDatabase[col]; let remaining = info.target - info.currentPouredElev; return remaining > 0 ? remaining : 0; }), backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)', borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1', borderWidth: 1, borderDash: [4, 4], stack: 'Stack 0' });
             if (chartInstance) chartInstance.destroy();
-            
-            const textColor = isDark ? '#cbd5e1' : '#64748b';
-            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-
+            const textColor = isDark ? '#cbd5e1' : '#64748b', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
             chartInstance = new Chart(document.getElementById('columnChart'), {
-                type: 'bar',
-                data: { labels: colNames, datasets },
+                type: 'bar', data: { labels: colNames, datasets },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { 
-                        x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, 
-                        y: { stacked: true, title: { display: true, color: textColor, text: 'ระดับความสูง (เมตร)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } 
-                    },
-                    plugins: {
-                        legend: { labels: { color: textColor, font: { family: 'Sarabun' } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.raw.toFixed(2) + ' m';
-                                }
-                            },
-                            titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }
-                        }
-                    },
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { stacked: true, title: { display: true, color: textColor, text: 'ระดับความสูง (เมตร)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } },
+                    plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + context.raw.toFixed(2) + ' m' }, titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } } },
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const colName = chart.data.labels[index];
-                            
+                            const colName = chart.data.labels[elements[0].index];
                             document.getElementById('tableSearchInput').value = colName;
                             const tableContent = document.getElementById('table-content-wrapper');
-                            if (tableContent.classList.contains('collapsed')) {
-                                toggleSection('table-content-wrapper', 'toggle-table-btn');
-                            }
-                            updateDashboard();
-                            document.getElementById('table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            if (tableContent.classList.contains('collapsed')) { toggleSection('table-content-wrapper', 'toggle-table-btn'); }
+                            updateDashboard(); document.getElementById('table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
                     },
-                    onHover: (event, elements) => {
-                        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-                    }
+                    onHover: (event, elements) => { event.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
                 }
             });
         }
 
         function drawSummaryChart() {
             document.getElementById('chart-title').innerHTML = `📊 ความคืบหน้าภาพรวมแยกตามโซน <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อดูรายโซน 👆)</span>`;
-            
             const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
             const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
             const allSortedZones = [...configZones, ...otherZones];
-
             const stats = allSortedZones.map(z => {
                 const target = PROJECT_COLUMN_TARGETS[z] || 0;
                 const comp = Object.values(globalDatabase).filter(c => c.zone === z && c.currentPouredElev >= c.target && c.target > 0).length;
                 const remaining = target - comp > 0 ? target - comp : 0;
-
                 return { zone: z, comp: comp, remaining: remaining };
             });
-
             if (chartInstance) chartInstance.destroy();
             document.getElementById('chart-container').style.width = '100%';
-            
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#cbd5e1' : '#64748b';
-            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-            
+            const isDark = document.documentElement.classList.contains('dark'), textColor = isDark ? '#cbd5e1' : '#64748b', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
             chartInstance = new Chart(document.getElementById('columnChart'), {
-                type: 'bar',
-                data: { 
-                    labels: stats.map(s=>s.zone), 
-                    datasets: [
-                        { 
-                            label: 'แล้วเสร็จ (ต้น)', 
-                            data: stats.map(s=>s.comp), 
-                            backgroundColor: '#10b981',
-                            stack: 'Stack 0'
-                        },
-                        {
-                            label: 'คงเหลือ (เป้าหมาย)',
-                            data: stats.map(s=>s.remaining),
-                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)',
-                            borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1',
-                            borderWidth: 1,
-                            borderDash: [4, 4],
-                            stack: 'Stack 0'
-                        }
-                    ] 
-                },
+                type: 'bar', data: { labels: stats.map(s=>s.zone), datasets: [{ label: 'แล้วเสร็จ (ต้น)', data: stats.map(s=>s.comp), backgroundColor: '#10b981', stack: 'Stack 0' }, { label: 'คงเหลือ (เป้าหมาย)', data: stats.map(s=>s.remaining), backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)', borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1', borderWidth: 1, borderDash: [4, 4], stack: 'Stack 0' }] },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { 
-                        y: { 
-                            stacked: true, 
-                            title: { display: true, color: textColor, text: 'จำนวนเสา (ต้น)', font: { family: 'Sarabun' } },
-                            ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, 
-                            grid: { color: gridColor } 
-                        },
-                        x: { 
-                            stacked: true, 
-                            ticks: { color: textColor, font: { family: 'Sarabun' } }, 
-                            grid: { display: false } 
-                        }
-                    },
-                    plugins: {
-                        legend: { labels: { color: textColor, font: { family: 'Sarabun' } } },
-                        tooltip: { 
-                            titleFont: { family: 'Sarabun' }, 
-                            bodyFont: { family: 'Sarabun' },
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.raw + ' ต้น';
-                                }
-                            }
-                        }
-                    },
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { y: { stacked: true, title: { display: true, color: textColor, text: 'จำนวนเสา (ต้น)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, grid: { color: gridColor } }, x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } } },
+                    plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { label: (context) => context.dataset.label + ': ' + context.raw + ' ต้น' } } },
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const zoneName = chart.data.labels[index];
+                            const zoneName = chart.data.labels[elements[0].index];
                             document.getElementById('zoneSelector').value = zoneName;
                             document.getElementById('tableSearchInput').value = '';
-                            updateDashboard();
-                            document.getElementById('chart-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            updateDashboard(); document.getElementById('chart-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     },
-                    onHover: (event, elements) => {
-                        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-                    }
+                    onHover: (event, elements) => { event.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
                 }
             });
         }
@@ -1101,158 +848,125 @@
             end.setHours(23,59,59);
             const board = document.getElementById('kanban-board');
             board.innerHTML = '';
-            [1,2,3,4,5,6,0].forEach(d => {
-                board.innerHTML += `<div class="k-col"><div class="k-header day-${d}">${days[d]}</div><div id="k-tasks-${d}"></div></div>`;
-            });
-
+            [1,2,3,4,5,6,0].forEach(d => { board.innerHTML += `<div class="k-col"><div class="k-header day-${d}">${days[d]}</div><div id="k-tasks-${d}"></div></div>`; });
             Object.keys(globalDatabase).forEach(col => {
                 const info = globalDatabase[col];
                 const percent = info.target > 0 ? Math.min((info.currentPouredElev / info.target) * 100, 100).toFixed(0) : 0;
                 const statusClass = percent == 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400';
-
                 info.lifts.forEach(l => {
                     if (l.date && l.date >= start && l.date <= end && (l.status.includes('เท')||l.status.includes('เสร็จ'))) {
                         const day = l.date.getDay();
                         const displayDate = l.date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-                        
-                        document.getElementById(`k-tasks-${day}`).innerHTML += `
-                            <div class="k-card card-${day} cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all" onclick="searchFromKanban('${col}')" title="คลิกเพื่อดูรายละเอียดเสาต้นนี้">
-                                <div class="flex items-center gap-2 mb-1.5">
-                                    <span class="text-base drop-shadow-sm text-pink-500">📌</span>
-                                    <span class="font-bold text-base text-slate-800 dark:text-slate-100">${col}</span>
-                                </div>
-                                <div class="flex items-center gap-2 mb-1.5">
-                                    <span class="text-[11px] font-bold px-2 py-0.5 rounded ${statusClass}">${info.latestStatus}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm drop-shadow-sm text-blue-400">📅</span>
-                                    <span class="text-sm font-medium text-slate-500 dark:text-slate-400">${displayDate}</span>
-                                </div>
-                            </div>`;
+                        document.getElementById(`k-tasks-${day}`).innerHTML += `<div class="k-card card-${day} cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all" onclick="searchFromKanban('${col}')" title="คลิกเพื่อดูรายละเอียดเสาต้นนี้"><div class="flex items-center gap-2 mb-1.5"><span class="text-base drop-shadow-sm text-pink-500">📌</span><span class="font-bold text-base text-slate-800 dark:text-slate-100">${col}</span></div><div class="flex items-center gap-2 mb-1.5"><span class="text-[11px] font-bold px-2 py-0.5 rounded ${statusClass}">${info.latestStatus}</span></div><div class="flex items-center gap-2"><span class="text-sm drop-shadow-sm text-blue-400">📅</span><span class="text-sm font-medium text-slate-500 dark:text-slate-400">${displayDate}</span></div></div>`;
                     }
                 });
             });
         }
 
+        // 🌟 ปรับปรุง: ระบบรวบรวมสถิติแยกตาม "ครั้งที่เท" และ "เสาที่เสร็จ 100%"
         function updateExecutiveSummary(displayCols) {
-            const stats = {};
+            const pourStats = {};
+            const compStats = {};
             
+            // 1. รวบรวมสถิติการเท (Lifts)
             displayCols.forEach(col => {
                 const info = globalDatabase[col];
                 info.lifts.forEach(l => {
                     if (l.date && (l.status.includes('เท')||l.status.includes('เสร็จ'))) {
                         const key = `${l.date.getFullYear()}-${String(l.date.getMonth()+1).padStart(2,'0')}`;
-                        if(!stats[key]) stats[key] = { label: `${monthNames[l.date.getMonth()]} ${l.date.getFullYear()+543}`, count: 0, y: l.date.getFullYear(), m: l.date.getMonth() };
-                        stats[key].count++;
+                        if(!pourStats[key]) pourStats[key] = { label: `${monthNames[l.date.getMonth()]} ${l.date.getFullYear()+543}`, count: 0, y: l.date.getFullYear(), m: l.date.getMonth() };
+                        pourStats[key].count++;
                     }
                 });
+                
+                // 2. รวบรวมสถิติเสาที่เสร็จ 100% (Completed Columns)
+                if (info.currentPouredElev >= info.target && info.target > 0) {
+                    let cumulativeHeight = 0;
+                    let completionDate = null;
+                    info.lifts.forEach(l => {
+                        if (l.status.includes('เท') || l.status.includes('เสร็จ')) {
+                            cumulativeHeight += l.height;
+                            if (cumulativeHeight >= info.target && !completionDate) completionDate = l.date;
+                        }
+                    });
+                    if (completionDate) {
+                        const key = `${completionDate.getFullYear()}-${String(completionDate.getMonth()+1).padStart(2,'0')}`;
+                        if(!compStats[key]) compStats[key] = { label: `${monthNames[completionDate.getMonth()]} ${completionDate.getFullYear()+543}`, count: 0, y: completionDate.getFullYear(), m: completionDate.getMonth() };
+                        compStats[key].count++;
+                    }
+                }
             });
             
-            monthlyStatsData = Object.values(stats).sort((a,b) => a.y - b.y || a.m - b.m);
-            const s1 = document.getElementById('monthSelect1');
-            const s2 = document.getElementById('monthSelect2');
-            
+            monthlyStatsData = Object.values(pourStats).sort((a,b) => a.y - b.y || a.m - b.m);
+            monthlyCompletedStatsData = Object.values(compStats).sort((a,b) => a.y - b.y || a.m - b.m);
+
+            const s1 = document.getElementById('monthSelect1'), s2 = document.getElementById('monthSelect2');
             if (monthlyStatsData.length === 0) {
-                s1.innerHTML = '<option value="">ไม่มีข้อมูล</option>';
-                s2.innerHTML = '<option value="">ไม่มีข้อมูล</option>';
-                document.getElementById('exec-summary-text').innerHTML = '<span class="text-slate-400 font-bold">⚠️ ไม่พบประวัติการเทเสา (ที่มีระบุวันที่) ในฐานข้อมูล</span>';
+                s1.innerHTML = '<option value="">ไม่มีข้อมูล</option>'; s2.innerHTML = '<option value="">ไม่มีข้อมูล</option>';
+                document.getElementById('exec-summary-text').innerHTML = '<span class="text-slate-400 font-bold">⚠️ ไม่พบข้อมูลประวัติ</span>';
                 if (monthlyChartInstance) monthlyChartInstance.destroy();
+                if (monthlyCompletedChartInstance) monthlyCompletedChartInstance.destroy();
                 return;
             }
-
             s1.innerHTML = ''; s2.innerHTML = '';
-            monthlyStatsData.forEach((d,i) => {
-                const opt = `<option value="${i}">${d.label}</option>`;
-                s1.innerHTML += opt; s2.innerHTML += opt;
-            });
-            
-            if (monthlyStatsData.length >= 2) { 
-                s1.value = monthlyStatsData.length-2; 
-                s2.value = monthlyStatsData.length-1; 
-            } else {
-                s1.value = 0; 
-                s2.value = 0; 
-            }
-            
+            monthlyStatsData.forEach((d,i) => { const opt = `<option value="${i}">${d.label}</option>`; s1.innerHTML += opt; s2.innerHTML += opt; });
+            if (monthlyStatsData.length >= 2) { s1.value = monthlyStatsData.length-2; s2.value = monthlyStatsData.length-1; } 
+            else { s1.value = 0; s2.value = 0; }
             compareMonthsAction(true);
         }
 
         function compareMonthsAction(init = false) {
-            if (monthlyStatsData.length === 0) return;
-            
-            const val1 = document.getElementById('monthSelect1').value;
-            const val2 = document.getElementById('monthSelect2').value;
-            
+            const val1 = document.getElementById('monthSelect1').value, val2 = document.getElementById('monthSelect2').value;
             if (val1 === "" || val2 === "") return;
-
-            const idx1 = parseInt(val1);
-            const idx2 = parseInt(val2);
+            const idx1 = parseInt(val1), idx2 = parseInt(val2);
             
-            if (isNaN(idx1) || isNaN(idx2)) return;
+            const isDark = document.documentElement.classList.contains('dark'), hlColor = 'text-slate-800 dark:text-white';
 
-            const d1 = monthlyStatsData[idx1];
-            const d2 = monthlyStatsData[idx2];
-            
-            if (!d1 || !d2) return;
-
-            const diff = d2.count - d1.count;
-            const pct = d1.count > 0 ? (Math.abs(diff)/d1.count*100).toFixed(2) : (d2.count > 0 ? 100 : 0);
-            
-            let statusText = diff > 0 ? 'เพิ่มขึ้น 📈' : diff < 0 ? 'ลดลง 📉' : 'คงที่ ➖';
-            let statusColor = diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : diff < 0 ? 'text-red-500 dark:text-[#f87171]' : 'text-slate-600 dark:text-slate-400';
-            
-            const hlColor = 'text-slate-800 dark:text-white';
-
-            if (idx1 === idx2) {
-                document.getElementById('exec-summary-text').innerHTML = `ผลการดำเนินงานเดือน <b class="${hlColor}">${d2.label}</b> สามารถทำผลงานได้ <b class="${hlColor}">${d2.count} ต้น</b>`;
-            } else {
-                document.getElementById('exec-summary-text').innerHTML = `ผลการดำเนินงานเดือน <b class="${hlColor}">${d2.label}</b> สามารถทำผลงานได้ <b class="${hlColor}">${d2.count} ต้น</b> เมื่อนำมาเปรียบเทียบกับเดือน <b class="${hlColor}">${d1.label}</b> (ที่ทำได้ ${d1.count} ต้น)<br>พบว่าปริมาณงาน <b class="${statusColor}">${statusText} จำนวน ${Math.abs(diff)} ต้น</b> คิดเป็น <b class="${hlColor}">${pct}%</b>`;
+            // --- จัดการชุดข้อมูลการเท (Lifts) ---
+            const d1 = monthlyStatsData[idx1], d2 = monthlyStatsData[idx2];
+            if (d1 && d2) {
+                const diff = d2.count - d1.count;
+                const pct = d1.count > 0 ? (Math.abs(diff)/d1.count*100).toFixed(2) : (d2.count > 0 ? 100 : 0);
+                let stTxt = diff > 0 ? 'เพิ่มขึ้น 📈' : diff < 0 ? 'ลดลง 📉' : 'คงที่ ➖';
+                let stCol = diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : diff < 0 ? 'text-red-500' : 'text-slate-600';
+                if (idx1 === idx2) document.getElementById('exec-summary-text').innerHTML = `สถิติเดือน <b class="${hlColor}">${d2.label}</b> มีการเทคอนกรีตทั้งหมด <b class="${hlColor}">${d2.count} ครั้ง</b>`;
+                else document.getElementById('exec-summary-text').innerHTML = `สถิติเดือน <b class="${hlColor}">${d2.label}</b> เทได้ <b class="${hlColor}">${d2.count} ครั้ง</b> เทียบกับเดือน <b class="${hlColor}">${d1.label}</b> (ที่ทำได้ ${d1.count} ครั้ง)<br>พบว่าปริมาณการเท <b class="${stCol}">${stTxt} จำนวน ${Math.abs(diff)} ครั้ง</b> คิดเป็น <b class="${hlColor}">${pct}%</b>`;
+                renderMonthlyChart('monthlyChart', init ? monthlyStatsData : (idx1===idx2 ? [d1] : [d1, d2]), 'จำนวนครั้งที่เทคอนกรีต (Lifts)', true);
             }
+
+            // --- จัดการชุดข้อมูลเสาเสร็จสมบูรณ์ (100% Completed) ---
+            // หมายเหตุ: ใช้เดือนเดียวกันกับที่เลือกไว้ด้านบน
+            const findMonthData = (dataArr, label) => dataArr.find(d => d.label === label) || { label: label, count: 0 };
+            const c1 = findMonthData(monthlyCompletedStatsData, d1.label);
+            const c2 = findMonthData(monthlyCompletedStatsData, d2.label);
+
+            const cDiff = c2.count - c1.count;
+            const cPct = c1.count > 0 ? (Math.abs(cDiff)/c1.count*100).toFixed(2) : (c2.count > 0 ? 100 : 0);
+            let cStTxt = cDiff > 0 ? 'เพิ่มขึ้น 📈' : cDiff < 0 ? 'ลดลง 📉' : 'คงที่ ➖';
+            let cStCol = cDiff > 0 ? 'text-emerald-600 dark:text-emerald-400' : cDiff < 0 ? 'text-red-500' : 'text-slate-600';
             
-            renderMonthlyChart(init ? monthlyStatsData : (idx1===idx2 ? [d1] : [d1, d2]));
+            if (idx1 === idx2) document.getElementById('exec-summary-completed-text').innerHTML = `สถิติเดือน <b class="${hlColor}">${c2.label}</b> มีเสาที่แล้วเสร็จ 100% ทั้งหมด <b class="${hlColor}">${c2.count} ต้น</b>`;
+            else document.getElementById('exec-summary-completed-text').innerHTML = `สถิติเดือน <b class="${hlColor}">${c2.label}</b> เสร็จ <b class="${hlColor}">${c2.count} ต้น</b> เทียบกับเดือน <b class="${hlColor}">${c1.label}</b> (ที่เสร็จ ${c1.count} ต้น)<br>พบว่าจำนวนเสาเสร็จสมบูรณ์ <b class="${cStCol}">${cStTxt} จำนวน ${Math.abs(cDiff)} ต้น</b> คิดเป็น <b class="${hlColor}">${cPct}%</b>`;
+            
+            renderMonthlyChart('monthlyCompletedChart', init ? monthlyCompletedStatsData : (idx1===idx2 ? [c1] : [c1, c2]), 'จำนวนเสาที่แล้วเสร็จ 100% (ต้น)', false);
         }
 
-        function resetMonthlyChart() { 
-            if (monthlyStatsData.length === 0) return;
-            
-            const s1 = document.getElementById('monthSelect1');
-            const s2 = document.getElementById('monthSelect2');
-            
-            if (monthlyStatsData.length >= 2) { 
-                s1.value = monthlyStatsData.length-2; 
-                s2.value = monthlyStatsData.length-1; 
-            } else if (monthlyStatsData.length === 1) {
-                s1.value = 0; 
-                s2.value = 0; 
-            }
-            
-            compareMonthsAction(true);
-        }
-
-        function renderMonthlyChart(data) {
-            if (monthlyChartInstance) monthlyChartInstance.destroy();
-            
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#cbd5e1' : '#64748b';
-            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-
-            monthlyChartInstance = new Chart(document.getElementById('monthlyChart'), {
-                type: 'bar',
-                data: { labels: data.map(d=>d.label), datasets: [{ label: 'จำนวนผลงานเสาเข็มดำเนินการแล้ว (ต้น)', data: data.map(d=>d.count), backgroundColor: '#22c55e', borderRadius: 4 }] },
+        function renderMonthlyChart(canvasId, data, label, isPourChart) {
+            let instance = isPourChart ? monthlyChartInstance : monthlyCompletedChartInstance;
+            if (instance) instance.destroy();
+            const isDark = document.documentElement.classList.contains('dark'), textColor = isDark ? '#cbd5e1' : '#64748b', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            const newInstance = new Chart(document.getElementById(canvasId), {
+                type: 'bar', data: { labels: data.map(d=>d.label), datasets: [{ label: label, data: data.map(d=>d.count), backgroundColor: isPourChart ? '#10b981' : '#22c55e', borderRadius: 4 }] },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } },
-                        y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun', stepSize: 10 } }, grid: { color: gridColor } }
-                    },
-                    plugins: {
-                        legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun' } } }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun', stepSize: 5 } }, grid: { color: gridColor } } },
+                    plugins: { legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun' } } } }
                 }
             });
+            if (isPourChart) monthlyChartInstance = newInstance; else monthlyCompletedChartInstance = newInstance;
         }
 
+        function resetMonthlyChart() { if (monthlyStatsData.length === 0) return; updateExecutiveSummary(Object.keys(globalDatabase)); }
     </script>
 </body>
 </html>
