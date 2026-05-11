@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Dashboard v1.7 - พี่เอ็กซ์</title>
+    <title>Bored Pile Dashboard v1.9</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -101,7 +101,7 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Dashboard เสาเข็มเจาะ V1.7</h1>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Dashboard เสาเข็มเจาะ V1.9</h1>
             <p class="text-gray-500 dark:text-gray-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto no-print">
@@ -200,6 +200,12 @@
                     <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">ถึง</label>
                     <input type="date" id="endDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
                     <button onclick="filterKanban()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
+                    <button onclick="setLastWeek()" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-md font-bold transition-colors text-sm">
+                        ⏪ สัปดาห์ก่อน
+                    </button>
+                    <button onclick="setThisWeek()" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-md font-bold transition-colors text-sm">
+                        ▶️ สัปดาห์นี้
+                    </button>
                 </div>
 
                 <div id="kanban-status" class="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-4 border border-green-200 dark:border-green-800 no-print">
@@ -207,24 +213,6 @@
                 </div>
 
                 <div class="kanban-grid" id="kanban-board"></div>
-            </div>
-        </div>
-
-        <div class="glass-card p-6 mb-8 border-t-4 border-yellow-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">📊 ความคืบหน้าภาพรวมแยกตามโซน</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 no-print">(เปรียบเทียบผลงานที่ทำได้ กับเป้าหมายคงเหลือ)</p>
-                </div>
-                <button onclick="toggleSection('progress-content', 'toggle-progress-btn')" id="toggle-progress-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
-                    🔽 ซ่อนเนื้อหา
-                </button>
-            </div>
-            
-            <div id="progress-content" class="collapsible-content pt-2">
-                <div class="w-full relative" style="height: 400px;">
-                    <canvas id="progressChart"></canvas>
-                </div>
             </div>
         </div>
 
@@ -261,6 +249,24 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 mb-8 border-t-4 border-yellow-500">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">📊 ความคืบหน้าภาพรวมแยกตามโซน</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 no-print">(เปรียบเทียบผลงานที่ทำได้ กับเป้าหมายคงเหลือ)</p>
+                </div>
+                <button onclick="toggleSection('progress-content', 'toggle-progress-btn')" id="toggle-progress-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
+                    🔽 ซ่อนเนื้อหา
+                </button>
+            </div>
+            
+            <div id="progress-content" class="collapsible-content pt-2">
+                <div class="w-full relative" style="height: 400px;">
+                    <canvas id="progressChart"></canvas>
                 </div>
             </div>
         </div>
@@ -479,6 +485,43 @@
 
         let currentWeekStart, currentWeekEnd, currentMonthKey;
 
+        // --- 🌟 ฟังก์ชันแปลงวันที่กลาง ---
+        function formatDateForInput(d) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // --- 🌟 ฟังก์ชันเลื่อนสัปดาห์ ---
+        function setLastWeek() {
+            const startInput = document.getElementById('startDate').value;
+            const endInput = document.getElementById('endDate').value;
+            if (!startInput || !endInput) return;
+            
+            const [sYear, sMonth, sDay] = startInput.split('-');
+            const startDate = new Date(parseInt(sYear), parseInt(sMonth) - 1, parseInt(sDay), 0, 0, 0, 0);
+            
+            const [eYear, eMonth, eDay] = endInput.split('-');
+            const endDate = new Date(parseInt(eYear), parseInt(eMonth) - 1, parseInt(eDay), 23, 59, 59, 999);
+            
+            startDate.setDate(startDate.getDate() - 7);
+            endDate.setDate(endDate.getDate() - 7);
+            
+            document.getElementById('startDate').value = formatDateForInput(startDate);
+            document.getElementById('endDate').value = formatDateForInput(endDate);
+            filterKanban();
+        }
+
+        function setThisWeek() {
+            if (currentWeekStart && currentWeekEnd) {
+                document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
+                document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
+                filterKanban();
+            }
+        }
+        // ---------------------------------
+
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
         const OTHER_WORKS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
 
@@ -493,12 +536,7 @@
             currentWeekEnd = new Date(currentWeekStart);
             currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
             currentWeekEnd.setHours(23, 59, 59, 999);
-            const formatDateForInput = (d) => {
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            };
+            
             const monthLabelText = `${monthNames[today.getMonth()]} ${today.getFullYear() + 543}`;
             document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
             document.getElementById('kpi-week-label').innerText = `สัปดาห์ปัจจุบัน`;
@@ -832,7 +870,6 @@
             });
         }
 
-        // --- 🌟 อัปเดตฟังก์ชัน filterKanban เพื่อใส่ onclick ไว้ที่การ์ด ---
         function filterKanban() {
             const startVal = document.getElementById('startDate').value, endVal = document.getElementById('endDate').value;
             if(!startVal || !endVal) return;
@@ -854,7 +891,6 @@
                     const diaIndex = shortProjName.toLowerCase().indexOf('-dia');
                     if (diaIndex !== -1) shortProjName = shortProjName.substring(0, diaIndex).trim();
                     
-                    // ปรับแต่งให้การ์ดคลิกได้ พร้อมเอฟเฟกต์ hover 
                     document.getElementById(`k-tasks-${dayIndex}`).innerHTML += `
                         <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all" onclick="searchFromKanban('${shortProjName}')" title="คลิกเพื่อดูรายละเอียด">
                             <div class="font-bold text-sm mb-1 text-gray-800 dark:text-gray-100">📌 ${shortProjName}</div>
