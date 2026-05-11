@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบริหารจัดการโครงการ</title>
+    <title>ระบบบริหารจัดการโครงการ - ทางพิเศษฉลองรัฐ</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -21,6 +21,7 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); 
         }
         
+        /* คำนวณความสูง: จอทั้งหมด - (TopBar 40px + Header 70px) = 110px */
         #content-frame { 
             width: 100%; 
             height: calc(100vh - 110px); 
@@ -33,16 +34,16 @@
 <body class="text-slate-800 flex flex-col h-screen">
 
     <!-- 1. ส่วนชื่อโครงการ (Top Bar) - จัดกึ่งกลาง -->
-    <div class="bg-indigo-900 text-white h-10 flex items-center justify-center px-4 shadow-inner text-center">
+    <div class="bg-indigo-900 text-white h-10 flex items-center justify-center px-4 shadow-inner text-center z-40">
         <span class="text-xs md:text-sm lg:text-base font-semibold tracking-wide">
             โครงการก่อสร้างทางพิเศษฉลองรัฐส่วนต่อขยาย (ช่วงจตุโชติ - ถนนลำลูกกา)
         </span>
     </div>
 
-    <!-- 2. ส่วนเมนูนำทาง (Navigation Bar) - ปรับเป็นจัดกึ่งกลาง -->
+    <!-- 2. ส่วนเมนูนำทาง (Navigation Bar) - จัดกึ่งกลาง -->
     <header class="bg-white shadow-md z-30 h-[70px] px-4 flex items-center justify-center border-b border-slate-200">
         
-        <!-- Desktop Menu: จัดกึ่งกลางด้วยการไม่ใช้ justify-between -->
+        <!-- Desktop Menu -->
         <div class="hidden md:flex items-center gap-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
             <button onclick="loadDashboard('BoredPile_App.html', this)" class="nav-btn px-5 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-200">
                 🏗️ เสาเข็มเจาะ
@@ -58,14 +59,14 @@
             </button>
         </div>
 
-        <!-- Mobile Menu Button: จัดกึ่งกลางบนมือถือ -->
-        <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden px-6 py-2 rounded-lg bg-slate-100 text-slate-600 font-bold border border-slate-200 text-sm shadow-sm active:bg-slate-200">
+        <!-- Mobile Menu Button -->
+        <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden px-6 py-2 rounded-lg bg-slate-100 text-slate-600 font-bold border border-slate-200 text-sm shadow-sm">
             ☰ เลือกเมนูระบบ
         </button>
 
     </header>
 
-    <!-- Mobile Menu Overlay (แสดงใต้ Header) -->
+    <!-- Mobile Menu Overlay -->
     <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 shadow-2xl absolute w-full z-20 top-[110px]">
         <div class="flex flex-col p-2 gap-1 text-center">
             <button onclick="loadDashboard('BoredPile_App.html', this, true)" class="mobile-nav-btn py-4 rounded-lg text-sm font-bold">
@@ -83,34 +84,40 @@
         </div>
     </div>
 
-    <!-- 3. พื้นที่แสดงเนื้อหา (Content Area) -->
+    <!-- 3. พื้นที่แสดงเนื้อหา (Iframe Area) -->
     <main class="flex-1 w-full bg-slate-200 relative overflow-hidden">
         <iframe id="content-frame" src="about:blank" title="Viewer" allowfullscreen></iframe>
     </main>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const lastPage = localStorage.getItem('last-page') || 'BoredPile_App.html';
-            loadDashboard(lastPage);
-        });
-
+        // ฟังก์ชันโหลดหน้า Dashboard พร้อมระบบป้องกัน Cache (Cache Buster)
         function loadDashboard(fileName, btnElement, isMobile = false) {
             const iframe = document.getElementById('content-frame');
-            if (iframe.src.includes(fileName) && fileName !== 'about:blank') return;
+            
+            // สร้าง Timestamp เพื่อทำให้ URL เปลี่ยนไปทุกครั้งที่โหลด (ป้องกันการจำหน้าเก่า)
+            const cacheBuster = '?t=' + Date.now();
+            const finalUrl = fileName + cacheBuster;
 
+            // เอฟเฟกต์ Fade Out เมื่อเริ่มโหลด
             iframe.style.opacity = '0';
 
             setTimeout(() => {
-                iframe.src = fileName;
+                iframe.src = finalUrl;
+                
+                // บันทึกชื่อไฟล์จริง (ไม่ติด timestamp) ลง localStorage
                 localStorage.setItem('last-page', fileName);
+                
+                // อัปเดตสีปุ่ม
                 updateActiveButtons(fileName);
                 
+                // ปิดเมนูมือถือ (ถ้าเปิดอยู่)
                 if (isMobile) {
                     document.getElementById('mobile-menu').classList.add('hidden');
                 }
             }, 50);
         }
 
+        // ฟังก์ชันจัดการสถานะ Active ของปุ่ม
         function updateActiveButtons(fileName) {
             const allBtns = document.querySelectorAll('.nav-btn, .mobile-nav-btn');
             
@@ -129,6 +136,13 @@
             });
         }
 
+        // เมื่อหน้าเว็บหลักโหลดเสร็จ ให้เรียกหน้าล่าสุด
+        window.addEventListener('DOMContentLoaded', () => {
+            const lastPage = localStorage.getItem('last-page') || 'BoredPile_App.html';
+            loadDashboard(lastPage);
+        });
+
+        // เมื่อ Iframe โหลดเนื้อหาข้างในเสร็จ ให้ Fade In กลับมา
         document.getElementById('content-frame').addEventListener('load', function() {
             this.style.opacity = '1';
         });
