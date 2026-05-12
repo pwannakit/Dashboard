@@ -97,7 +97,6 @@
                 const pileCsvText = await pileResponse.text();
                 const sonicGroutCsvText = await sonicGroutResponse.text();
 
-                // อุดรอยรั่วที่ 1: สั่ง PapaParse ให้ trim ช่องว่างตรง Header ทิ้งให้หมด
                 const parseConfig = { 
                     header: true, 
                     skipEmptyLines: true,
@@ -110,33 +109,37 @@
                 processData(pileData, sonicGroutData);
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById("zone-status").innerHTML = '<span style="color:red;">การเชื่อมต่อล้มเหลว โปรดตรวจสอบ Link Google Sheet</span>';
-                document.getElementById("ramp-status").innerHTML = '<span style="color:red;">การเชื่อมต่อล้มเหลว โปรดตรวจสอบ Link Google Sheet</span>';
+                document.getElementById("zone-status").innerHTML = '<span style="color:red;">ไม่สามารถโหลดข้อมูลได้</span>';
+                document.getElementById("ramp-status").innerHTML = '<span style="color:red;">ไม่สามารถโหลดข้อมูลได้</span>';
             }
         }
 
-        // อุดรอยรั่วที่ 2: ฟังก์ชันอ่านวันที่แบบยืดหยุ่น ป้องกัน Timezone เพี้ยน
+        // ตัวแปลงวันที่แบบใหม่ อุดรอยรั่วข้อมูลขยะ (NaN) 100%
         function parseDateToYMD(dStr) {
             if (!dStr) return null;
             dStr = dStr.trim();
+            if (dStr === "") return null;
             
-            // กรณีเจอรูปแบบมี / เช่น 11/05/2026
             if(dStr.includes('/')) {
                 const parts = dStr.split('/');
-                let day = parseInt(parts[0]);
-                let month = parseInt(parts[1]);
-                let year = parseInt(parts[2]);
+                if(parts.length < 3) return null; // ข้อมูลไม่ครบ
+                
+                let p1 = parseInt(parts[0], 10);
+                let p2 = parseInt(parts[1], 10);
+                let p3 = parseInt(parts[2].split(' ')[0], 10); // ตัดเวลาทิ้งเผื่อติดมา
 
-                if (month > 12) { // สลับวัน-เดือน เผื่อ Sheet ส่งมากลับหน้าหลัง
-                    let temp = month; month = day; day = temp;
-                }
-                if (year < 100) year += 2000; // แปลงปี 26 เป็น 2026
-                if (year > 2500) year -= 543; // แปลงปี พ.ศ. เป็น ค.ศ.
+                if (isNaN(p1) || isNaN(p2) || isNaN(p3)) return null;
+
+                let day, month, year = p3;
+                if (p2 > 12) { month = p1; day = p2; } 
+                else { day = p1; month = p2; }
+
+                if (year < 100) year += 2000; 
+                if (year > 2500) year -= 543; 
 
                 return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             } 
             
-            // กรณีรูปแบบอื่นๆ
             const d = new Date(dStr);
             if (isNaN(d.getTime())) return null;
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -158,11 +161,9 @@
                 }
             }
 
-            // อุดรอยรั่วที่ 3: Regex ดักคำว่า Zone หรือ Z (เช่น Z4, Z-4, Zone4) และ Ramp
             const regexZone = /(?:ZONE|Z)[-\s]*(\d)/i;
             const regexRamp = /(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/i;
 
-            // --- งานเสาเข็ม (ใช้วันที่เริ่มงาน) ---
             pileData.forEach(row => {
                 const targetDate = row['วันที่เริ่มงาน'];
                 const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim() : "";
@@ -189,7 +190,6 @@
                 }
             });
 
-            // --- งาน Sonic & Grouting ---
             sonicGroutData.forEach(row => {
                  const startDate = row['วันที่เริ่มงาน'];
                  const finishDate = row['วันที่เสร็จงานจริงๆ'];
@@ -232,9 +232,9 @@
         }
 
         function renderTables(dailySummary) {
-            const sortedYMDs = Object.keys(dailySummary).sort();
+            // หัวใจหลักในการแก้บั๊ก: กรองเอาเฉพาะข้อมูลที่มีรูปแบบ YYYY-MM-DD เท่านั้น ขยะจะถูกตัดทิ้งหมด
+            const sortedYMDs = Object.keys(dailySummary).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
             
-            // ป้องกันเออเรอร์กรณีไม่มีข้อมูลหลุดมาถึงขั้นตอนนี้เลย
             if (sortedYMDs.length === 0) {
                 document.getElementById("zone-status").innerHTML = '<span style="color:red;">ไม่พบข้อมูลวันที่ หรือรูปแบบข้อมูลไม่ตรงกัน</span>';
                 document.getElementById("ramp-status").innerHTML = '<span style="color:red;">ไม่พบข้อมูลวันที่ หรือรูปแบบข้อมูลไม่ตรงกัน</span>';
@@ -258,14 +258,14 @@
             // ตาราง 7 วัน
             const zoneDatesYMD = [];
             for(let i=6; i>=0; i--) {
-                const d = new Date(parseInt(maxYear), parseInt(maxMonth) - 1, parseInt(maxDay) + 2 - i);
+                const d = new Date(parseInt(maxYear, 10), parseInt(maxMonth, 10) - 1, parseInt(maxDay, 10) + 2 - i);
                 zoneDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
             }
 
             // ตาราง 4 วัน
             const rampDatesYMD = [];
             for(let i=3; i>=0; i--) {
-                const d = new Date(parseInt(maxYear), parseInt(maxMonth) - 1, parseInt(maxDay) + 2 - i);
+                const d = new Date(parseInt(maxYear, 10), parseInt(maxMonth, 10) - 1, parseInt(maxDay, 10) + 2 - i);
                 rampDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
             }
 
@@ -289,7 +289,7 @@
             function formatDisplayDate(ymd) {
                 const [year, month, day] = ymd.split('-');
                 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                return `${parseInt(day)} ${months[parseInt(month)-1]} ${year.slice(-2)}`;
+                return `${parseInt(day, 10)} ${months[parseInt(month, 10)-1]} ${year.slice(-2)}`;
             }
 
             const val = (number) => number === 0 ? '' : number;
