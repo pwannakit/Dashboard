@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foundation Dashboard V1.5.1 - พี่เอ็กซ์</title>
+    <title>Foundation Dashboard V1.5.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -38,7 +38,7 @@
         .hide { display: none !important; }
         
         .kanban-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 20px; }
-        .k-col { background: #f1f5f9; border-radius: 12px; padding: 10px; min-height: 400px; transition: 0.3s; }
+        .k-col { background: #f8fafc; border-radius: 12px; padding: 10px; min-height: 400px; transition: 0.3s; }
         .dark .k-col { background: #1e293b; }
         .k-header { text-align: center; font-weight: bold; color: white; padding: 10px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
@@ -75,8 +75,8 @@
 
         @media print {
             body { background-color: #ffffff !important; color: #000000 !important; }
-            .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e5e7eb !important; }
-            .glass-card { box-shadow: none !important; border: 1px solid #e5e7eb !important; break-inside: avoid; margin-bottom: 24px; }
+            .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
+            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: 24px; }
             .no-print { display: none !important; }
             .hide-on-print { display: none !important; }
             .glass-card:has(.collapsed) { display: none !important; }
@@ -92,21 +92,21 @@
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
-<body class="text-gray-800 bg-slate-50 p-6">
+<body class="text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 p-6">
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Dashboard งานฐานราก V1.5.1</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ Dashboard งานฐานราก V1.5.2</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์</p>
         </div>
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
             <button onclick="openTargetModal()" class="px-4 py-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 shadow-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-2">
                 <span>📊 ปริมาณฐานรากทั้งโครงการ</span>
             </button>
-            <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+            <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
                 <span>⚙️ ตั้งค่าฐานข้อมูล</span>
             </button>
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
@@ -114,21 +114,21 @@
 
     <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content no-print collapsed hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
-                <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <span class="text-blue-500">🌐</span> วิธีที่ 1: ดึงข้อมูลผ่านลิงก์ Google Sheets
                 </h3>
-                <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none focus:border-blue-500">
+                <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none focus:border-blue-500">
                 <button onclick="loadFromUrl()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-sm">
                     🚀 ดึงข้อมูลจากลิงก์
                 </button>
             </div>
 
-            <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
-                <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <span class="text-yellow-500">📁</span> วิธีที่ 2: อัปโหลดไฟล์ Task.csv
                 </h3>
-                <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none bg-gray-50 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-gray-200 file:text-gray-700">
+                <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none bg-slate-50 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-slate-200 file:text-slate-700">
                 <button onclick="loadFromFile()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-sm">
                     📥 ดึงข้อมูลจากไฟล์
                 </button>
@@ -143,8 +143,8 @@
     <div id="dashboardContent" class="max-w-7xl mx-auto hide">
         
         <div class="glass-card p-6 border-l-8 border-blue-500 mb-8">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
-                <h3 class="text-lg font-bold text-gray-800 dark:text-white">🎯 สรุปภาพรวมผลงาน (KPIs)</h3>
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">🎯 สรุปภาพรวมผลงาน (KPIs)</h3>
                 <button onclick="toggleSection('kpi-content', 'toggle-kpi-btn')" id="toggle-kpi-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
                     🔽 ซ่อนเนื้อหา
                 </button>
@@ -152,23 +152,23 @@
             
             <div id="kpi-content" class="collapsible-content">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm text-center">
-                        <h3 class="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">รวมทั้งหมด</h3>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+                        <h3 class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">รวมทั้งหมด</h3>
                         <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400 mt-2">
-                            <span id="kpi-total">0</span> <span class="text-xl text-gray-500 dark:text-gray-400 font-normal">ฐาน</span>
+                            <span id="kpi-total">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
-                        <h3 id="kpi-month-label" class="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">เดือนปัจจุบัน</h3>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
+                        <h3 id="kpi-month-label" class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">เดือนปัจจุบัน</h3>
                         <div class="text-4xl md:text-5xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-                            <span id="kpi-month">0</span> <span class="text-xl text-gray-500 dark:text-gray-400 font-normal">ฐาน</span>
+                            <span id="kpi-month">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span>
                         </div>
                         <div class="absolute -right-4 -top-4 opacity-5 text-emerald-500 text-8xl">📅</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
-                        <h3 id="kpi-week-label" class="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">สัปดาห์ปัจจุบัน</h3>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
+                        <h3 id="kpi-week-label" class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">สัปดาห์ปัจจุบัน</h3>
                         <div class="text-4xl md:text-5xl font-bold text-purple-600 dark:text-purple-400 mt-2">
-                            <span id="kpi-week">0</span> <span class="text-xl text-gray-500 dark:text-gray-400 font-normal">ฐาน</span>
+                            <span id="kpi-week">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span>
                         </div>
                         <div class="absolute -right-4 -top-4 opacity-5 text-purple-500 text-8xl">🗓️</div>
                     </div>
@@ -177,8 +177,8 @@
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-indigo-500">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
                 
                 <div class="flex items-center gap-3 no-print">
                     <button onclick="toggleSection('kanban-content', 'toggle-kanban-btn')" id="toggle-kanban-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
@@ -188,10 +188,10 @@
             </div>
 
             <div id="kanban-content" class="collapsible-content">
-                <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm w-fit mb-4 no-print">
-                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
+                <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm w-fit mb-4 no-print">
+                    <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
                     <input type="date" id="startDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
-                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">ถึง</label>
+                    <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">ถึง</label>
                     <input type="date" id="endDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
                     
                     <button onclick="filterKanban()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
@@ -199,7 +199,7 @@
                     <button onclick="setThisWeek()" class="px-4 py-1.5 rounded-lg font-bold transition-colors text-sm bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300">▶️ สัปดาห์นี้</button>
                 </div>
 
-                <div id="kanban-status" class="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-4 border border-green-200 dark:border-green-800 no-print">
+                <div id="kanban-status" class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-4 border border-emerald-200 dark:border-emerald-800 no-print">
                     ✅ โปรดระบุวันที่และกดค้นหาเพื่อแสดงข้อมูล
                 </div>
 
@@ -210,8 +210,8 @@
         <div class="glass-card p-6 mb-8 border-t-4 border-purple-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">🔍 ค้นหาตามชื่อโปรเจค</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 no-print">พิมพ์ชื่อโปรเจคเพื่อดูวันที่เสร็จงานและหมายเหตุ</p>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">🔍 ค้นหาตามชื่อโปรเจค</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 no-print">พิมพ์ชื่อโปรเจคเพื่อดูวันที่เสร็จงานและหมายเหตุ</p>
                 </div>
                 <button onclick="toggleSection('search-content', 'toggle-search-btn')" id="toggle-search-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
                     🔽 ซ่อนเนื้อหา
@@ -223,8 +223,8 @@
                     <input type="text" id="searchInput" class="w-full p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white focus:border-purple-500 outline-none transition-all" placeholder="ตัวอย่างเช่น: F1, F2 ...">
                 </div>
 
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700" style="max-height: 400px;">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700" style="max-height: 400px;">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                         <thead class="bg-purple-50 dark:bg-slate-800 sticky top-0 z-10">
                             <tr>
                                 <th class="px-6 py-3 text-left text-sm font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider w-1/4">ชื่อโปรเจค</th>
@@ -232,9 +232,9 @@
                                 <th class="px-6 py-3 text-left text-sm font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider w-2/4">หมายเหตุ</th>
                             </tr>
                         </thead>
-                        <tbody id="searchTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">
+                        <tbody id="searchTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
                             <tr>
-                                <td colspan="3" class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 font-medium">
+                                <td colspan="3" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">
                                     👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์
                                 </td>
                             </tr>
@@ -247,8 +247,8 @@
         <div class="glass-card p-6 mb-8 border-t-4 border-yellow-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">📊 ความคืบหน้าภาพรวมแยกตามโซน</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 no-print">(เปรียบเทียบผลงานที่ทำได้ กับเป้าหมายคงเหลือ)</p>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 ความคืบหน้าภาพรวมแยกตามโซน</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 no-print">(เปรียบเทียบผลงานที่ทำได้ กับเป้าหมายคงเหลือ)</p>
                 </div>
                 <button onclick="toggleSection('zone-chart-content', 'toggle-zone-chart-btn')" id="toggle-zone-chart-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
                     🔽 ซ่อนเนื้อหา
@@ -264,33 +264,33 @@
 
         <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                <h3 class="text-lg font-bold text-gray-800 dark:text-white">📋 สรุปจำนวนฐานรากแยกตามพื้นที่ (Zone)</h3>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">📋 สรุปจำนวนฐานรากแยกตามพื้นที่ (Zone)</h3>
                 <button onclick="toggleSection('zone-content', 'toggle-zone-btn')" id="toggle-zone-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
                     🔽 ซ่อนตาราง
                 </button>
             </div>
             
             <div id="zone-content" class="collapsible-content">
-                <div class="rounded-lg border border-gray-200 dark:border-slate-700 w-full overflow-x-auto mt-2">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                        <thead class="bg-gray-100 dark:bg-slate-800">
+                <div class="rounded-lg border border-slate-200 dark:border-slate-700 w-full overflow-x-auto mt-2">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-100 dark:bg-slate-800">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 w-1/4">โซนพื้นที่ (Zone)</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700 dark:text-gray-300 w-1/5">ปริมาณทั้งหมด (ฐาน)</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700 dark:text-gray-300 w-1/5">แล้วเสร็จ (ฐาน)</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700 dark:text-gray-300 w-1/5">คงเหลือ (ฐาน)</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 w-auto">คืบหน้า (%)</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-slate-700 dark:text-slate-300 w-1/4">โซนพื้นที่ (Zone)</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-slate-700 dark:text-slate-300 w-1/5">ปริมาณทั้งหมด (ฐาน)</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-slate-700 dark:text-slate-300 w-1/5">แล้วเสร็จ (ฐาน)</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-slate-700 dark:text-slate-300 w-1/5">คงเหลือ (ฐาน)</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-slate-700 dark:text-slate-300 w-auto">คืบหน้า (%)</th>
                             </tr>
                         </thead>
-                        <tbody id="zoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">
+                        <tbody id="zoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
                         </tbody>
-                        <tfoot class="bg-gray-50 dark:bg-slate-800/80 border-t-2 border-gray-200 dark:border-slate-700">
+                        <tfoot class="bg-slate-50 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
                             <tr>
-                                <td class="px-6 py-4 text-center text-sm font-bold text-gray-800 dark:text-white">รวมทั้งโครงการ:</td>
+                                <td class="px-6 py-4 text-center text-sm font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</td>
                                 <td class="px-6 py-4 text-center text-sm font-bold text-blue-600 dark:text-blue-400" id="total-target">0</td>
                                 <td class="px-6 py-4 text-center text-sm font-bold text-emerald-600 dark:text-emerald-400" id="total-actual">0</td>
                                 <td class="px-6 py-4 text-center text-sm font-bold text-orange-500 dark:text-orange-400" id="total-remain">0</td>
-                                <td class="px-6 py-4 text-left text-sm font-bold text-gray-800 dark:text-white" id="total-percent">0.0%</td>
+                                <td class="px-6 py-4 text-left text-sm font-bold text-slate-800 dark:text-white" id="total-percent">0.0%</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -299,10 +299,10 @@
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-emerald-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 no-print">ภาพรวมและเปรียบเทียบผลงานฐานรากรายเดือน (ไม่รวมงานแก้/แซม)</p>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 no-print">ภาพรวมและเปรียบเทียบผลงานฐานรากรายเดือน (ไม่รวมงานแก้/แซม)</p>
                 </div>
                 
                 <div class="flex items-center gap-2">
@@ -320,7 +320,7 @@
                 <div class="flex flex-wrap items-center gap-3 mb-4 bg-emerald-50 dark:bg-slate-800/80 p-4 rounded-lg border border-emerald-100 dark:border-slate-700 shadow-sm no-print">
                     <label class="text-sm font-bold text-emerald-800 dark:text-emerald-400">⚖️ เปรียบเทียบผลงาน:</label>
                     <select id="compareMonth1" class="p-2 border rounded-md dark:bg-slate-700 dark:text-white dark:border-slate-600 text-sm outline-none focus:border-emerald-500"></select>
-                    <span class="text-gray-500 dark:text-gray-400 font-bold text-sm">VS</span>
+                    <span class="text-slate-500 dark:text-slate-400 font-bold text-sm">VS</span>
                     <select id="compareMonth2" class="p-2 border rounded-md dark:bg-slate-700 dark:text-white dark:border-slate-600 text-sm outline-none focus:border-emerald-500"></select>
                     
                     <button onclick="compareMonths()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md font-bold text-sm transition-colors shadow-sm">
@@ -331,7 +331,7 @@
                     </button>
                 </div>
 
-                <div id="monthlySummaryReport" class="mb-6 p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 border border-emerald-100 dark:border-slate-600 shadow-sm text-gray-700 dark:text-gray-200 text-lg leading-relaxed">
+                <div id="monthlySummaryReport" class="mb-6 p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 border border-emerald-100 dark:border-slate-600 shadow-sm text-slate-700 dark:text-slate-200 text-lg leading-relaxed">
                 </div>
                 
                 <div class="w-full relative" style="height: 380px;">
@@ -344,33 +344,33 @@
 
     <div id="target-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800">
-                <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     📊 ปริมาณฐานรากทั้งโครงการ
                 </h3>
-                <button onclick="closeTargetModal()" class="text-gray-400 hover:text-red-500 transition-colors">
+                <button onclick="closeTargetModal()" class="text-slate-400 hover:text-red-500 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             <div class="p-0 overflow-y-auto custom-scrollbar">
                 <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-500 uppercase bg-gray-100 dark:bg-slate-700 dark:text-gray-400 sticky top-0">
+                    <thead class="text-xs text-slate-500 uppercase bg-slate-100 dark:bg-slate-700 dark:text-slate-400 sticky top-0">
                         <tr>
-                            <th class="py-3 px-4 border-b border-gray-200 dark:border-slate-600">โซนพื้นที่ (Zone)</th>
-                            <th class="py-3 px-4 text-center border-b border-gray-200 dark:border-slate-600">เป้าหมาย (ฐาน)</th>
+                            <th class="py-3 px-4 border-b border-slate-200 dark:border-slate-600">โซนพื้นที่ (Zone)</th>
+                            <th class="py-3 px-4 text-center border-b border-slate-200 dark:border-slate-600">เป้าหมาย (ฐาน)</th>
                         </tr>
                     </thead>
-                    <tbody id="target-tbody" class="divide-y divide-gray-100 dark:divide-slate-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800">
+                    <tbody id="target-tbody" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800">
                         </tbody>
-                    <tfoot class="bg-gray-50 dark:bg-slate-700/50 sticky bottom-0 border-t-2 border-gray-200 dark:border-slate-600">
+                    <tfoot class="bg-slate-50 dark:bg-slate-700/50 sticky bottom-0 border-t-2 border-slate-200 dark:border-slate-600">
                         <tr>
-                            <th class="py-3 px-4 text-right font-bold text-gray-800 dark:text-white">รวมทั้งโครงการ:</th>
+                            <th class="py-3 px-4 text-right font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</th>
                             <th class="py-3 px-4 text-center font-bold text-blue-600 dark:text-blue-400 text-base" id="target-sum">0</th>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            <div class="p-3 bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 text-xs text-gray-500 dark:text-gray-400 text-center">
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 text-center">
                 *สามารถแก้ไขตัวเลขเป้าหมายได้ใน Source Code<br>(ที่ตัวแปร PROJECT_FOUNDATION_TARGETS)
             </div>
         </div>
@@ -381,19 +381,8 @@
         // 🌟 ตั้งค่าเป้าหมายปริมาณฐานรากแต่ละโซน
         // =========================================================================
         const PROJECT_FOUNDATION_TARGETS = {
-            "Zone 1": 12, 
-            "Zone 2": 47, 
-            "Zone 3": 42, 
-            "Zone 4": 11, 
-            "Zone 5": 6, 
-            "Zone 6": 20, 
-            "Zone 7": 76,
-            "Ramp-N01": 10, 
-            "Ramp-OR3": 24, 
-            "Ramp-OR4": 63, 
-            "Ramp-OR6": 41, 
-            "Ramp-OR7": 18, 
-            "Ramp-SR1": 8
+            "Zone 1": 12, "Zone 2": 47, "Zone 3": 42, "Zone 4": 11, "Zone 5": 6, "Zone 6": 20, "Zone 7": 76,
+            "Ramp-N01": 10, "Ramp-OR3": 24, "Ramp-OR4": 63, "Ramp-OR6": 41, "Ramp-OR7": 18, "Ramp-SR1": 8
         };
         // =========================================================================
 
@@ -485,7 +474,7 @@
             let sumTarget = 0;
             for (const [zone, target] of Object.entries(PROJECT_FOUNDATION_TARGETS)) {
                 sumTarget += target;
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"><td class="py-2 px-4 font-medium">${zone}</td><td class="py-2 px-4 text-center text-blue-600 dark:text-blue-400 font-bold">${target.toLocaleString()}</td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="py-2 px-4 font-medium">${zone}</td><td class="py-2 px-4 text-center text-blue-600 dark:text-blue-400 font-bold">${target.toLocaleString()}</td></tr>`;
             }
             document.getElementById('target-sum').innerText = sumTarget.toLocaleString();
             modal.classList.remove('hidden');
@@ -547,8 +536,8 @@
             st.className = 'mt-4 text-center p-3 rounded-lg font-bold ';
             if(type === 'load') st.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900/40', 'dark:text-blue-400');
             else if(type === 'err') st.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/40', 'dark:text-red-400');
-            else if(type === 'ok') st.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/40', 'dark:text-green-400');
-            else st.classList.add('bg-gray-100', 'text-gray-800', 'dark:bg-gray-800', 'dark:text-gray-300'); 
+            else if(type === 'ok') st.classList.add('bg-emerald-100', 'text-emerald-800', 'dark:bg-emerald-900/40', 'dark:text-emerald-400');
+            else st.classList.add('bg-slate-100', 'text-slate-800', 'dark:bg-slate-800', 'dark:text-slate-300'); 
         }
 
         function loadFromUrl() {
@@ -663,7 +652,7 @@
                         {
                             label: 'แล้วเสร็จ (ต้น)',
                             data: actualData,
-                            backgroundColor: '#2ecc71',
+                            backgroundColor: '#10b981', // ปรับเป็น emerald
                             borderWidth: 0,
                         },
                         {
@@ -728,14 +717,14 @@
                     document.getElementById(`k-tasks-${dayIndex}`).innerHTML += `
                         <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-500" 
                              onclick="searchFromKanban('${safeKeyword}')" title="คลิกเพื่อดูรายละเอียดในช่องค้นหา">
-                            <div class="font-bold text-sm mb-1 text-gray-800 dark:text-gray-100">📌 ${shortName}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">📅 ${displayDate}</div>
+                            <div class="font-bold text-sm mb-1 text-slate-800 dark:text-slate-100">📌 ${shortName}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">📅 ${displayDate}</div>
                         </div>`;
                 }
             });
             const banner = document.getElementById('kanban-status');
             if(foundCount > 0) {
-                banner.className = "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-4 border border-green-200 dark:border-green-800 no-print";
+                banner.className = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-4 border border-emerald-200 dark:border-emerald-800 no-print";
                 banner.innerHTML = `✅ ดึงข้อมูลสำเร็จ! พบงานเสร็จสิ้นจำนวน ${foundCount} ฐาน`;
             } else {
                 banner.className = "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400 p-3 rounded-lg text-center font-bold mb-4 border border-red-200 dark:border-red-800 no-print";
@@ -746,12 +735,12 @@
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const keyword = e.target.value.toLowerCase().trim();
             const tbody = document.getElementById('searchTableBody');
-            if (keyword === '') { tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 font-medium">👆 พิมพ์ชื่อโปรเจค...</td></tr>`; return; }
+            if (keyword === '') { tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจค...</td></tr>`; return; }
             const results = globalDatabase.filter(row => (row['ชื่อโปรเจค'] || '').toLowerCase().includes(keyword));
             if (results.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-red-500 font-medium">❌ ไม่พบข้อมูล</td></tr>`; return; }
             tbody.innerHTML = '';
             results.slice(0, 100).forEach(row => {
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-purple-700 dark:text-purple-400">📌 ${row['ชื่อโปรเจค']}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">📅 ${row['วันที่เสร็จงานจริงๆ']}</td><td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">${row['หมายเหตุ'] || '-'}</td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-purple-700 dark:text-purple-400">📌 ${row['ชื่อโปรเจค']}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">📅 ${row['วันที่เสร็จงานจริงๆ']}</td><td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">${row['หมายเหตุ'] || '-'}</td></tr>`;
             });
         });
 
@@ -773,17 +762,17 @@
                 sumRemain += remain;
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                        <td class="px-6 py-4 text-sm font-bold text-gray-800 dark:text-gray-200">${zone}</td>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <td class="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">${zone}</td>
                         <td class="px-6 py-4 text-sm text-center font-bold text-blue-600 dark:text-blue-400">${target > 0 ? target.toLocaleString() : '-'}</td>
                         <td class="px-6 py-4 text-sm text-center font-bold text-emerald-600 dark:text-emerald-400">${actual.toLocaleString()}</td>
                         <td class="px-6 py-4 text-sm text-center font-bold text-orange-500 dark:text-orange-400">${remain.toLocaleString()}</td>
                         <td class="px-6 py-4 text-sm w-48">
                             <div class="flex items-center gap-3">
-                                <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
                                     <div class="bg-blue-500 h-2.5 rounded-full" style="width: ${displayPercent}%"></div>
                                 </div>
-                                <span class="text-xs font-medium text-gray-600 dark:text-gray-300 min-w-[40px]">${percent.toFixed(1)}%</span>
+                                <span class="text-xs font-medium text-slate-600 dark:text-slate-300 min-w-[40px]">${percent.toFixed(1)}%</span>
                             </div>
                         </td>
                     </tr>
@@ -849,7 +838,7 @@
             const keys = Object.keys(dataObj).sort();
             
             if (keys.length === 0) {
-                div.innerHTML = '<span class="text-gray-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>';
+                div.innerHTML = '<span class="text-slate-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>';
                 return;
             }
 
