@@ -156,27 +156,27 @@
                 }
             }
 
-            // ประมวลผล Piling
+            // ประมวลผล Piling (อ้างอิง วันที่เริ่มงาน)
             pileData.forEach(row => {
-                const finishDate = row['วันที่เสร็จงานจริงๆ'] ? row['วันที่เสร็จงานจริงๆ'].trim() : "";
+                const targetDate = row['วันที่เริ่มงาน'] ? row['วันที่เริ่มงาน'].trim() : "";
                 const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
 
-                if (finishDate !== "") {
-                    initializeDateStruct(finishDate);
+                if (targetDate !== "") {
+                    initializeDateStruct(targetDate);
                     const zoneMatch = responsible.match(/ZONE\s*(\d)/);
                     const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
 
                     if (zoneMatch) {
                         const z = zoneMatch[1];
-                        if (dailySummary[finishDate].pileZone[z] !== undefined) {
-                            dailySummary[finishDate].pileZone[z]++;
-                            dailySummary[finishDate].pileZone.total++;
+                        if (dailySummary[targetDate].pileZone[z] !== undefined) {
+                            dailySummary[targetDate].pileZone[z]++;
+                            dailySummary[targetDate].pileZone.total++;
                         }
                     } else if (rampMatch) {
                         const r = rampMatch[1].replace('OR', 'O'); 
-                        if (dailySummary[finishDate].pileRamp[r] !== undefined) {
-                            dailySummary[finishDate].pileRamp[r]++;
-                            dailySummary[finishDate].pileRamp.total++;
+                        if (dailySummary[targetDate].pileRamp[r] !== undefined) {
+                            dailySummary[targetDate].pileRamp[r]++;
+                            dailySummary[targetDate].pileRamp.total++;
                         }
                     }
                 }
@@ -184,13 +184,23 @@
 
             // ประมวลผล Sonic & Grouting
             sonicGroutData.forEach(row => {
+                 const startDate = row['วันที่เริ่มงาน'] ? row['วันที่เริ่มงาน'].trim() : "";
                  const finishDate = row['วันที่เสร็จงานจริงๆ'] ? row['วันที่เสร็จงานจริงๆ'].trim() : "";
                  const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
                  
-                 if (finishDate !== "") {
-                     initializeDateStruct(finishDate);
-                     const isSonic = responsible.includes("SONIC");
-                     const isGrout = responsible.includes("GROUT");
+                 const isSonic = responsible.includes("SONIC");
+                 const isGrout = responsible.includes("GROUT");
+
+                 // กำหนด targetDate ตามประเภทงาน
+                 let targetDate = "";
+                 if (isSonic) {
+                     targetDate = startDate; // Sonic ใช้ วันที่เริ่มงาน
+                 } else if (isGrout) {
+                     targetDate = finishDate; // Grout ใช้ วันที่เสร็จงานจริงๆ
+                 }
+
+                 if (targetDate !== "") {
+                     initializeDateStruct(targetDate);
                      const zoneMatch = responsible.match(/Z(\d)/);
                      const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
 
@@ -198,15 +208,15 @@
                          const typeKey = isSonic ? 'sonic' : 'grout';
                          if (zoneMatch) {
                              const z = zoneMatch[1];
-                             if (dailySummary[finishDate][typeKey + 'Zone'][z] !== undefined) {
-                                 dailySummary[finishDate][typeKey + 'Zone'][z]++;
-                                 dailySummary[finishDate][typeKey + 'Zone'].total++;
+                             if (dailySummary[targetDate][typeKey + 'Zone'][z] !== undefined) {
+                                 dailySummary[targetDate][typeKey + 'Zone'][z]++;
+                                 dailySummary[targetDate][typeKey + 'Zone'].total++;
                              }
                          } else if (rampMatch) {
                              const r = rampMatch[1].replace('OR', 'O');
-                             if (dailySummary[finishDate][typeKey + 'Ramp'][r] !== undefined) {
-                                 dailySummary[finishDate][typeKey + 'Ramp'][r]++;
-                                 dailySummary[finishDate][typeKey + 'Ramp'].total++;
+                             if (dailySummary[targetDate][typeKey + 'Ramp'][r] !== undefined) {
+                                 dailySummary[targetDate][typeKey + 'Ramp'][r]++;
+                                 dailySummary[targetDate][typeKey + 'Ramp'].total++;
                              }
                          }
                      }
