@@ -15,7 +15,8 @@
         th { background-color: #f9f9f9; }
         .highlight-row { background-color: #d9d9d9; }
         .num-col { width: 2.5%; }
-        .error-msg { color: red; font-weight: bold; text-align: center; padding: 20px; }
+        .error-msg { color: red; font-weight: bold; text-align: center; padding: 15px; }
+        .debug-box { background: #fbeaea; border: 1px solid #f0c3c3; padding: 10px; text-align: left; font-size: 11px; margin-top: 10px; color: #333; overflow-x: auto;}
     </style>
 </head>
 <body>
@@ -95,12 +96,11 @@
                     fetch(pileCsvUrl), fetch(sonicGroutCsvUrl)
                 ]);
 
-                if (!pileResponse.ok || !sonicGroutResponse.ok) throw new Error("Network response was not ok");
+                if (!pileResponse.ok || !sonicGroutResponse.ok) throw new Error("Network response error");
 
                 const pileCsvText = await pileResponse.text();
                 const sonicGroutCsvText = await sonicGroutResponse.text();
 
-                // ลบช่องว่างที่มองไม่เห็นใน Header (เช่น BOM character)
                 const parseConfig = { 
                     header: true, 
                     skipEmptyLines: true,
@@ -112,57 +112,75 @@
 
                 processData(pileData, sonicGroutData);
             } catch (error) {
-                console.error('Fetch Error:', error);
-                showError('ไม่สามารถดึงข้อมูลจากลิงก์ Google Sheets ได้ โปรดตรวจสอบลิงก์อีกครั้ง');
+                showError('ไม่สามารถดึงข้อมูลจากลิงก์ Google Sheets ได้ โปรดตรวจสอบว่า Publish to web แล้วหรือไม่');
             }
         }
 
-        function showError(msg) {
-            document.getElementById("zone-status").innerHTML = `<span class="error-msg">${msg}</span>`;
-            document.getElementById("ramp-status").innerHTML = `<span class="error-msg">${msg}</span>`;
+        function showError(msg, debugInfo = "") {
+            const html = `<div class="error-msg">${msg}${debugInfo ? `<div class="debug-box">${debugInfo}</div>` : ''}</div>`;
+            document.getElementById("zone-status").parentElement.innerHTML = `<td colspan="28">${html}</td>`;
+            document.getElementById("ramp-status").parentElement.innerHTML = `<td colspan="25">${html}</td>`;
         }
 
-        // ฟังก์ชันแปลงวันที่แบบกันพัง 100%
+        // ตัวอ่านวันที่ขั้นเทพ รองรับภาษาไทย ภาษาอังกฤษ และปี พ.ศ.
         function parseDateSafe(dStr) {
             if (!dStr || typeof dStr !== 'string') return null;
             dStr = dStr.trim();
             if (dStr === "" || dStr === "-") return null;
 
-            try {
-                // พยายามดึงตัวเลขออกจาก String (เช่น "11/05/2026 10:00:00" -> แยกส่วน)
-                const parts = dStr.split(/[\/\-\s]/).filter(p => p.length > 0 && !isNaN(p));
-                
-                if (parts.length >= 3) {
-                    let p1 = parseInt(parts[0], 10);
-                    let p2 = parseInt(parts[1], 10);
-                    let p3 = parseInt(parts[2], 10);
+            // ตรวจสอบเดือนแบบข้อความ (ไทย/อังกฤษ)
+            const monthsMap = {
+                'ม.ค.':1,'มกราคม':1,'JAN':1, 'ก.พ.':2,'กุมภาพันธ์':2,'FEB':2,
+                'มี.ค.':3,'มีนาคม':3,'MAR':3, 'เม.ย.':4,'เมษายน':4,'APR':4,
+                'พ.ค.':5,'พฤษภาคม':5,'MAY':5, 'มิ.ย.':6,'มิถุนายน':6,'JUN':6,
+                'ก.ค.':7,'กรกฎาคม':7,'JUL':7, 'ส.ค.':8,'สิงหาคม':8,'AUG':8,
+                'ก.ย.':9,'กันยายน':9,'SEP':9, 'ต.ค.':10,'ตุลาคม':10,'OCT':10,
+                'พ.ย.':11,'พฤศจิกายน':11,'NOV':11, 'ธ.ค.':12,'ธันวาคม':12,'DEC':12
+            };
 
-                    if (isNaN(p1) || isNaN(p2) || isNaN(p3)) return null;
+            const upperStr = dStr.toUpperCase();
+            let monthVal = null;
+            for (let key in monthsMap) {
+                if (upperStr.includes(key)) {
+                    monthVal = monthsMap[key];
+                    break;
+                }
+            }
 
-                    let year = p3;
+            // ดึงตัวเลขทั้งหมดออกมา
+            const nums = dStr.match(/\d+/g);
+            if (nums && nums.length >= 2) {
+                let day = parseInt(nums[0], 10);
+                let year = parseInt(nums[nums.length - 1], 10);
+                let month = monthVal;
+
+                if (!month && nums.length >= 3) {
+                    month = parseInt(nums[1], 10);
+                    if (month > 12) { // สลับ วัน/เดือน อัตโนมัติ
+                        month = day; day = parseInt(nums[1], 10);
+                    }
+                }
+
+                if (month) {
                     if (year < 100) year += 2000;
-                    if (year > 2500) year -= 543;
-
-                    let month = p2, day = p1;
-                    if (p1 > 31) { year = p1; month = p2; day = p3; } // รูปแบบ YYYY-MM-DD
-                    else if (p2 > 12) { month = p1; day = p2; } // รูปแบบ MM/DD/YYYY
-
+                    if (year > 2500) year -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+                    
                     const d = new Date(year, month - 1, day);
                     if (!isNaN(d.getTime())) {
                         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     }
                 }
-                
-                // ถ้ารูปแบบแปลกประหลาด ให้ลองโยนเข้า Date Object ตรงๆ
-                const fallbackDate = new Date(dStr);
-                if (!isNaN(fallbackDate.getTime())) {
-                    return `${fallbackDate.getFullYear()}-${String(fallbackDate.getMonth() + 1).padStart(2, '0')}-${String(fallbackDate.getDate()).padStart(2, '0')}`;
-                }
-
-                return null;
-            } catch (e) {
-                return null; // ถ้า Error อะไรก็ตาม ให้ถือว่าเป็น Null แล้วข้ามไปเลย
             }
+
+            // ลองให้ Javascript เดา (สำหรับรูปแบบมาตรฐาน)
+            const jsDate = new Date(dStr);
+            if (!isNaN(jsDate.getTime())) {
+                let y = jsDate.getFullYear();
+                if (y > 2500) y -= 543;
+                return `${y}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
+            }
+
+            return null;
         }
 
         function processData(pileData, sonicGroutData) {
@@ -171,12 +189,8 @@
             function initializeDateStruct(ymd) {
                 if (!dailySummary[ymd]) {
                     dailySummary[ymd] = {
-                        pileZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
-                        sonicZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
-                        groutZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
-                        pileRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 },
-                        sonicRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 },
-                        groutRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }
+                        pileZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 }, sonicZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 }, groutZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
+                        pileRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }, sonicRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }, groutRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }
                     };
                 }
             }
@@ -184,16 +198,15 @@
             const regexZone = /(?:ZONE|Z)[-\s]*(\d)/i;
             const regexRamp = /(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/i;
 
-            const safeGetValue = (row, key1, key2) => {
-                if (row[key1] !== undefined) return row[key1];
-                if (row[key2] !== undefined) return row[key2]; // เผื่อ Header พิมพ์ไม่ตรงเป๊ะ
-                return "";
-            };
+            // ฟังก์ชันค้นหาชื่อคอลัมน์แบบยืดหยุ่น (Fuzzy Search)
+            const findKey = (row, keyword) => Object.keys(row).find(k => k.includes(keyword));
 
-            // ประมวลผล Piling
             pileData.forEach(row => {
-                const targetDate = safeGetValue(row, 'วันที่เริ่มงาน', 'วันที่เริ่มงาน ');
-                const responsible = safeGetValue(row, 'ผู้รับผิดชอบ', 'ผู้รับผิดชอบ ').trim();
+                const startKey = findKey(row, 'เริ่มงาน');
+                const respKey = findKey(row, 'รับผิดชอบ');
+                
+                const targetDate = startKey ? row[startKey] : "";
+                const responsible = respKey ? row[respKey] : "";
                 const ymd = parseDateSafe(targetDate);
 
                 if (ymd) {
@@ -204,24 +217,25 @@
                     if (zoneMatch) {
                         const z = zoneMatch[1];
                         if (dailySummary[ymd].pileZone[z] !== undefined) {
-                            dailySummary[ymd].pileZone[z]++;
-                            dailySummary[ymd].pileZone.total++;
+                            dailySummary[ymd].pileZone[z]++; dailySummary[ymd].pileZone.total++;
                         }
                     } else if (rampMatch) {
                         const r = rampMatch[1].toUpperCase().replace('OR', 'O'); 
                         if (dailySummary[ymd].pileRamp[r] !== undefined) {
-                            dailySummary[ymd].pileRamp[r]++;
-                            dailySummary[ymd].pileRamp.total++;
+                            dailySummary[ymd].pileRamp[r]++; dailySummary[ymd].pileRamp.total++;
                         }
                     }
                 }
             });
 
-            // ประมวลผล Sonic & Grouting
             sonicGroutData.forEach(row => {
-                 const startDate = safeGetValue(row, 'วันที่เริ่มงาน', 'วันที่เริ่มงาน ');
-                 const finishDate = safeGetValue(row, 'วันที่เสร็จงานจริงๆ', 'วันที่เสร็จงานจริงๆ ');
-                 const responsible = safeGetValue(row, 'ผู้รับผิดชอบ', 'ผู้รับผิดชอบ ').toUpperCase();
+                 const startKey = findKey(row, 'เริ่มงาน');
+                 const finishKey = findKey(row, 'เสร็จงาน');
+                 const respKey = findKey(row, 'รับผิดชอบ');
+
+                 const startDate = startKey ? row[startKey] : "";
+                 const finishDate = finishKey ? row[finishKey] : "";
+                 const responsible = respKey ? String(row[respKey]).toUpperCase() : "";
                  
                  const isSonic = responsible.includes("SONIC");
                  const isGrout = responsible.includes("GROUT");
@@ -242,29 +256,28 @@
                          if (zoneMatch) {
                              const z = zoneMatch[1];
                              if (dailySummary[ymd][typeKey + 'Zone'][z] !== undefined) {
-                                 dailySummary[ymd][typeKey + 'Zone'][z]++;
-                                 dailySummary[ymd][typeKey + 'Zone'].total++;
+                                 dailySummary[ymd][typeKey + 'Zone'][z]++; dailySummary[ymd][typeKey + 'Zone'].total++;
                              }
                          } else if (rampMatch) {
                              const r = rampMatch[1].replace('OR', 'O');
                              if (dailySummary[ymd][typeKey + 'Ramp'][r] !== undefined) {
-                                 dailySummary[ymd][typeKey + 'Ramp'][r]++;
-                                 dailySummary[ymd][typeKey + 'Ramp'].total++;
+                                 dailySummary[ymd][typeKey + 'Ramp'][r]++; dailySummary[ymd][typeKey + 'Ramp'].total++;
                              }
                          }
                      }
                  }
             });
 
-            renderTables(dailySummary);
+            renderTables(dailySummary, pileData);
         }
 
-        function renderTables(dailySummary) {
-            // ดึงเฉพาะ Key ที่เป็นรูปแบบวันที่จริงๆ เท่านั้น (YYYY-MM-DD)
+        function renderTables(dailySummary, rawDataForDebug) {
             const sortedYMDs = Object.keys(dailySummary).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
             
             if (sortedYMDs.length === 0) {
-                showError("โหลดข้อมูลสำเร็จ แต่ไม่พบข้อมูลวันที่ หรือรูปแบบวันที่ใน Sheet ไม่ตรงเกณฑ์");
+                // ถ้ายังหาไม่เจออีก จะปริ้นข้อมูลดิบออกหน้าจอให้ดูเลยครับ
+                let debugInfo = "<b>ข้อมูลดิบที่อ่านได้จาก Sheet (2 บรรทัดแรก):</b><br>" + JSON.stringify(rawDataForDebug.slice(0, 2), null, 2);
+                showError("โหลดข้อมูลสำเร็จ แต่ไม่พบข้อมูลวันที่ หรือรูปแบบวันที่ใน Sheet ไม่ตรงเกณฑ์", debugInfo);
                 return;
             }
 
@@ -272,7 +285,6 @@
             let accPileZone = 0, accSonicZone = 0, accGroutZone = 0;
             let accPileRamp = 0, accSonicRamp = 0, accGroutRamp = 0;
 
-            // ทบยอด ACC ให้ครบทุกวันที่มีในฐานข้อมูล
             sortedYMDs.forEach(ymd => {
                 const data = dailySummary[ymd];
                 accPileZone += data.pileZone.total; accSonicZone += data.sonicZone.total; accGroutZone += data.groutZone.total;
@@ -280,32 +292,21 @@
                 accData[ymd] = { accPileZone, accSonicZone, accGroutZone, accPileRamp, accSonicRamp, accGroutRamp };
             });
 
-            // หาวันที่ล่าสุดที่มีข้อมูล เพื่อใช้เป็นแกนกลางในการสร้างตาราง
             const maxDataYMD = sortedYMDs[sortedYMDs.length - 1];
-            const maxParts = maxDataYMD.split('-');
-            if(maxParts.length !== 3) {
-                showError("เกิดข้อผิดพลาดในการประมวลผลวันที่ล่าสุด"); return;
-            }
-
-            const maxYear = parseInt(maxParts[0], 10);
-            const maxMonth = parseInt(maxParts[1], 10);
-            const maxDay = parseInt(maxParts[2], 10);
+            const [maxYear, maxMonth, maxDay] = maxDataYMD.split('-');
             
-            // สร้าง Array วันที่สำหรับตาราง 7 วัน (โดยบวกไปข้างหน้า 2 วัน เผื่ออนาคตเหมือนในรูป)
             const zoneDatesYMD = [];
             for(let i=6; i>=0; i--) {
-                const d = new Date(maxYear, maxMonth - 1, maxDay + 2 - i);
+                const d = new Date(parseInt(maxYear, 10), parseInt(maxMonth, 10) - 1, parseInt(maxDay, 10) + 2 - i);
                 zoneDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
             }
 
-            // สร้าง Array วันที่สำหรับตาราง 4 วัน
             const rampDatesYMD = [];
             for(let i=3; i>=0; i--) {
-                const d = new Date(maxYear, maxMonth - 1, maxDay + 2 - i);
+                const d = new Date(parseInt(maxYear, 10), parseInt(maxMonth, 10) - 1, parseInt(maxDay, 10) + 2 - i);
                 rampDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
             }
 
-            // ฟังก์ชันช่วยดึงยอดสะสมของวันนั้นๆ (ถ้าหาวันไม่เจอ ให้ย้อนกลับไปเอาของวันก่อนหน้า)
             function getAccForDate(targetYMD) {
                 let lastAcc = { accPileZone:0, accSonicZone:0, accGroutZone:0, accPileRamp:0, accSonicRamp:0, accGroutRamp:0 };
                 for (let ymd of sortedYMDs) {
@@ -333,7 +334,7 @@
 
             const val = (number) => number === 0 ? '' : number;
 
-            // ----- เริ่มวาดตาราง Zone -----
+            // วาด Zone
             const zoneTbody = document.querySelector("#zone-table tbody");
             zoneTbody.innerHTML = "";
             let finalZoneAcc = null;
@@ -372,7 +373,7 @@
             </tr>`;
             zoneTbody.insertAdjacentHTML('beforeend', emptyZoneRow);
 
-            // ----- เริ่มวาดตาราง Ramp -----
+            // วาด Ramp
             const rampTbody = document.querySelector("#ramp-table tbody");
             rampTbody.innerHTML = "";
             let finalRampAcc = null;
