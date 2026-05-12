@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic & Grouting Dashboard V1.6</title>
+    <title>Sonic & Grouting Dashboard V1.7.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -39,7 +39,7 @@
         
         /* สไตล์ Kanban */
         .kanban-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 10px; }
-        .k-col { background: #f1f5f9; border-radius: 12px; padding: 10px; min-height: 250px; transition: 0.3s; }
+        .k-col { background: #f8fafc; border-radius: 12px; padding: 10px; min-height: 250px; transition: 0.3s; }
         .dark .k-col { background: #1e293b; }
         .k-header { text-align: center; font-weight: bold; color: white; padding: 10px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
@@ -77,18 +77,18 @@
         }
     </style>
 </head>
-<body class="text-gray-800 bg-slate-50 p-6">
+<body class="text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 p-6">
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 Dashboard Sonic Logging & Grouting V1.6</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 Dashboard Sonic Logging & Grouting V1.7.1</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
-            <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+            <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
                 <span>⚙️ ตั้งค่าฐานข้อมูล</span>
             </button>
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
@@ -96,21 +96,21 @@
 
     <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content collapsed hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
-                <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
+                <h3 class="font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
                     <span class="text-blue-500">🌐</span> วิธีที่ 1: ดึงข้อมูลผ่านลิงก์ Google Sheets
                 </h3>
-                <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none focus:border-blue-500">
+                <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none focus:border-blue-500">
                 <button onclick="loadFromUrl()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-sm">
                     🚀 ดึงข้อมูลจากลิงก์
                 </button>
             </div>
 
-            <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
-                <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
+                <h3 class="font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
                     <span class="text-yellow-500">📁</span> วิธีที่ 2: อัปโหลดไฟล์ Task.csv (ชัวร์ 100%)
                 </h3>
-                <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none bg-gray-50 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-gray-200 file:text-gray-700">
+                <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none bg-slate-50 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-slate-200 file:text-slate-700">
                 <button onclick="loadFromFile()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-sm">
                     📥 ดึงข้อมูลจากไฟล์
                 </button>
@@ -126,8 +126,8 @@
         <div class="glass-card p-6 mb-8 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-400 to-orange-500"></div>
             
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3 mt-1">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">🎯 สรุปภาพรวมงาน Sonic Logging Test & Grouting</h3>
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">🎯 สรุปภาพรวมงาน Sonic Logging Test & Grouting</h3>
                 <button onclick="toggleSection('kpi-merged-content', 'toggle-kpi-btn')" id="toggle-kpi-btn" class="bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-indigo-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
                     🔽 ซ่อนเนื้อหา
                 </button>
@@ -136,62 +136,62 @@
             <div id="kpi-merged-content" class="collapsible-content">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                        <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-gray-200 dark:border-slate-700">
-                            <h3 class="text-gray-600 dark:text-gray-300 font-bold uppercase tracking-widest text-xs md:text-sm">รวมทั้งหมด (Total)</h3>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                        <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-slate-200 dark:border-slate-700">
+                            <h3 class="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest text-xs md:text-sm">รวมทั้งหมด (Total)</h3>
                         </div>
-                        <div class="flex divide-x divide-gray-100 dark:divide-slate-700 p-4 relative">
+                        <div class="flex divide-x divide-slate-100 dark:divide-slate-700 p-4 relative">
                             <div class="w-1/2 text-center px-2 py-1">
-                                <p class="text-[12px] text-gray-400 font-bold mb-1">📡 Sonic</p>
+                                <p class="text-[12px] text-slate-400 font-bold mb-1">📡 Sonic</p>
                                 <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">
                                     <span id="kpi-sonic-total">0</span>
                                 </div>
                             </div>
                             <div class="w-1/2 text-center px-2 py-1">
-                                <p class="text-[12px] text-gray-400 font-bold mb-1">🧱 Grouting</p>
-                                <div class="text-3xl md:text-4xl font-bold text-orange-500 dark:text-orange-400">
+                                <p class="text-[12px] text-slate-400 font-bold mb-1">🧱 Grouting</p>
+                                <div class="text-4xl md:text-5xl font-bold text-orange-500 dark:text-orange-400">
                                     <span id="kpi-grout-total">0</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                        <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-gray-200 dark:border-slate-700 relative overflow-hidden">
-                            <h3 class="text-gray-600 dark:text-gray-300 font-bold uppercase tracking-widest text-xs md:text-sm relative z-10">เดือนปัจจุบัน</h3>
-                            <div class="absolute -right-2 -top-4 opacity-5 text-gray-500 text-6xl z-0">📅</div>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                        <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                            <h3 class="text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest text-xs md:text-sm relative z-10">เดือนปัจจุบัน</h3>
+                            <div class="absolute -right-2 -top-4 opacity-5 text-emerald-500 text-6xl z-0">📅</div>
                         </div>
-                        <div class="flex divide-x divide-gray-100 dark:divide-slate-700 p-4 relative">
+                        <div class="flex divide-x divide-slate-100 dark:divide-slate-700 p-4 relative">
                             <div class="w-1/2 text-center px-2 py-1">
-                                <p class="text-[12px] text-gray-400 font-bold mb-1">📡 Sonic</p>
-                                <div class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">
+                                <p class="text-[12px] text-slate-400 font-bold mb-1">📡 Sonic</p>
+                                <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">
                                     <span id="kpi-sonic-month">0</span>
                                 </div>
                             </div>
                             <div class="w-1/2 text-center px-2 py-1">
-                                <p class="text-[12px] text-gray-400 font-bold mb-1">🧱 Grouting</p>
-                                <div class="text-3xl md:text-4xl font-bold text-orange-500 dark:text-orange-400">
+                                <p class="text-[12px] text-slate-400 font-bold mb-1">🧱 Grouting</p>
+                                <div class="text-4xl md:text-5xl font-bold text-orange-500 dark:text-orange-400">
                                     <span id="kpi-grout-month">0</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                        <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-gray-200 dark:border-slate-700 relative overflow-hidden">
-                            <h3 class="text-gray-600 dark:text-gray-300 font-bold uppercase tracking-widest text-xs md:text-sm relative z-10">สัปดาห์ปัจจุบัน</h3>
-                            <div class="absolute -right-2 -top-4 opacity-5 text-gray-500 text-6xl z-0">🗓️</div>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                        <div class="bg-slate-50 dark:bg-slate-700/50 p-3 text-center border-b border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                            <h3 class="text-purple-600 dark:text-purple-400 font-bold uppercase tracking-widest text-xs md:text-sm relative z-10">สัปดาห์ปัจจุบัน</h3>
+                            <div class="absolute -right-2 -top-4 opacity-5 text-purple-500 text-6xl z-0">🗓️</div>
                         </div>
-                        <div class="flex divide-x divide-gray-100 dark:divide-slate-700 p-4 relative">
+                        <div class="flex divide-x divide-slate-100 dark:divide-slate-700 p-4 relative">
                             <div class="w-1/2 text-center px-2 py-1">
-                                <p class="text-[12px] text-gray-400 font-bold mb-1">📡 Sonic</p>
-                                <div class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">
+                                <p class="text-[12px] text-slate-400 font-bold mb-1">📡 Sonic</p>
+                                <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">
                                     <span id="kpi-sonic-week">0</span>
                                 </div>
                             </div>
                             <div class="w-1/2 text-center px-2 py-1">
-                                <p class="text-[12px] text-gray-400 font-bold mb-1">🧱 Grouting</p>
-                                <div class="text-3xl md:text-4xl font-bold text-orange-500 dark:text-orange-400">
+                                <p class="text-[12px] text-slate-400 font-bold mb-1">🧱 Grouting</p>
+                                <div class="text-4xl md:text-5xl font-bold text-orange-500 dark:text-orange-400">
                                     <span id="kpi-grout-week">0</span>
                                 </div>
                             </div>
@@ -200,17 +200,17 @@
 
                 </div>
 
-                <div class="flex flex-col md:flex-row justify-center gap-2 md:gap-6 text-xs text-gray-500 dark:text-gray-400 mt-5 bg-gray-50 dark:bg-slate-800/80 p-2.5 rounded-lg border border-gray-200 dark:border-slate-700 w-fit mx-auto shadow-sm">
-                    <span class="flex items-center gap-1.5"><b class="text-blue-600 dark:text-blue-400">📡 Sonic:</b> อ้างอิงข้อมูลจาก <u class="font-bold border-b border-gray-400">วันที่เริ่มงาน</u></span>
-                    <span class="hidden md:inline border-l border-gray-300 dark:border-slate-600"></span>
-                    <span class="flex items-center gap-1.5"><b class="text-orange-500 dark:text-orange-400">🧱 Grouting:</b> อ้างอิงข้อมูลจาก <u class="font-bold border-b border-gray-400">วันที่เสร็จงานจริงๆ</u></span>
+                <div class="flex flex-col md:flex-row justify-center gap-2 md:gap-6 text-xs text-slate-500 dark:text-slate-400 mt-5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 w-fit mx-auto shadow-sm">
+                    <span class="flex items-center gap-1.5"><b class="text-blue-600 dark:text-blue-400">📡 Sonic:</b> อ้างอิงข้อมูลจาก <u class="font-bold border-b border-slate-400">วันที่เริ่มงาน</u></span>
+                    <span class="hidden md:inline border-l border-slate-300 dark:border-slate-600"></span>
+                    <span class="flex items-center gap-1.5"><b class="text-orange-500 dark:text-orange-400">🧱 Grouting:</b> อ้างอิงข้อมูลจาก <u class="font-bold border-b border-slate-400">วันที่เสร็จงานจริงๆ</u></span>
                 </div>
             </div>
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-indigo-500">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
                 
                 <div class="flex items-center gap-3">
                     <button onclick="toggleSection('kanban-content', 'toggle-kanban-btn')" id="toggle-kanban-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
@@ -220,21 +220,21 @@
             </div>
 
             <div id="kanban-content" class="collapsible-content">
-                <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm w-fit mb-4">
-                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
+                <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm w-fit mb-4">
+                    <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
                     <input type="date" id="startDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
-                    <label class="text-gray-600 dark:text-gray-300 font-medium text-sm">ถึง</label>
+                    <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">ถึง</label>
                     <input type="date" id="endDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
                     
                     <button onclick="filterKanban()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm">ค้นหา</button>
                     
-                    <div class="hidden sm:block border-l border-gray-300 dark:border-slate-600 h-6 mx-1"></div>
+                    <div class="hidden sm:block border-l border-slate-300 dark:border-slate-600 h-6 mx-1"></div>
                     
                     <button onclick="setLastWeek()" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm flex items-center gap-1">⏪ สัปดาห์ก่อน</button>
                     <button onclick="setThisWeek()" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm flex items-center gap-1">▶️ สัปดาห์นี้</button>
                 </div>
 
-                <div id="kanban-status" class="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-6 border border-green-200 dark:border-green-800 shadow-sm">
+                <div id="kanban-status" class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-6 border border-emerald-200 dark:border-emerald-800 shadow-sm">
                     ✅ โปรดระบุวันที่และกดค้นหาเพื่อแสดงข้อมูล
                 </div>
 
@@ -257,8 +257,8 @@
         <div class="glass-card p-6 mb-8 border-t-4 border-purple-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">🔍 ค้นหาตามชื่อโปรเจค</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">พิมพ์ชื่อโปรเจคเพื่อดูลักษณะงาน วันที่ดำเนินการ และหมายเหตุ</p>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">🔍 ค้นหาตามชื่อโปรเจค</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">พิมพ์ชื่อโปรเจคเพื่อดูลักษณะงาน วันที่ดำเนินการ และหมายเหตุ</p>
                 </div>
                 <button onclick="toggleSection('search-content', 'toggle-search-btn')" id="toggle-search-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
                     🔽 ซ่อนเนื้อหา
@@ -270,8 +270,8 @@
                     <input type="text" id="searchInput" class="w-full p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white focus:border-purple-500 outline-none transition-all" placeholder="ตัวอย่างเช่น: 81L/2 ...">
                 </div>
 
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700" style="max-height: 400px;">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700" style="max-height: 400px;">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                         <thead class="bg-purple-50 dark:bg-slate-800 sticky top-0 z-10">
                             <tr>
                                 <th class="px-6 py-3 text-left text-sm font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider w-1/6">ชื่อโปรเจค</th>
@@ -280,9 +280,9 @@
                                 <th class="px-6 py-3 text-left text-sm font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider w-1/2">หมายเหตุ</th>
                             </tr>
                         </thead>
-                        <tbody id="searchTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">
+                        <tbody id="searchTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
                             <tr>
-                                <td colspan="4" class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 font-medium">
+                                <td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">
                                     👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์
                                 </td>
                             </tr>
@@ -294,7 +294,7 @@
 
         <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📋 สรุปเปรียบเทียบผลงานแยกตามบริเวณ (Zone)</h3>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">📋 สรุปเปรียบเทียบผลงานแยกตามบริเวณ (Zone)</h3>
                 <button onclick="toggleSection('zone-content', 'toggle-zone-btn')" id="toggle-zone-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
                     🔽 ซ่อนตาราง
                 </button>
@@ -306,40 +306,40 @@
                     <canvas id="zoneChart"></canvas>
                 </div>
                 
-                <div class="rounded-lg border border-gray-200 dark:border-slate-700 w-full overflow-hidden shadow-sm">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                        <thead class="bg-gray-100 dark:bg-slate-800 hidden md:table-header-group">
+                <div class="rounded-lg border border-slate-200 dark:border-slate-700 w-full overflow-hidden shadow-sm">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-100 dark:bg-slate-800 hidden md:table-header-group">
                             <tr>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-1/3 border-r border-gray-200 dark:border-slate-700">บริเวณ (ZONE)</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider w-1/3 border-r border-gray-200 dark:border-slate-700">Sonic Logging</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-1/3 border-r border-slate-200 dark:border-slate-700">บริเวณ (ZONE)</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider w-1/3 border-r border-slate-200 dark:border-slate-700">Sonic Logging</th>
                                 <th class="px-6 py-4 text-center text-sm font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wider w-1/3">Grouting</th>
                             </tr>
                         </thead>
-                        <tbody id="zoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">
+                        <tbody id="zoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="glass-card p-6 mb-8 border-t-4 border-gray-400 dark:border-gray-500">
+        <div class="glass-card p-6 mb-8 border-t-4 border-slate-400 dark:border-slate-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📌 สรุปผลงานอื่นๆ (Other Works)</h3>
-                <button onclick="toggleSection('other-zone-content', 'toggle-other-btn')" id="toggle-other-btn" class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-gray-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">📌 สรุปผลงานอื่นๆ (Other Works)</h3>
+                <button onclick="toggleSection('other-zone-content', 'toggle-other-btn')" id="toggle-other-btn" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
                     🔽 ซ่อนตาราง
                 </button>
             </div>
             
             <div id="other-zone-content" class="collapsible-content">
-                <div class="rounded-lg border border-gray-200 dark:border-slate-700 w-full overflow-hidden mt-2 shadow-sm">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                        <thead class="bg-gray-100 dark:bg-slate-800 hidden md:table-header-group">
+                <div class="rounded-lg border border-slate-200 dark:border-slate-700 w-full overflow-hidden mt-2 shadow-sm">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-100 dark:bg-slate-800 hidden md:table-header-group">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-slate-700 w-3/4">ลักษณะงาน (พร้อมรายชื่อโปรเจค)</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-1/4">จำนวน (งาน)</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 w-3/4">ลักษณะงาน (พร้อมรายชื่อโปรเจค)</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-1/4">จำนวน (งาน)</th>
                             </tr>
                         </thead>
-                        <tbody id="otherZoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">
+                        <tbody id="otherZoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
                         </tbody>
                     </table>
                 </div>
@@ -347,21 +347,27 @@
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-emerald-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-gray-100 dark:border-slate-700 pb-3">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">เปรียบเทียบผลงานรายเดือน (<span class="text-blue-500 font-bold">Sonic</span> อิงวันที่เริ่มงาน | <span class="text-orange-500 font-bold">Grouting</span> อิงวันที่เสร็จงาน)</p>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">เปรียบเทียบผลงานรายเดือน (<span class="text-blue-500 font-bold">Sonic</span> อิงวันที่เริ่มงาน | <span class="text-orange-500 font-bold">Grouting</span> อิงวันที่เสร็จงาน)</p>
                 </div>
-                <button onclick="toggleSection('monthly-content', 'toggle-monthly-btn')" id="toggle-monthly-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
-                    🔽 ซ่อนเนื้อหา
-                </button>
+                
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-200 dark:border-slate-600 flex items-center gap-1 shadow-sm print:hidden">
+                        🖨️ พิมพ์รายงาน
+                    </button>
+                    <button onclick="toggleSection('monthly-content', 'toggle-monthly-btn')" id="toggle-monthly-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
+                        🔽 ซ่อนเนื้อหา
+                    </button>
+                </div>
             </div>
             
             <div id="monthly-content" class="collapsible-content pt-2">
                 <div class="flex flex-wrap items-center gap-3 mb-4 bg-emerald-50 dark:bg-slate-800/80 p-4 rounded-lg border border-emerald-100 dark:border-slate-700 shadow-sm">
                     <label class="text-sm font-bold text-emerald-800 dark:text-emerald-400">⚖️ เปรียบเทียบผลงาน:</label>
                     <select id="compareMonth1" class="p-2 border rounded-md dark:bg-slate-700 dark:text-white dark:border-slate-600 text-sm outline-none focus:border-emerald-500"></select>
-                    <span class="text-gray-500 dark:text-gray-400 font-bold text-sm">VS</span>
+                    <span class="text-slate-500 dark:text-slate-400 font-bold text-sm">VS</span>
                     <select id="compareMonth2" class="p-2 border rounded-md dark:bg-slate-700 dark:text-white dark:border-slate-600 text-sm outline-none focus:border-emerald-500"></select>
                     
                     <button onclick="compareMonths()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md font-bold text-sm transition-colors shadow-sm">
@@ -372,7 +378,7 @@
                     </button>
                 </div>
 
-                <div id="monthlySummaryReport" class="mb-6 p-5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-100 dark:border-slate-600 shadow-sm text-gray-700 dark:text-gray-200 text-base leading-relaxed">
+                <div id="monthlySummaryReport" class="mb-6 p-5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-100 dark:border-slate-600 shadow-sm text-slate-700 dark:text-slate-200 text-base leading-relaxed">
                 </div>
                 
                 <div class="w-full relative" style="height: 400px;">
@@ -397,7 +403,6 @@
 
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
 
-        // 🟢 ดึงฟังก์ชันแปลงวันที่ออกมาเป็น Global ตามกฎ
         function formatDateForInput(d) {
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -429,7 +434,6 @@
             loadFromUrl();
         });
 
-        // 🟢 ฟังก์ชันสำหรับปุ่ม "สัปดาห์ก่อน" (อัปเดตให้กดถอยหลังได้เรื่อยๆ)
         function setLastWeek() {
             const startVal = document.getElementById('startDate').value; 
             const endVal = document.getElementById('endDate').value;
@@ -448,7 +452,6 @@
             filterKanban();
         }
 
-        // 🟢 ฟังก์ชันสำหรับปุ่ม "สัปดาห์นี้"
         function setThisWeek() {
             document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
             document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
@@ -467,14 +470,14 @@
                 btn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
                 btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
                 btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
-                btn.classList.remove('bg-gray-100', 'text-gray-700');
+                btn.classList.remove('bg-slate-100', 'text-slate-700');
             } else {
                 const btnText = btn.innerHTML.includes('ตาราง') ? '🔽 ซ่อนตาราง' : '🔽 ซ่อนเนื้อหา';
                 btn.innerHTML = btnText;
                 btn.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
                 
                 if(btnId === 'toggle-other-btn') {
-                    btn.classList.add('bg-gray-100', 'text-gray-700', 'border-gray-200', 'dark:bg-slate-700', 'dark:text-gray-300');
+                    btn.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-200', 'dark:bg-slate-700', 'dark:text-slate-300');
                 } else if(btnId === 'toggle-kpi-btn') {
                     btn.classList.add('bg-indigo-50', 'text-indigo-600', 'border-indigo-200', 'dark:bg-slate-700');
                 } else {
@@ -516,8 +519,8 @@
             st.className = 'mt-4 text-center p-3 rounded-lg font-bold ';
             if(type === 'load') st.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900/40', 'dark:text-blue-400');
             else if(type === 'err') st.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/40', 'dark:text-red-400');
-            else if(type === 'ok') st.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/40', 'dark:text-green-400');
-            else st.classList.add('bg-gray-100', 'text-gray-800', 'dark:bg-gray-800', 'dark:text-gray-300'); 
+            else if(type === 'ok') st.classList.add('bg-emerald-100', 'text-emerald-800', 'dark:bg-emerald-900/40', 'dark:text-emerald-400');
+            else st.classList.add('bg-slate-100', 'text-slate-800', 'dark:bg-slate-800', 'dark:text-slate-300'); 
         }
 
         function loadFromUrl() {
@@ -678,7 +681,7 @@
             renderOtherZoneTable(otherZoneCounts);
             
             document.getElementById('searchInput').value = '';
-            document.getElementById('searchTableBody').innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
+            document.getElementById('searchTableBody').innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
             
             filterKanban();
             prepareMonthlyChart(data);
@@ -780,14 +783,14 @@
                 const sonicContainer = document.getElementById(`k-sonic-${dayIndex}`);
                 for (const [baseName, data] of Object.entries(sonicGrouped[dayIndex])) {
                     let badgeHTML = data.count > 1 
-                        ? `<span class="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/50">+${data.count} งาน</span>` 
-                        : `<span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
+                        ? `<span class="text-[11px] font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/50">+${data.count} งาน</span>` 
+                        : `<span class="text-[11px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
                     
                     sonicContainer.innerHTML += `
                         <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-blue-400" onclick="triggerSearch('${baseName}', 'sonic')">
-                            <div class="font-bold text-sm mb-1.5 text-gray-800 dark:text-gray-100 break-words">📌 ${baseName}</div>
+                            <div class="font-bold text-sm mb-1.5 text-slate-800 dark:text-slate-100 break-words">📌 ${baseName}</div>
                             <div class="mb-2">${badgeHTML}</div>
-                            <div class="text-xs text-blue-600 dark:text-blue-400 font-bold border-t border-gray-100 dark:border-slate-700 pt-2 mt-1">
+                            <div class="text-xs text-blue-600 dark:text-blue-400 font-bold border-t border-slate-100 dark:border-slate-700 pt-2 mt-1">
                                 เริ่ม: ${data.date}
                             </div>
                         </div>`;
@@ -796,14 +799,14 @@
                 const groutContainer = document.getElementById(`k-grout-${dayIndex}`);
                 for (const [baseName, data] of Object.entries(groutGrouped[dayIndex])) {
                     let badgeHTML = data.count > 1 
-                        ? `<span class="text-[10px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded-md dark:bg-orange-900/60 dark:text-orange-300 border border-orange-200 dark:border-orange-700/50">+${data.count} งาน</span>` 
-                        : `<span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
+                        ? `<span class="text-[11px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded-md dark:bg-orange-900/60 dark:text-orange-300 border border-orange-200 dark:border-orange-700/50">+${data.count} งาน</span>` 
+                        : `<span class="text-[11px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
                     
                     groutContainer.innerHTML += `
                         <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-orange-400" style="border-left-color: #e67e22;" onclick="triggerSearch('${baseName}', 'grout')">
-                            <div class="font-bold text-sm mb-1.5 text-gray-800 dark:text-gray-100 break-words">📌 ${baseName}</div>
+                            <div class="font-bold text-sm mb-1.5 text-slate-800 dark:text-slate-100 break-words">📌 ${baseName}</div>
                             <div class="mb-2">${badgeHTML}</div>
-                            <div class="text-xs text-orange-600 dark:text-orange-400 font-bold border-t border-gray-100 dark:border-slate-700 pt-2 mt-1">
+                            <div class="text-xs text-orange-600 dark:text-orange-400 font-bold border-t border-slate-100 dark:border-slate-700 pt-2 mt-1">
                                 เสร็จ: ${data.date}
                             </div>
                         </div>`;
@@ -813,7 +816,7 @@
             const banner = document.getElementById('kanban-status');
             const totalFound = foundSonicCount + foundGroutCount;
             if(totalFound > 0) {
-                banner.className = "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400 p-3 rounded-lg text-center font-bold mb-6 border border-green-200 dark:border-green-800 shadow-sm";
+                banner.className = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-6 border border-emerald-200 dark:border-emerald-800 shadow-sm";
                 banner.innerHTML = `✅ พบข้อมูลในช่วงที่เลือกทั้งหมด ${totalFound} รายการ (Sonic: ${foundSonicCount} งาน, Grouting: ${foundGroutCount} งาน)`;
             } else {
                 banner.className = "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400 p-3 rounded-lg text-center font-bold mb-6 border border-red-200 dark:border-red-800 shadow-sm";
@@ -825,7 +828,7 @@
             const tbody = document.getElementById('searchTableBody');
             
             if (keyword === '') {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
                 return;
             }
 
@@ -857,11 +860,11 @@
                 const remark = row['หมายเหตุ'] || '-'; 
                 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-purple-700 dark:text-purple-400">📌 ${projName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700 dark:text-gray-300">${jobType}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 leading-relaxed">${dateDisplay}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">${remark}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700 dark:text-slate-300">${jobType}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${dateDisplay}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">${remark}</td>
                     </tr>
                 `;
             });
@@ -1013,15 +1016,15 @@
                 totalSonic += data.sonic;
                 totalGrout += data.grout;
 
-                const sonicColor = data.sonic > 0 ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-400 dark:text-gray-500';
-                const groutColor = data.grout > 0 ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-gray-400 dark:text-gray-500';
+                const sonicColor = data.sonic > 0 ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-400 dark:text-slate-500';
+                const groutColor = data.grout > 0 ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-slate-400 dark:text-slate-500';
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors border-b border-gray-100 dark:border-slate-800/50 last:border-0">
-                        <td class="px-6 py-3 whitespace-nowrap text-sm font-bold text-gray-700 dark:text-gray-300 text-center border-r border-gray-100 dark:border-slate-700">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
+                        <td class="px-6 py-3 whitespace-nowrap text-sm font-bold text-slate-700 dark:text-slate-300 text-center border-r border-slate-100 dark:border-slate-700">
                             ${zone}
                         </td>
-                        <td class="px-6 py-3 whitespace-nowrap text-sm text-center ${sonicColor} border-r border-gray-100 dark:border-slate-700">
+                        <td class="px-6 py-3 whitespace-nowrap text-sm text-center ${sonicColor} border-r border-slate-100 dark:border-slate-700">
                             ${data.sonic}
                         </td>
                         <td class="px-6 py-3 whitespace-nowrap text-sm text-center ${groutColor}">
@@ -1061,7 +1064,7 @@
             let total = 0;
 
             if (items.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 font-medium">ไม่พบข้อมูลงานอื่นๆ ในระบบ</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="2" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">ไม่พบข้อมูลงานอื่นๆ ในระบบ</td></tr>`;
                 return;
             }
 
@@ -1073,16 +1076,16 @@
                 }).join('');
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors border-b border-gray-100 dark:border-slate-800/50 last:border-0">
-                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-slate-700 align-top">
-                            <div class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
+                        <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-700 align-top">
+                            <div class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                                 <span class="text-indigo-500 text-lg">📌</span> ${item.zone}
                             </div>
                             <div class="flex flex-wrap gap-1.5 pl-7">
                                 ${projectTags}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-600 dark:text-gray-400 font-bold align-top pt-5">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-600 dark:text-slate-400 font-bold align-top pt-5">
                             ${item.count.toLocaleString()}
                         </td>
                     </tr>
@@ -1090,11 +1093,11 @@
             });
 
             tbody.innerHTML += `
-                <tr class="bg-gray-100 dark:bg-slate-800 border-t-2 border-gray-200 dark:border-slate-700">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800 dark:text-gray-300 text-center border-r border-gray-200 dark:border-slate-700">
+                <tr class="bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-200 dark:border-slate-700">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-300 text-center border-r border-slate-200 dark:border-slate-700">
                         รวมทั้งหมด (Total)
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800 dark:text-gray-300 text-center text-lg">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-300 text-center text-lg">
                         ${total.toLocaleString()}
                     </td>
                 </tr>
@@ -1192,7 +1195,7 @@
             const keys = Object.keys(dataObj).sort(); 
 
             if (keys.length === 0) {
-                summaryDiv.innerHTML = '<span class="text-gray-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>';
+                summaryDiv.innerHTML = '<span class="text-slate-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>';
                 return;
             }
 
