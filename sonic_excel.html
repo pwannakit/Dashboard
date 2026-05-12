@@ -122,13 +122,11 @@
             document.getElementById("ramp-status").parentElement.innerHTML = `<td colspan="25">${html}</td>`;
         }
 
-        // ตัวอ่านวันที่ขั้นเทพ รองรับภาษาไทย ภาษาอังกฤษ และปี พ.ศ.
         function parseDateSafe(dStr) {
             if (!dStr || typeof dStr !== 'string') return null;
             dStr = dStr.trim();
             if (dStr === "" || dStr === "-") return null;
 
-            // ตรวจสอบเดือนแบบข้อความ (ไทย/อังกฤษ)
             const monthsMap = {
                 'ม.ค.':1,'มกราคม':1,'JAN':1, 'ก.พ.':2,'กุมภาพันธ์':2,'FEB':2,
                 'มี.ค.':3,'มีนาคม':3,'MAR':3, 'เม.ย.':4,'เมษายน':4,'APR':4,
@@ -147,7 +145,6 @@
                 }
             }
 
-            // ดึงตัวเลขทั้งหมดออกมา
             const nums = dStr.match(/\d+/g);
             if (nums && nums.length >= 2) {
                 let day = parseInt(nums[0], 10);
@@ -156,14 +153,14 @@
 
                 if (!month && nums.length >= 3) {
                     month = parseInt(nums[1], 10);
-                    if (month > 12) { // สลับ วัน/เดือน อัตโนมัติ
+                    if (month > 12) { 
                         month = day; day = parseInt(nums[1], 10);
                     }
                 }
 
                 if (month) {
                     if (year < 100) year += 2000;
-                    if (year > 2500) year -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+                    if (year > 2500) year -= 543; 
                     
                     const d = new Date(year, month - 1, day);
                     if (!isNaN(d.getTime())) {
@@ -172,7 +169,6 @@
                 }
             }
 
-            // ลองให้ Javascript เดา (สำหรับรูปแบบมาตรฐาน)
             const jsDate = new Date(dStr);
             if (!isNaN(jsDate.getTime())) {
                 let y = jsDate.getFullYear();
@@ -182,6 +178,26 @@
 
             return null;
         }
+
+        // --- ล็อกเป้าคอลัมน์ให้แม่นยำ ---
+        const getStartDate = (row) => {
+            for (let k in row) { if (k.includes('เริ่มงาน')) return row[k]; }
+            return "";
+        };
+
+        const getActualFinishDate = (row) => {
+            for (let k in row) { 
+                // บังคับว่าต้องมีคำว่า "จริง" เพื่อไม่ให้ไปดึง "วันที่คาดว่าจะเสร็จงาน" มาผิด
+                if (k.includes('เสร็จงานจริง')) return row[k]; 
+            }
+            if (row['วันที่เสร็จงานจริงๆ'] !== undefined) return row['วันที่เสร็จงานจริงๆ'];
+            return "";
+        };
+
+        const getResponsible = (row) => {
+            for (let k in row) { if (k.includes('รับผิดชอบ')) return String(row[k]); }
+            return "";
+        };
 
         function processData(pileData, sonicGroutData) {
             const dailySummary = {};
@@ -198,15 +214,10 @@
             const regexZone = /(?:ZONE|Z)[-\s]*(\d)/i;
             const regexRamp = /(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/i;
 
-            // ฟังก์ชันค้นหาชื่อคอลัมน์แบบยืดหยุ่น (Fuzzy Search)
-            const findKey = (row, keyword) => Object.keys(row).find(k => k.includes(keyword));
-
+            // 1. ประมวลผล Piling Work
             pileData.forEach(row => {
-                const startKey = findKey(row, 'เริ่มงาน');
-                const respKey = findKey(row, 'รับผิดชอบ');
-                
-                const targetDate = startKey ? row[startKey] : "";
-                const responsible = respKey ? row[respKey] : "";
+                const targetDate = getStartDate(row);
+                const responsible = getResponsible(row).toUpperCase();
                 const ymd = parseDateSafe(targetDate);
 
                 if (ymd) {
@@ -220,7 +231,7 @@
                             dailySummary[ymd].pileZone[z]++; dailySummary[ymd].pileZone.total++;
                         }
                     } else if (rampMatch) {
-                        const r = rampMatch[1].toUpperCase().replace('OR', 'O'); 
+                        const r = rampMatch[1].replace('OR', 'O'); 
                         if (dailySummary[ymd].pileRamp[r] !== undefined) {
                             dailySummary[ymd].pileRamp[r]++; dailySummary[ymd].pileRamp.total++;
                         }
@@ -228,40 +239,51 @@
                 }
             });
 
+            // 2. ประมวลผล Sonic & Grouting
             sonicGroutData.forEach(row => {
-                 const startKey = findKey(row, 'เริ่มงาน');
-                 const finishKey = findKey(row, 'เสร็จงาน');
-                 const respKey = findKey(row, 'รับผิดชอบ');
-
-                 const startDate = startKey ? row[startKey] : "";
-                 const finishDate = finishKey ? row[finishKey] : "";
-                 const responsible = respKey ? String(row[respKey]).toUpperCase() : "";
+                 const startDate = getStartDate(row);
+                 const finishDate = getActualFinishDate(row); // ใช้ฟังก์ชันล็อกเป้าที่แก้ใหม่
+                 const responsible = getResponsible(row).toUpperCase();
                  
                  const isSonic = responsible.includes("SONIC");
                  const isGrout = responsible.includes("GROUT");
 
-                 let targetDate = "";
-                 if (isSonic) targetDate = startDate;
-                 else if (isGrout) targetDate = finishDate;
+                 const zoneMatch = responsible.match(regexZone);
+                 const rampMatch = responsible.match(regexRamp);
 
-                 const ymd = parseDateSafe(targetDate);
-
-                 if (ymd) {
-                     initializeDateStruct(ymd);
-                     const zoneMatch = responsible.match(regexZone);
-                     const rampMatch = responsible.match(regexRamp);
-
-                     if (isSonic || isGrout) {
-                         const typeKey = isSonic ? 'sonic' : 'grout';
+                 // คำนวณ Sonic แยกจาก Grout โดยเด็ดขาด
+                 if (isSonic) {
+                     const ymdSonic = parseDateSafe(startDate);
+                     if (ymdSonic) {
+                         initializeDateStruct(ymdSonic);
                          if (zoneMatch) {
                              const z = zoneMatch[1];
-                             if (dailySummary[ymd][typeKey + 'Zone'][z] !== undefined) {
-                                 dailySummary[ymd][typeKey + 'Zone'][z]++; dailySummary[ymd][typeKey + 'Zone'].total++;
+                             if (dailySummary[ymdSonic]['sonicZone'][z] !== undefined) {
+                                 dailySummary[ymdSonic]['sonicZone'][z]++; dailySummary[ymdSonic]['sonicZone'].total++;
                              }
                          } else if (rampMatch) {
                              const r = rampMatch[1].replace('OR', 'O');
-                             if (dailySummary[ymd][typeKey + 'Ramp'][r] !== undefined) {
-                                 dailySummary[ymd][typeKey + 'Ramp'][r]++; dailySummary[ymd][typeKey + 'Ramp'].total++;
+                             if (dailySummary[ymdSonic]['sonicRamp'][r] !== undefined) {
+                                 dailySummary[ymdSonic]['sonicRamp'][r]++; dailySummary[ymdSonic]['sonicRamp'].total++;
+                             }
+                         }
+                     }
+                 }
+
+                 // คำนวณ Grout 
+                 if (isGrout) {
+                     const ymdGrout = parseDateSafe(finishDate);
+                     if (ymdGrout) {
+                         initializeDateStruct(ymdGrout);
+                         if (zoneMatch) {
+                             const z = zoneMatch[1];
+                             if (dailySummary[ymdGrout]['groutZone'][z] !== undefined) {
+                                 dailySummary[ymdGrout]['groutZone'][z]++; dailySummary[ymdGrout]['groutZone'].total++;
+                             }
+                         } else if (rampMatch) {
+                             const r = rampMatch[1].replace('OR', 'O');
+                             if (dailySummary[ymdGrout]['groutRamp'][r] !== undefined) {
+                                 dailySummary[ymdGrout]['groutRamp'][r]++; dailySummary[ymdGrout]['groutRamp'].total++;
                              }
                          }
                      }
@@ -275,7 +297,6 @@
             const sortedYMDs = Object.keys(dailySummary).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
             
             if (sortedYMDs.length === 0) {
-                // ถ้ายังหาไม่เจออีก จะปริ้นข้อมูลดิบออกหน้าจอให้ดูเลยครับ
                 let debugInfo = "<b>ข้อมูลดิบที่อ่านได้จาก Sheet (2 บรรทัดแรก):</b><br>" + JSON.stringify(rawDataForDebug.slice(0, 2), null, 2);
                 showError("โหลดข้อมูลสำเร็จ แต่ไม่พบข้อมูลวันที่ หรือรูปแบบวันที่ใน Sheet ไม่ตรงเกณฑ์", debugInfo);
                 return;
