@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.26 - พี่เอ็กซ์</title>
+    <title>Column Dashboard V3.28 - พี่เอ็กซ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,6 +13,7 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body { transition: background-color 0.3s, color 0.3s; }
@@ -89,8 +90,8 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.26</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Full Executive Summary)</p>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 Column Dashboard V3.28</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">ระบบติดตามงานเสารายต้น (Chart Data Labels Fixed)</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
@@ -100,7 +101,7 @@
             <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2">
                 <span>⚙️ ตั้งค่าฐานข้อมูล</span>
             </button>
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-xl" title="สลับโหมดมืด/สว่าง">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
@@ -110,7 +111,7 @@
         <div id="data-source-container" class="collapsible-content collapsed">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-slate-50 dark:bg-slate-800/50">
-                    <h3 class="font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <span class="text-blue-500">🌐</span> ลิงก์ฐานข้อมูล Google Sheets
                     </h3>
                     <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 outline-none focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm">
@@ -120,7 +121,7 @@
                 </div>
 
                 <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-slate-50 dark:bg-slate-800/50">
-                    <h3 class="font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <span class="text-yellow-500">📁</span> อัปโหลดไฟล์ CSV (กรณีออฟไลน์)
                     </h3>
                     <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 outline-none bg-white dark:bg-slate-700 text-slate-800 dark:text-white file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-slate-200 dark:file:bg-slate-600 file:text-slate-700 dark:file:text-slate-200">
@@ -193,20 +194,20 @@
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-slate-400 dark:border-slate-500">
-                        <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">เสาพร้อมดำเนินการ <span id="kpi-zone-name" class="text-indigo-600 dark:text-indigo-400"></span></div>
-                        <div class="text-2xl md:text-4xl font-bold text-slate-800 dark:text-slate-100" id="kpi-total">0</div>
+                        <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">เสาพร้อมดำเนินการ<span id="kpi-zone-name" class="text-indigo-600 dark:text-indigo-400"></span></div>
+                        <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400" id="kpi-total">0</div>
                     </div>
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-emerald-500">
                         <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">เสร็จสมบูรณ์ 100%</div>
-                        <div class="text-2xl md:text-4xl font-bold text-emerald-600 dark:text-emerald-400" id="kpi-completed">0</div>
+                        <div class="text-4xl md:text-5xl font-bold text-emerald-600 dark:text-emerald-400" id="kpi-completed">0</div>
                     </div>
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-blue-500">
                         <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">กำลังดำเนินการ</div>
-                        <div class="text-2xl md:text-4xl font-bold text-blue-600 dark:text-blue-400" id="kpi-active">0</div>
+                        <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400" id="kpi-active">0</div>
                     </div>
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-amber-500">
                         <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">รอดำเนินการ</div>
-                        <div class="text-2xl md:text-4xl font-bold text-amber-600 dark:text-amber-400" id="kpi-pending">0</div>
+                        <div class="text-4xl md:text-5xl font-bold text-orange-500 dark:text-orange-400" id="kpi-pending">0</div>
                     </div>
                 </div>
             </div>
@@ -241,7 +242,7 @@
 
         <div class="glass-card section-wrapper">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 id="chart-title" class="text-lg font-bold text-slate-800 dark:text-white flex flex-wrap items-center gap-2">
+                <h3 id="chart-title" class="text-xl font-bold text-slate-800 dark:text-white flex flex-wrap items-center gap-2">
                     📈 กราฟระดับความสูงเสา
                 </h3>
                 <div class="flex flex-wrap items-center gap-3 no-print">
@@ -264,7 +265,7 @@
 
         <div class="glass-card section-wrapper mb-8" id="table-card">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
                     📋 รายละเอียดเสาในพื้นที่
                     <span id="table-count-badge" class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300 text-xs px-3 py-1.5 rounded-full font-bold"></span>
                 </h3>
@@ -304,7 +305,7 @@
 
         <div class="glass-card section-wrapper mb-8" id="zone-summary-card">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
                     📑 สรุปจำนวนเสาแยกตามพื้นที่ (Zone vs Target)
                 </h3>
                 <button onclick="toggleSection('zone-summary-wrapper', 'toggle-zone-summary-btn')" id="toggle-zone-summary-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center justify-center gap-1 shadow-sm w-full sm:w-auto no-print">
@@ -331,13 +332,13 @@
                                 <th class="px-4 py-3 text-right text-sm font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</th>
                                 <th id="sum-target-footer" class="px-4 py-3 text-center text-base font-bold text-blue-600 dark:text-blue-400">0</th>
                                 <th id="sum-actual-footer" class="px-4 py-3 text-center text-base font-bold text-emerald-600 dark:text-emerald-400">0</th>
-                                <th id="sum-diff-footer" class="px-4 py-3 text-center text-base font-bold text-amber-600 dark:text-amber-400">0</th>
+                                <th id="sum-diff-footer" class="px-4 py-3 text-center text-base font-bold text-orange-500 dark:text-orange-400">0</th>
                                 <th id="sum-percent-footer" class="px-4 py-3 text-left text-base font-bold text-slate-800 dark:text-white">0%</th>
                             </tr>
                             <tr class="bg-orange-50/80 dark:bg-[#1a1a24] border-t border-slate-200 dark:border-slate-700">
                                 <td colspan="5" class="px-5 py-4">
                                     <div class="flex flex-col gap-3">
-                                        <div class="text-orange-600 dark:text-[#f97316] font-bold text-base" id="pending-count-text">รอดำเนินการ (Pending Columns)</div>
+                                        <div class="text-orange-500 dark:text-orange-400 font-bold text-base" id="pending-count-text">รอดำเนินการ (Pending Columns)</div>
                                         <div id="pending-tags-container" class="flex flex-wrap gap-2 items-center">
                                         </div>
                                     </div>
@@ -403,7 +404,7 @@
     <div id="target-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     📊 ปริมาณเป้าหมายเสาทั้งโครงการ
                 </h3>
                 <button onclick="closeTotalColumnsModal()" class="text-slate-400 hover:text-red-500 transition-colors">
@@ -435,6 +436,9 @@
     </div>
 
     <script>
+        // 🌟 ลงทะเบียน Plugin ให้ระบบรับทราบ 🌟
+        Chart.register(ChartDataLabels);
+
         const PROJECT_COLUMN_TARGETS = {
             "Zone 1": 12, "Zone 2": 47, "Zone 3": 42, "Zone 4": 11, "Zone 5": 6, "Zone 6": 20, "Zone 7": 76,
             "Ramp-N01": 10, "Ramp-OR3": 24, "Ramp-OR4": 63, "Ramp-OR6": 41, "Ramp-OR7": 18, "Ramp-SR1": 8
@@ -446,9 +450,9 @@
         let ZONES = [];
         let chartInstance = null;
         let monthlyChartInstance = null;
-        let monthlyCompletedChartInstance = null; // 🌟 เพิ่มตัวแปรเก็บกราฟใหม่
+        let monthlyCompletedChartInstance = null; 
         let monthlyStatsData = [];
-        let monthlyCompletedStatsData = []; // 🌟 เพิ่มตัวแปรเก็บข้อมูลสถิติเสาเสร็จ 100%
+        let monthlyCompletedStatsData = []; 
 
         let currentWeekStart, currentWeekEnd, currentMonthKey;
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -701,6 +705,106 @@
             renderZoneSummaryTable();
         }
 
+        // 🌟 กราฟภาพรวมแยกโซนที่มีตัวเลขโชว์กลางแท่ง 🌟
+        function drawSummaryChart() {
+            document.getElementById('chart-title').innerHTML = `📊 ความคืบหน้าภาพรวมแยกตามโซน <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อดูรายโซน 👆)</span>`;
+            const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
+            const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
+            const allSortedZones = [...configZones, ...otherZones];
+            const stats = allSortedZones.map(z => {
+                const target = PROJECT_COLUMN_TARGETS[z] || 0;
+                const comp = Object.values(globalDatabase).filter(c => c.zone === z && c.currentPouredElev >= c.target && c.target > 0).length;
+                const remaining = target - comp > 0 ? target - comp : 0;
+                return { zone: z, comp: comp, remaining: remaining };
+            });
+            if (chartInstance) chartInstance.destroy();
+            document.getElementById('chart-container').style.width = '100%';
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#64748b';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            chartInstance = new Chart(document.getElementById('columnChart'), {
+                type: 'bar', 
+                data: { 
+                    labels: stats.map(s=>s.zone), 
+                    datasets: [
+                        { label: 'แล้วเสร็จ (ต้น)', data: stats.map(s=>s.comp), backgroundColor: '#10b981', stack: 'Stack 0' }, 
+                        { label: 'คงเหลือ (เป้าหมาย)', data: stats.map(s=>s.remaining), backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)', borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1', borderWidth: 1, borderDash: [4, 4], stack: 'Stack 0' }
+                    ] 
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { 
+                        y: { stacked: true, title: { display: true, color: textColor, text: 'จำนวนเสา (ต้น)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, grid: { color: gridColor } }, 
+                        x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } } 
+                    },
+                    plugins: { 
+                        // 🌟 คำสั่งบังคับเปิดตัวเลข 🌟
+                        datalabels: {
+                            display: true,
+                            anchor: 'center',
+                            align: 'center',
+                            color: function(context) { return context.datasetIndex === 0 ? '#ffffff' : (isDark ? '#cbd5e1' : '#475569'); },
+                            font: { family: 'Sarabun', weight: 'bold', size: 14 },
+                            formatter: function(value) { return value > 0 ? value : ''; }
+                        },
+                        legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, 
+                        tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { label: (context) => context.dataset.label + ': ' + context.raw + ' ต้น' } } 
+                    },
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const zoneName = chart.data.labels[elements[0].index];
+                            document.getElementById('zoneSelector').value = zoneName;
+                            document.getElementById('tableSearchInput').value = '';
+                            updateDashboard(); document.getElementById('chart-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    },
+                    onHover: (event, elements) => { event.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+                }
+            });
+        }
+
+        // 🌟 กราฟเสารายต้น (ต้องสั่งปิดตัวเลข ไม่งั้นกราฟจะรก) 🌟
+        function drawColumnChart(colNames) {
+            colNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+            document.getElementById('chart-title').innerHTML = `📈 กราฟระดับความสูงเสารายต้น <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อค้นหาเสา 👆)</span>`;
+            const minWidth = Math.max(800, colNames.length * 35); 
+            document.getElementById('chart-container').style.width = `${minWidth}px`;
+            let maxLifts = 0;
+            colNames.forEach(col => { if(globalDatabase[col].lifts.length > maxLifts) maxLifts = globalDatabase[col].lifts.length; });
+            const isDark = document.documentElement.classList.contains('dark');
+            const datasets = [];
+            for (let i = 0; i < maxLifts; i++) {
+                datasets.push({ label: `Lift ${i+1}`, data: colNames.map(col => { const l = globalDatabase[col].lifts.filter(x => x.status.includes('เท')||x.status.includes('เสร็จ'))[i]; return l ? l.height : 0; }), backgroundColor: `hsl(${210 + (i*30)}, 70%, ${isDark ? 60 : 40}%)`, stack: 'Stack 0' });
+            }
+            datasets.push({ label: 'คงเหลือ (รอเท)', data: colNames.map(col => { const info = globalDatabase[col]; let remaining = info.target - info.currentPouredElev; return remaining > 0 ? remaining : 0; }), backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)', borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1', borderWidth: 1, borderDash: [4, 4], stack: 'Stack 0' });
+            if (chartInstance) chartInstance.destroy();
+            const textColor = isDark ? '#cbd5e1' : '#64748b', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            chartInstance = new Chart(document.getElementById('columnChart'), {
+                type: 'bar', data: { labels: colNames, datasets },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { stacked: true, title: { display: true, color: textColor, text: 'ระดับความสูง (เมตร)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } },
+                    plugins: { 
+                        datalabels: { display: false }, // ปิดตัวเลข
+                        legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, 
+                        tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + context.raw.toFixed(2) + ' m' }, titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } } 
+                    },
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const colName = chart.data.labels[elements[0].index];
+                            document.getElementById('tableSearchInput').value = colName;
+                            const tableContent = document.getElementById('table-content-wrapper');
+                            if (tableContent.classList.contains('collapsed')) { toggleSection('table-content-wrapper', 'toggle-table-btn'); }
+                            updateDashboard(); document.getElementById('table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    },
+                    onHover: (event, elements) => { event.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+                }
+            });
+        }
+
         function renderZoneSummaryTable() {
             const tbody = document.getElementById('zoneSummaryTableBody');
             let html = '';
@@ -718,7 +822,7 @@
                 const displayRemaining = diff > 0 ? diff : 0; 
                 const statusColor = actualCompleted >= target && target > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-bold';
                 const percent = target > 0 ? Math.min((actualCompleted / target) * 100, 100).toFixed(1) : (actualCompleted > 0 ? 100 : 0);
-                html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"><td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">${zone}</td><td class="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-bold">${target}</td><td class="px-4 py-3 text-center ${statusColor}">${actualCompleted}</td><td class="px-4 py-3 text-center text-amber-600 dark:text-amber-400">${displayRemaining}</td><td class="px-4 py-3"><div class="flex items-center gap-2"><div class="progress-bg w-full min-w-[100px]"><div class="progress-bar ${actualCompleted >= target && target > 0 ? 'bg-emerald-500' : 'bg-blue-500'}" style="width: ${percent}%;"></div></div><span class="text-xs font-bold w-12 text-right">${percent}%</span></div></td></tr>`;
+                html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"><td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">${zone}</td><td class="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-bold">${target}</td><td class="px-4 py-3 text-center ${statusColor}">${actualCompleted}</td><td class="px-4 py-3 text-center text-orange-500 dark:text-orange-400">${displayRemaining}</td><td class="px-4 py-3"><div class="flex items-center gap-2"><div class="progress-bg w-full min-w-[100px]"><div class="progress-bar ${actualCompleted >= target && target > 0 ? 'bg-emerald-500' : 'bg-blue-500'}" style="width: ${percent}%;"></div></div><span class="text-xs font-bold w-12 text-right">${percent}%</span></div></td></tr>`;
             });
             Object.keys(globalDatabase).forEach(colName => {
                 const info = globalDatabase[colName];
@@ -774,74 +878,6 @@
             tbody.innerHTML = html;
         }
 
-        function drawColumnChart(colNames) {
-            colNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-            document.getElementById('chart-title').innerHTML = `📈 กราฟระดับความสูงเสารายต้น <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อค้นหาเสา 👆)</span>`;
-            const minWidth = Math.max(800, colNames.length * 35); 
-            document.getElementById('chart-container').style.width = `${minWidth}px`;
-            let maxLifts = 0;
-            colNames.forEach(col => { if(globalDatabase[col].lifts.length > maxLifts) maxLifts = globalDatabase[col].lifts.length; });
-            const isDark = document.documentElement.classList.contains('dark');
-            const datasets = [];
-            for (let i = 0; i < maxLifts; i++) {
-                datasets.push({ label: `Lift ${i+1}`, data: colNames.map(col => { const l = globalDatabase[col].lifts.filter(x => x.status.includes('เท')||x.status.includes('เสร็จ'))[i]; return l ? l.height : 0; }), backgroundColor: `hsl(${210 + (i*30)}, 70%, ${isDark ? 60 : 40}%)`, stack: 'Stack 0' });
-            }
-            datasets.push({ label: 'คงเหลือ (รอเท)', data: colNames.map(col => { const info = globalDatabase[col]; let remaining = info.target - info.currentPouredElev; return remaining > 0 ? remaining : 0; }), backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)', borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1', borderWidth: 1, borderDash: [4, 4], stack: 'Stack 0' });
-            if (chartInstance) chartInstance.destroy();
-            const textColor = isDark ? '#cbd5e1' : '#64748b', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-            chartInstance = new Chart(document.getElementById('columnChart'), {
-                type: 'bar', data: { labels: colNames, datasets },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { stacked: true, title: { display: true, color: textColor, text: 'ระดับความสูง (เมตร)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } },
-                    plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + context.raw.toFixed(2) + ' m' }, titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } } },
-                    onClick: (event, elements, chart) => {
-                        if (elements.length > 0) {
-                            const colName = chart.data.labels[elements[0].index];
-                            document.getElementById('tableSearchInput').value = colName;
-                            const tableContent = document.getElementById('table-content-wrapper');
-                            if (tableContent.classList.contains('collapsed')) { toggleSection('table-content-wrapper', 'toggle-table-btn'); }
-                            updateDashboard(); document.getElementById('table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                    },
-                    onHover: (event, elements) => { event.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
-                }
-            });
-        }
-
-        function drawSummaryChart() {
-            document.getElementById('chart-title').innerHTML = `📊 ความคืบหน้าภาพรวมแยกตามโซน <span class="text-sm font-normal text-blue-500 ml-2 bg-blue-50 dark:bg-slate-700 px-2 py-1 rounded-full whitespace-nowrap">(คลิกที่แท่งกราฟเพื่อดูรายโซน 👆)</span>`;
-            const configZones = Object.keys(PROJECT_COLUMN_TARGETS);
-            const otherZones = ZONES.filter(z => !configZones.includes(z)).sort();
-            const allSortedZones = [...configZones, ...otherZones];
-            const stats = allSortedZones.map(z => {
-                const target = PROJECT_COLUMN_TARGETS[z] || 0;
-                const comp = Object.values(globalDatabase).filter(c => c.zone === z && c.currentPouredElev >= c.target && c.target > 0).length;
-                const remaining = target - comp > 0 ? target - comp : 0;
-                return { zone: z, comp: comp, remaining: remaining };
-            });
-            if (chartInstance) chartInstance.destroy();
-            document.getElementById('chart-container').style.width = '100%';
-            const isDark = document.documentElement.classList.contains('dark'), textColor = isDark ? '#cbd5e1' : '#64748b', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-            chartInstance = new Chart(document.getElementById('columnChart'), {
-                type: 'bar', data: { labels: stats.map(s=>s.zone), datasets: [{ label: 'แล้วเสร็จ (ต้น)', data: stats.map(s=>s.comp), backgroundColor: '#10b981', stack: 'Stack 0' }, { label: 'คงเหลือ (เป้าหมาย)', data: stats.map(s=>s.remaining), backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.6)', borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#cbd5e1', borderWidth: 1, borderDash: [4, 4], stack: 'Stack 0' }] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { y: { stacked: true, title: { display: true, color: textColor, text: 'จำนวนเสา (ต้น)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, grid: { color: gridColor } }, x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } } },
-                    plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' }, callbacks: { label: (context) => context.dataset.label + ': ' + context.raw + ' ต้น' } } },
-                    onClick: (event, elements, chart) => {
-                        if (elements.length > 0) {
-                            const zoneName = chart.data.labels[elements[0].index];
-                            document.getElementById('zoneSelector').value = zoneName;
-                            document.getElementById('tableSearchInput').value = '';
-                            updateDashboard(); document.getElementById('chart-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    },
-                    onHover: (event, elements) => { event.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
-                }
-            });
-        }
-
         function filterKanban() {
             const start = new Date(document.getElementById('startDate').value);
             const end = new Date(document.getElementById('endDate').value);
@@ -863,12 +899,10 @@
             });
         }
 
-        // 🌟 ปรับปรุง: ระบบรวบรวมสถิติแยกตาม "ครั้งที่เท" และ "เสาที่เสร็จ 100%"
         function updateExecutiveSummary(displayCols) {
             const pourStats = {};
             const compStats = {};
             
-            // 1. รวบรวมสถิติการเท (Lifts)
             displayCols.forEach(col => {
                 const info = globalDatabase[col];
                 info.lifts.forEach(l => {
@@ -879,7 +913,6 @@
                     }
                 });
                 
-                // 2. รวบรวมสถิติเสาที่เสร็จ 100% (Completed Columns)
                 if (info.currentPouredElev >= info.target && info.target > 0) {
                     let cumulativeHeight = 0;
                     let completionDate = null;
@@ -922,7 +955,6 @@
             
             const isDark = document.documentElement.classList.contains('dark'), hlColor = 'text-slate-800 dark:text-white';
 
-            // --- จัดการชุดข้อมูลการเท (Lifts) ---
             const d1 = monthlyStatsData[idx1], d2 = monthlyStatsData[idx2];
             if (d1 && d2) {
                 const diff = d2.count - d1.count;
@@ -934,8 +966,6 @@
                 renderMonthlyChart('monthlyChart', init ? monthlyStatsData : (idx1===idx2 ? [d1] : [d1, d2]), 'จำนวนครั้งที่เทคอนกรีต (Lifts)', true);
             }
 
-            // --- จัดการชุดข้อมูลเสาเสร็จสมบูรณ์ (100% Completed) ---
-            // หมายเหตุ: ใช้เดือนเดียวกันกับที่เลือกไว้ด้านบน
             const findMonthData = (dataArr, label) => dataArr.find(d => d.label === label) || { label: label, count: 0 };
             const c1 = findMonthData(monthlyCompletedStatsData, d1.label);
             const c2 = findMonthData(monthlyCompletedStatsData, d2.label);
@@ -951,6 +981,7 @@
             renderMonthlyChart('monthlyCompletedChart', init ? monthlyCompletedStatsData : (idx1===idx2 ? [c1] : [c1, c2]), 'จำนวนเสาที่แล้วเสร็จ 100% (ต้น)', false);
         }
 
+        // 🌟 กราฟรายเดือน (ปิดตัวเลข) 🌟
         function renderMonthlyChart(canvasId, data, label, isPourChart) {
             let instance = isPourChart ? monthlyChartInstance : monthlyCompletedChartInstance;
             if (instance) instance.destroy();
@@ -960,7 +991,10 @@
                 options: { 
                     responsive: true, maintainAspectRatio: false,
                     scales: { x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun', stepSize: 5 } }, grid: { color: gridColor } } },
-                    plugins: { legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun' } } } }
+                    plugins: { 
+                        datalabels: { display: false }, 
+                        legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun' } } } 
+                    }
                 }
             });
             if (isPourChart) monthlyChartInstance = newInstance; else monthlyCompletedChartInstance = newInstance;
