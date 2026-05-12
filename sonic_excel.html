@@ -34,14 +34,14 @@
             border: 1px solid #000;
             padding: 6px 4px;
             text-align: center;
+            height: 24px; /* กำหนดความสูงให้ตารางดูโปร่งขึ้นนิดนึง */
         }
         th {
             background-color: #f9f9f9;
         }
-        /* ไฮไลท์แถวล่าสุด */
+        /* ไฮไลท์แถวล่าสุดสีเทาเหมือนในรูป */
         .highlight-row {
-            background-color: #e0e0e0;
-            font-weight: bold;
+            background-color: #d9d9d9; 
         }
         .num-col {
             width: 2.5%;
@@ -122,8 +122,7 @@
         async function fetchDatabase() {
             try {
                 const [pileResponse, sonicGroutResponse] = await Promise.all([
-                    fetch(pileCsvUrl),
-                    fetch(sonicGroutCsvUrl)
+                    fetch(pileCsvUrl), fetch(sonicGroutCsvUrl)
                 ]);
 
                 const pileCsvText = await pileResponse.text();
@@ -135,17 +134,35 @@
                 processData(pileData, sonicGroutData);
             } catch (error) {
                 console.error('Error:', error);
-                document.querySelector("#zone-table tbody").innerHTML = '<tr><td colspan="28" style="color:red;">ไม่สามารถโหลดข้อมูลได้ โปรดตรวจสอบการเชื่อมต่อ</td></tr>';
-                document.querySelector("#ramp-table tbody").innerHTML = '<tr><td colspan="25" style="color:red;">ไม่สามารถโหลดข้อมูลได้ โปรดตรวจสอบการเชื่อมต่อ</td></tr>';
+                document.querySelector("#zone-table tbody").innerHTML = '<tr><td colspan="28" style="color:red;">ไม่สามารถโหลดข้อมูลได้</td></tr>';
+                document.querySelector("#ramp-table tbody").innerHTML = '<tr><td colspan="25" style="color:red;">ไม่สามารถโหลดข้อมูลได้</td></tr>';
             }
+        }
+
+        // ตัวแปลงวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD เพื่อใช้เป็น Key และเรียงลำดับได้แม่นยำ
+        function parseDateToYMD(dStr) {
+            if (!dStr) return null;
+            let d;
+            if(dStr.includes('/')) {
+                const parts = dStr.split('/');
+                if (parts[2].length >= 4 || parseInt(parts[2]) > 31) {
+                    d = new Date(parts[2], parts[1] - 1, parts[0]);
+                } else {
+                    d = new Date(dStr);
+                }
+            } else {
+                d = new Date(dStr);
+            }
+            if (isNaN(d.getTime())) return null;
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
         function processData(pileData, sonicGroutData) {
             const dailySummary = {};
 
-            function initializeDateStruct(dateStr) {
-                if (!dailySummary[dateStr]) {
-                    dailySummary[dateStr] = {
+            function initializeDateStruct(ymd) {
+                if (!dailySummary[ymd]) {
+                    dailySummary[ymd] = {
                         pileZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
                         sonicZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
                         groutZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
@@ -160,23 +177,24 @@
             pileData.forEach(row => {
                 const targetDate = row['วันที่เริ่มงาน'] ? row['วันที่เริ่มงาน'].trim() : "";
                 const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
+                const ymd = parseDateToYMD(targetDate);
 
-                if (targetDate !== "") {
-                    initializeDateStruct(targetDate);
+                if (ymd) {
+                    initializeDateStruct(ymd);
                     const zoneMatch = responsible.match(/ZONE\s*(\d)/);
                     const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
 
                     if (zoneMatch) {
                         const z = zoneMatch[1];
-                        if (dailySummary[targetDate].pileZone[z] !== undefined) {
-                            dailySummary[targetDate].pileZone[z]++;
-                            dailySummary[targetDate].pileZone.total++;
+                        if (dailySummary[ymd].pileZone[z] !== undefined) {
+                            dailySummary[ymd].pileZone[z]++;
+                            dailySummary[ymd].pileZone.total++;
                         }
                     } else if (rampMatch) {
                         const r = rampMatch[1].replace('OR', 'O'); 
-                        if (dailySummary[targetDate].pileRamp[r] !== undefined) {
-                            dailySummary[targetDate].pileRamp[r]++;
-                            dailySummary[targetDate].pileRamp.total++;
+                        if (dailySummary[ymd].pileRamp[r] !== undefined) {
+                            dailySummary[ymd].pileRamp[r]++;
+                            dailySummary[ymd].pileRamp.total++;
                         }
                     }
                 }
@@ -191,16 +209,14 @@
                  const isSonic = responsible.includes("SONIC");
                  const isGrout = responsible.includes("GROUT");
 
-                 // กำหนด targetDate ตามประเภทงาน
                  let targetDate = "";
-                 if (isSonic) {
-                     targetDate = startDate; // Sonic ใช้ วันที่เริ่มงาน
-                 } else if (isGrout) {
-                     targetDate = finishDate; // Grout ใช้ วันที่เสร็จงานจริงๆ
-                 }
+                 if (isSonic) targetDate = startDate;
+                 else if (isGrout) targetDate = finishDate;
 
-                 if (targetDate !== "") {
-                     initializeDateStruct(targetDate);
+                 const ymd = parseDateToYMD(targetDate);
+
+                 if (ymd) {
+                     initializeDateStruct(ymd);
                      const zoneMatch = responsible.match(/Z(\d)/);
                      const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
 
@@ -208,15 +224,15 @@
                          const typeKey = isSonic ? 'sonic' : 'grout';
                          if (zoneMatch) {
                              const z = zoneMatch[1];
-                             if (dailySummary[targetDate][typeKey + 'Zone'][z] !== undefined) {
-                                 dailySummary[targetDate][typeKey + 'Zone'][z]++;
-                                 dailySummary[targetDate][typeKey + 'Zone'].total++;
+                             if (dailySummary[ymd][typeKey + 'Zone'][z] !== undefined) {
+                                 dailySummary[ymd][typeKey + 'Zone'][z]++;
+                                 dailySummary[ymd][typeKey + 'Zone'].total++;
                              }
                          } else if (rampMatch) {
                              const r = rampMatch[1].replace('OR', 'O');
-                             if (dailySummary[targetDate][typeKey + 'Ramp'][r] !== undefined) {
-                                 dailySummary[targetDate][typeKey + 'Ramp'][r]++;
-                                 dailySummary[targetDate][typeKey + 'Ramp'].total++;
+                             if (dailySummary[ymd][typeKey + 'Ramp'][r] !== undefined) {
+                                 dailySummary[ymd][typeKey + 'Ramp'][r]++;
+                                 dailySummary[ymd][typeKey + 'Ramp'].total++;
                              }
                          }
                      }
@@ -227,117 +243,171 @@
         }
 
         function renderTables(dailySummary) {
-            // ฟังก์ชันสำหรับแปลงและเรียงวันที่
-            const parseDate = (dStr) => {
-                if(dStr.includes('/')) {
-                    const parts = dStr.split('/');
-                    return new Date(parts[2], parts[1] - 1, parts[0]); // รองรับ format DD/MM/YYYY
-                }
-                return new Date(dStr);
-            };
+            const sortedYMDs = Object.keys(dailySummary).sort();
+            if (sortedYMDs.length === 0) return;
 
-            const sortedDates = Object.keys(dailySummary).sort((a, b) => parseDate(a) - parseDate(b));
-
-            // ฟังก์ชันสำหรับแสดงผลวันที่ (เช่น 11 May 26)
-            const formatDateDisplay = (dStr) => {
-                const d = parseDate(dStr);
-                if (isNaN(d.getTime())) return dStr; 
-                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const year = d.getFullYear().toString().slice(-2);
-                return `${d.getDate()} ${months[d.getMonth()]} ${year}`;
-            };
-
-            // Helper function: ถ้าเป็น 0 ให้ปล่อยว่าง
-            const val = (number) => number === 0 ? '' : number;
-
-            const zoneTbody = document.querySelector("#zone-table tbody");
-            const rampTbody = document.querySelector("#ramp-table tbody");
-            zoneTbody.innerHTML = "";
-            rampTbody.innerHTML = "";
-
+            // 1. คำนวณยอดสะสม (ACC) ของทุกวันที่มีในฐานข้อมูล
+            const accData = {};
             let accPileZone = 0, accSonicZone = 0, accGroutZone = 0;
             let accPileRamp = 0, accSonicRamp = 0, accGroutRamp = 0;
 
-            sortedDates.forEach((date, index) => {
-                const data = dailySummary[date];
-                const isLast = index === sortedDates.length - 1;
-                const trClass = isLast ? 'class="highlight-row"' : '';
-                const displayDate = formatDateDisplay(date);
-
-                // คำนวณยอดทบ ACC
+            sortedYMDs.forEach(ymd => {
+                const data = dailySummary[ymd];
                 accPileZone += data.pileZone.total;
                 accSonicZone += data.sonicZone.total;
                 accGroutZone += data.groutZone.total;
-
                 accPileRamp += data.pileRamp.total;
                 accSonicRamp += data.sonicRamp.total;
                 accGroutRamp += data.groutRamp.total;
 
-                // วาดแถวตาราง Zone
-                const zoneRow = `<tr ${trClass}>
-                    <td>${displayDate}</td>
-                    <td><b>${accPileZone}</b></td>
-                    <td>${val(data.pileZone['1'])}</td><td>${val(data.pileZone['2'])}</td><td>${val(data.pileZone['3'])}</td>
-                    <td>${val(data.pileZone['4'])}</td><td>${val(data.pileZone['5'])}</td><td>${val(data.pileZone['6'])}</td>
-                    <td>${val(data.pileZone['7'])}</td><td>${data.pileZone['total']}</td>
-                    
-                    <td><b>${accSonicZone}</b></td>
-                    <td>${val(data.sonicZone['1'])}</td><td>${val(data.sonicZone['2'])}</td><td>${val(data.sonicZone['3'])}</td>
-                    <td>${val(data.sonicZone['4'])}</td><td>${val(data.sonicZone['5'])}</td><td>${val(data.sonicZone['6'])}</td>
-                    <td>${val(data.sonicZone['7'])}</td><td>${data.sonicZone['total']}</td>
-
-                    <td><b>${accGroutZone}</b></td>
-                    <td>${val(data.groutZone['1'])}</td><td>${val(data.groutZone['2'])}</td><td>${val(data.groutZone['3'])}</td>
-                    <td>${val(data.groutZone['4'])}</td><td>${val(data.groutZone['5'])}</td><td>${val(data.groutZone['6'])}</td>
-                    <td>${val(data.groutZone['7'])}</td><td>${data.groutZone['total']}</td>
-                </tr>`;
-                zoneTbody.insertAdjacentHTML('beforeend', zoneRow);
-
-                // วาดแถวตาราง Ramp
-                const rampRow = `<tr ${trClass}>
-                    <td>${displayDate}</td>
-                    <td><b>${accPileRamp}</b></td>
-                    <td>${val(data.pileRamp['N1'])}</td><td>${val(data.pileRamp['S1'])}</td><td>${val(data.pileRamp['O3'])}</td>
-                    <td>${val(data.pileRamp['O4'])}</td><td>${val(data.pileRamp['O6'])}</td><td>${val(data.pileRamp['O7'])}</td>
-                    <td>${data.pileRamp['total']}</td>
-                    
-                    <td><b>${accSonicRamp}</b></td>
-                    <td>${val(data.sonicRamp['N1'])}</td><td>${val(data.sonicRamp['S1'])}</td><td>${val(data.sonicRamp['O3'])}</td>
-                    <td>${val(data.sonicRamp['O4'])}</td><td>${val(data.sonicRamp['O6'])}</td><td>${val(data.sonicRamp['O7'])}</td>
-                    <td>${data.sonicRamp['total']}</td>
-
-                    <td><b>${accGroutRamp}</b></td>
-                    <td>${val(data.groutRamp['N1'])}</td><td>${val(data.groutRamp['S1'])}</td><td>${val(data.groutRamp['O3'])}</td>
-                    <td>${val(data.groutRamp['O4'])}</td><td>${val(data.groutRamp['O6'])}</td><td>${val(data.groutRamp['O7'])}</td>
-                    <td>${data.groutRamp['total']}</td>
-                </tr>`;
-                rampTbody.insertAdjacentHTML('beforeend', rampRow);
+                accData[ymd] = {
+                    accPileZone, accSonicZone, accGroutZone,
+                    accPileRamp, accSonicRamp, accGroutRamp
+                };
             });
 
-            // เพิ่มแถวเปล่าบรรทัดสุดท้ายสำหรับโชว์ยอดรวม ACC
+            // 2. กำหนดวันที่อัปเดต (วันที่ล่าสุดที่มีงาน) และวันที่สิ้นสุดตาราง (+2 วัน)
+            const maxDataYMD = sortedYMDs[sortedYMDs.length - 1];
+            const maxDateObj = new Date(maxDataYMD);
+            
+            const endDateObj = new Date(maxDataYMD);
+            endDateObj.setDate(endDateObj.getDate() + 2); // สร้างตารางเผื่ออนาคต 2 วัน เหมือนในรูป
+
+            // สร้าง Array ของวันที่ ที่จะใช้แสดงผล (Zone 7 วัน, Ramp 4 วัน)
+            const zoneDatesYMD = [];
+            for(let i=6; i>=0; i--) {
+                const d = new Date(endDateObj);
+                d.setDate(d.getDate() - i);
+                zoneDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+            }
+
+            const rampDatesYMD = [];
+            for(let i=3; i>=0; i--) {
+                const d = new Date(endDateObj);
+                d.setDate(d.getDate() - i);
+                rampDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+            }
+
+            // ฟังก์ชันช่วยดึงยอดสะสม (ถ้าเป็นวันอนาคตที่ไม่มีใน DB ให้ดึงยอดของวันล่าสุดมาใช้)
+            function getAccForDate(targetYMD) {
+                let lastAcc = { accPileZone:0, accSonicZone:0, accGroutZone:0, accPileRamp:0, accSonicRamp:0, accGroutRamp:0 };
+                for (let ymd of sortedYMDs) {
+                    if (ymd <= targetYMD) lastAcc = accData[ymd];
+                    else break;
+                }
+                return lastAcc;
+            }
+
+            // ฟังก์ชันช่วยดึงยอดรายวัน (ถ้าไม่มีใน DB ให้คืนค่า 0)
+            function getDailyForDate(ymd) {
+                if (dailySummary[ymd]) return dailySummary[ymd];
+                return {
+                    pileZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 }, sonicZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 }, groutZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
+                    pileRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }, sonicRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }, groutRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }
+                };
+            }
+
+            // ฟังก์ชันแปลงวันที่ให้แสดงผลสวยงาม (11 May 26)
+            function formatDisplayDate(ymd) {
+                const d = new Date(ymd);
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`;
+            }
+
+            // ถ้าค่าเป็น 0 ให้แสดงช่องว่าง
+            const val = (number) => number === 0 ? '' : number;
+
+            // 3. เริ่มวาดตาราง Zone (7 วัน)
+            const zoneTbody = document.querySelector("#zone-table tbody");
+            zoneTbody.innerHTML = "";
+            let finalZoneAcc = null;
+
+            zoneDatesYMD.forEach((ymd) => {
+                const dData = getDailyForDate(ymd);
+                const dAcc = getAccForDate(ymd);
+                finalZoneAcc = dAcc; // เก็บก้อนสุดท้ายไว้สรุปบรรทัดล่าง
+
+                // ไฮไลท์เฉพาะแถวที่เป็น Update Date
+                const isUpdateDate = (ymd === maxDataYMD);
+                const trClass = isUpdateDate ? 'class="highlight-row"' : '';
+                const displayDate = formatDisplayDate(ymd);
+
+                const rowHtml = `<tr ${trClass}>
+                    <td>${displayDate}</td>
+                    <td><b>${dAcc.accPileZone}</b></td>
+                    <td>${val(dData.pileZone['1'])}</td><td>${val(dData.pileZone['2'])}</td><td>${val(dData.pileZone['3'])}</td>
+                    <td>${val(dData.pileZone['4'])}</td><td>${val(dData.pileZone['5'])}</td><td>${val(dData.pileZone['6'])}</td>
+                    <td>${val(dData.pileZone['7'])}</td><td>${dData.pileZone['total']}</td>
+                    
+                    <td><b>${dAcc.accSonicZone}</b></td>
+                    <td>${val(dData.sonicZone['1'])}</td><td>${val(dData.sonicZone['2'])}</td><td>${val(dData.sonicZone['3'])}</td>
+                    <td>${val(dData.sonicZone['4'])}</td><td>${val(dData.sonicZone['5'])}</td><td>${val(dData.sonicZone['6'])}</td>
+                    <td>${val(dData.sonicZone['7'])}</td><td>${dData.sonicZone['total']}</td>
+
+                    <td><b>${dAcc.accGroutZone}</b></td>
+                    <td>${val(dData.groutZone['1'])}</td><td>${val(dData.groutZone['2'])}</td><td>${val(dData.groutZone['3'])}</td>
+                    <td>${val(dData.groutZone['4'])}</td><td>${val(dData.groutZone['5'])}</td><td>${val(dData.groutZone['6'])}</td>
+                    <td>${val(dData.groutZone['7'])}</td><td>${dData.groutZone['total']}</td>
+                </tr>`;
+                zoneTbody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+
+            // แถวสรุป ACC ล่างสุดของ Zone
             const emptyZoneRow = `<tr>
                 <td></td>
-                <td><b>${accPileZone}</b></td><td colspan="8"></td>
-                <td><b>${accSonicZone}</b></td><td colspan="8"></td>
-                <td><b>${accGroutZone}</b></td><td colspan="8"></td>
+                <td><b>${finalZoneAcc.accPileZone}</b></td><td colspan="8"></td>
+                <td><b>${finalZoneAcc.accSonicZone}</b></td><td colspan="8"></td>
+                <td><b>${finalZoneAcc.accGroutZone}</b></td><td colspan="8"></td>
             </tr>`;
             zoneTbody.insertAdjacentHTML('beforeend', emptyZoneRow);
 
+            // 4. เริ่มวาดตาราง Ramp (4 วัน)
+            const rampTbody = document.querySelector("#ramp-table tbody");
+            rampTbody.innerHTML = "";
+            let finalRampAcc = null;
+
+            rampDatesYMD.forEach((ymd) => {
+                const dData = getDailyForDate(ymd);
+                const dAcc = getAccForDate(ymd);
+                finalRampAcc = dAcc;
+
+                const isUpdateDate = (ymd === maxDataYMD);
+                const trClass = isUpdateDate ? 'class="highlight-row"' : '';
+                const displayDate = formatDisplayDate(ymd);
+
+                const rowHtml = `<tr ${trClass}>
+                    <td>${displayDate}</td>
+                    <td><b>${dAcc.accPileRamp}</b></td>
+                    <td>${val(dData.pileRamp['N1'])}</td><td>${val(dData.pileRamp['S1'])}</td><td>${val(dData.pileRamp['O3'])}</td>
+                    <td>${val(dData.pileRamp['O4'])}</td><td>${val(dData.pileRamp['O6'])}</td><td>${val(dData.pileRamp['O7'])}</td>
+                    <td>${dData.pileRamp['total']}</td>
+                    
+                    <td><b>${dAcc.accSonicRamp}</b></td>
+                    <td>${val(dData.sonicRamp['N1'])}</td><td>${val(dData.sonicRamp['S1'])}</td><td>${val(dData.sonicRamp['O3'])}</td>
+                    <td>${val(dData.sonicRamp['O4'])}</td><td>${val(dData.sonicRamp['O6'])}</td><td>${val(dData.sonicRamp['O7'])}</td>
+                    <td>${dData.sonicRamp['total']}</td>
+
+                    <td><b>${dAcc.accGroutRamp}</b></td>
+                    <td>${val(dData.groutRamp['N1'])}</td><td>${val(dData.groutRamp['S1'])}</td><td>${val(dData.groutRamp['O3'])}</td>
+                    <td>${val(dData.groutRamp['O4'])}</td><td>${val(dData.groutRamp['O6'])}</td><td>${val(dData.groutRamp['O7'])}</td>
+                    <td>${dData.groutRamp['total']}</td>
+                </tr>`;
+                rampTbody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+
+            // แถวสรุป ACC ล่างสุดของ Ramp
             const emptyRampRow = `<tr>
                 <td></td>
-                <td><b>${accPileRamp}</b></td><td colspan="7"></td>
-                <td><b>${accSonicRamp}</b></td><td colspan="7"></td>
-                <td><b>${accGroutRamp}</b></td><td colspan="7"></td>
+                <td><b>${finalRampAcc.accPileRamp}</b></td><td colspan="7"></td>
+                <td><b>${finalRampAcc.accSonicRamp}</b></td><td colspan="7"></td>
+                <td><b>${finalRampAcc.accGroutRamp}</b></td><td colspan="7"></td>
             </tr>`;
             rampTbody.insertAdjacentHTML('beforeend', emptyRampRow);
 
-            // อัปเดตวันที่ล่าสุดบน Header
-            if (sortedDates.length > 0) {
-                document.getElementById('current-date').innerText = formatDateDisplay(sortedDates[sortedDates.length - 1]);
-            }
+            // 5. อัปเดตวันที่บน Header ตาม maxDataYMD
+            document.getElementById('current-date').innerText = formatDisplayDate(maxDataYMD);
         }
 
-        // เริ่มต้นการทำงาน
         fetchDatabase();
     </script>
 </body>
