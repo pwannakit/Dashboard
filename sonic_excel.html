@@ -8,46 +8,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f5f5f5; }
-        
-        /* ส่วนควบคุมปุ่ม (ไม่รวมในรูปภาพที่เซฟ) */
-        .controls { 
-            display: flex; 
-            justify-content: flex-end; 
-            margin-bottom: 10px; 
-            gap: 10px;
-        }
-        .btn-save {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; }
+        .btn-save { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .btn-save:hover { background-color: #0056b3; }
-
-        /* พื้นที่สำหรับถ่ายรูปรายงาน */
-        #report-container {
-            background-color: white;
-            padding: 25px;
-            border-radius: 4px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            width: 1100px; /* ล็อกความกว้างเพื่อให้รูปออกมาสัดส่วนสวยงาม */
-            margin: 0 auto;
-        }
-
+        #report-container { background-color: white; padding: 25px; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.05); width: 1100px; margin: 0 auto; }
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         h2 { margin: 0; font-size: 22px; }
         .update-date { font-size: 18px; font-weight: bold; }
-        
         table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
         th, td { border: 1px solid #000; padding: 6px 4px; text-align: center; height: 26px; }
         th { background-color: #f9f9f9; }
         .highlight-row { background-color: #d9d9d9; }
         .num-col { width: 2.5%; }
+        .error-msg { color: red; font-weight: bold; text-align: center; padding: 15px; }
     </style>
 </head>
 <body>
@@ -71,18 +44,9 @@
                     <th colspan="9">Grouting Work (Zone)</th>
                 </tr>
                 <tr>
-                    <th class="num-col">ACC.</th>
-                    <th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th>
-                    <th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th>
-                    <th class="num-col">7</th><th class="num-col">Total</th>
-                    <th class="num-col">ACC.</th>
-                    <th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th>
-                    <th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th>
-                    <th class="num-col">7</th><th class="num-col">Total</th>
-                    <th class="num-col">ACC.</th>
-                    <th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th>
-                    <th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th>
-                    <th class="num-col">7</th><th class="num-col">Total</th>
+                    <th class="num-col">ACC.</th><th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th><th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th><th class="num-col">7</th><th class="num-col">Total</th>
+                    <th class="num-col">ACC.</th><th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th><th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th><th class="num-col">7</th><th class="num-col">Total</th>
+                    <th class="num-col">ACC.</th><th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th><th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th><th class="num-col">7</th><th class="num-col">Total</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -97,18 +61,9 @@
                     <th colspan="8">Grouting Work (Ramp)</th>
                 </tr>
                 <tr>
-                    <th class="num-col">ACC.</th>
-                    <th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th>
-                    <th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th>
-                    <th class="num-col">Total</th>
-                    <th class="num-col">ACC.</th>
-                    <th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th>
-                    <th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th>
-                    <th class="num-col">Total</th>
-                    <th class="num-col">ACC.</th>
-                    <th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th>
-                    <th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th>
-                    <th class="num-col">Total</th>
+                    <th class="num-col">ACC.</th><th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th><th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th><th class="num-col">Total</th>
+                    <th class="num-col">ACC.</th><th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th><th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th><th class="num-col">Total</th>
+                    <th class="num-col">ACC.</th><th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th><th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th><th class="num-col">Total</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -124,7 +79,6 @@
                 const [pResp, sgResp] = await Promise.all([fetch(pileCsvUrl), fetch(sonicGroutCsvUrl)]);
                 const pText = await pResp.text();
                 const sgText = await sgResp.text();
-
                 const cfg = { header: true, skipEmptyLines: true, transformHeader: h => h.replace(/[\u200B-\u200D\uFEFF]/g, '').trim() };
                 processData(Papa.parse(pText, cfg).data, Papa.parse(sgText, cfg).data);
             } catch (e) { console.error(e); }
@@ -144,16 +98,18 @@
             return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         }
 
+        const getResponsible = r => { for(let k in r) if(k.includes('รับผิดชอบ')) return String(r[k]); return ""; };
+        const getVal = (row, k) => { for(let key in row) if(key.includes(k)) return row[key]; return ""; };
+        const getActualFinish = r => { for(let k in r) if(k.includes('เสร็จงานจริง')) return r[k]; return r['วันที่เสร็จงานจริงๆ'] || ""; };
+
         function processData(pData, sgData) {
             const summary = {};
             const init = ymd => { if(!summary[ymd]) summary[ymd] = { pileZone:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,total:0}, sonicZone:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,total:0}, groutZone:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,total:0}, pileRamp:{N1:0,S1:0,O3:0,O4:0,O6:0,O7:0,total:0}, sonicRamp:{N1:0,S1:0,O3:0,O4:0,O6:0,O7:0,total:0}, groutRamp:{N1:0,S1:0,O3:0,O4:0,O6:0,O7:0,total:0} }; };
             
-            const getVal = (row, k) => { for(let key in row) if(key.includes(k)) return row[key]; return ""; };
-
             pData.forEach(r => {
                 const ymd = parseDateSafe(getVal(r, 'เริ่มงาน'));
                 if(ymd) {
-                    init(ymd); const resp = getVal(r, 'รับผิดชอบ').toUpperCase();
+                    init(ymd); const resp = getResponsible(r).toUpperCase();
                     const z = resp.match(/(?:ZONE|Z)[-\s]*(\d)/i), rm = resp.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/i);
                     if(z) { summary[ymd].pileZone[z[1]]++; summary[ymd].pileZone.total++; }
                     else if(rm) { const rKey = rm[1].replace('OR','O'); summary[ymd].pileRamp[rKey]++; summary[ymd].pileRamp.total++; }
@@ -175,11 +131,10 @@
             render(summary);
         }
 
-        const getResponsible = r => { for(let k in r) if(k.includes('รับผิดชอบ')) return String(r[k]); return ""; };
-        const getActualFinish = r => { for(let k in r) if(k.includes('เสร็จงานจริง')) return r[k]; return r['วันที่เสร็จงานจริงๆ'] || ""; };
-
         function render(summary) {
             const sorted = Object.keys(summary).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+            if(sorted.length === 0) return;
+
             const acc = {}; let aPZ=0, aSZ=0, aGZ=0, aPR=0, aSR=0, aGR=0;
             sorted.forEach(y => {
                 const d = summary[y]; aPZ+=d.pileZone.total; aSZ+=d.sonicZone.total; aGZ+=d.groutZone.total;
@@ -187,40 +142,71 @@
                 acc[y] = { aPZ, aSZ, aGZ, aPR, aSR, aGR };
             });
 
-            const maxYMD = sorted[sorted.length-1], maxP = maxYMD.split('-');
-            const zoneD = [], rampD = [];
-            for(let i=6;i>=0;i--) { const d=new Date(maxP[0],maxP[1]-1,parseInt(maxP[2])+2-i); zoneD.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`); }
-            for(let i=3;i>=0;i--) { const d=new Date(maxP[0],maxP[1]-1,parseInt(maxP[2])+2-i); rampD.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`); }
+            const maxDataYMD = sorted[sorted.length-1];
+
+            // -------------------------------------------------------------
+            // ระบบรอบหมุนเวียน (Pagination) 
+            // -------------------------------------------------------------
+            // หากต้องการเปลี่ยนวันเริ่มรอบ ให้เปลี่ยนวันที่ใน 2 ตัวแปรนี้ครับ
+            const ZONE_EPOCH = "2026-05-07"; // วันตั้งต้นตาราง Zone
+            const RAMP_EPOCH = "2026-05-10"; // วันตั้งต้นตาราง Ramp
+
+            function diffDays(ymd1, ymd2) {
+                const [y1,m1,d1] = ymd1.split('-'); const [y2,m2,d2] = ymd2.split('-');
+                const utc1 = Date.UTC(y1, m1-1, d1); const utc2 = Date.UTC(y2, m2-1, d2);
+                return Math.floor((utc2 - utc1) / 86400000);
+            }
+
+            function addDays(ymd, days) {
+                const [y,m,d] = ymd.split('-'); const dateObj = new Date(y, m-1, d);
+                dateObj.setDate(dateObj.getDate() + days);
+                return `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+            }
+
+            // คำนวณวันของตาราง Zone (ทีละ 7 วัน)
+            let dZone = diffDays(ZONE_EPOCH, maxDataYMD); if (dZone < 0) dZone = 0;
+            const cycleZone = Math.floor(dZone / 7);
+            const startZoneYMD = addDays(ZONE_EPOCH, cycleZone * 7);
+            const zoneD = []; for(let i=0; i<7; i++) zoneD.push(addDays(startZoneYMD, i));
+
+            // คำนวณวันของตาราง Ramp (ทีละ 4 วัน)
+            let dRamp = diffDays(RAMP_EPOCH, maxDataYMD); if (dRamp < 0) dRamp = 0;
+            const cycleRamp = Math.floor(dRamp / 4);
+            const startRampYMD = addDays(RAMP_EPOCH, cycleRamp * 4);
+            const rampD = []; for(let i=0; i<4; i++) rampD.push(addDays(startRampYMD, i));
+            // -------------------------------------------------------------
 
             const getAcc = y => { let l = {aPZ:0,aSZ:0,aGZ:0,aPR:0,aSR:0,aGR:0}; for(let k of sorted) { if(k <= y) l = acc[k]; else break; } return l; };
             const getD = y => summary[y] || { pileZone:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,total:0}, sonicZone:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,total:0}, groutZone:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,total:0}, pileRamp:{N1:0,S1:0,O3:0,O4:0,O6:0,O7:0,total:0}, sonicRamp:{N1:0,S1:0,O3:0,O4:0,O6:0,O7:0,total:0}, groutRamp:{N1:0,S1:0,O3:0,O4:0,O6:0,O7:0,total:0} };
             const fmt = y => { const p=y.split('-'); return `${parseInt(p[2])} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][p[1]-1]} ${p[0].slice(-2)}`; };
             const v = n => n === 0 ? '' : n;
 
+            // วาดตาราง Zone
             const zTb = document.querySelector("#zone-table tbody"); zTb.innerHTML = "";
             zoneD.forEach(y => {
-                const dd = getD(y), da = getAcc(y), trc = (y===maxYMD)?'class="highlight-row"':'';
+                const dd = getD(y), da = getAcc(y), trc = (y===maxDataYMD)?'class="highlight-row"':'';
                 zTb.insertAdjacentHTML('beforeend', `<tr ${trc}><td>${fmt(y)}</td><td><b>${da.aPZ}</b></td><td>${v(dd.pileZone[1])}</td><td>${v(dd.pileZone[2])}</td><td>${v(dd.pileZone[3])}</td><td>${v(dd.pileZone[4])}</td><td>${v(dd.pileZone[5])}</td><td>${v(dd.pileZone[6])}</td><td>${v(dd.pileZone[7])}</td><td>${dd.pileZone.total}</td><td><b>${da.aSZ}</b></td><td>${v(dd.sonicZone[1])}</td><td>${v(dd.sonicZone[2])}</td><td>${v(dd.sonicZone[3])}</td><td>${v(dd.sonicZone[4])}</td><td>${v(dd.sonicZone[5])}</td><td>${v(dd.sonicZone[6])}</td><td>${v(dd.sonicZone[7])}</td><td>${dd.sonicZone.total}</td><td><b>${da.aGZ}</b></td><td>${v(dd.groutZone[1])}</td><td>${v(dd.groutZone[2])}</td><td>${v(dd.groutZone[3])}</td><td>${v(dd.groutZone[4])}</td><td>${v(dd.groutZone[5])}</td><td>${v(dd.groutZone[6])}</td><td>${v(dd.groutZone[7])}</td><td>${dd.groutZone.total}</td></tr>`);
             });
-            const lastZa = getAcc(zoneD[6]);
+            const lastZa = getAcc(zoneD[6]); // ดึงยอดของวันสุดท้ายในรอบมาโชว์ใต้ตาราง
             zTb.insertAdjacentHTML('beforeend', `<tr><td></td><td><b>${lastZa.aPZ}</b></td><td colspan="8"></td><td><b>${lastZa.aSZ}</b></td><td colspan="8"></td><td><b>${lastZa.aGZ}</b></td><td colspan="8"></td></tr>`);
 
+            // วาดตาราง Ramp
             const rTb = document.querySelector("#ramp-table tbody"); rTb.innerHTML = "";
             rampD.forEach(y => {
-                const dd = getD(y), da = getAcc(y), trc = (y===maxYMD)?'class="highlight-row"':'';
+                const dd = getD(y), da = getAcc(y), trc = (y===maxDataYMD)?'class="highlight-row"':'';
                 rTb.insertAdjacentHTML('beforeend', `<tr ${trc}><td>${fmt(y)}</td><td><b>${da.aPR}</b></td><td>${v(dd.pileRamp.N1)}</td><td>${v(dd.pileRamp.S1)}</td><td>${v(dd.pileRamp.O3)}</td><td>${v(dd.pileRamp.O4)}</td><td>${v(dd.pileRamp.O6)}</td><td>${v(dd.pileRamp.O7)}</td><td>${dd.pileRamp.total}</td><td><b>${da.aSR}</b></td><td>${v(dd.sonicRamp.N1)}</td><td>${v(dd.sonicRamp.S1)}</td><td>${v(dd.sonicRamp.O3)}</td><td>${v(dd.sonicRamp.O4)}</td><td>${v(dd.sonicRamp.O6)}</td><td>${v(dd.sonicRamp.O7)}</td><td>${dd.sonicRamp.total}</td><td><b>${da.aGR}</b></td><td>${v(dd.groutRamp.N1)}</td><td>${v(dd.groutRamp.S1)}</td><td>${v(dd.groutRamp.O3)}</td><td>${v(dd.groutRamp.O4)}</td><td>${v(dd.groutRamp.O6)}</td><td>${v(dd.groutRamp.O7)}</td><td>${dd.groutRamp.total}</td></tr>`);
             });
             const lastRa = getAcc(rampD[3]);
             rTb.insertAdjacentHTML('beforeend', `<tr><td></td><td><b>${lastRa.aPR}</b></td><td colspan="7"></td><td><b>${lastRa.aSR}</b></td><td colspan="7"></td><td><b>${lastRa.aGR}</b></td><td colspan="7"></td></tr>`);
 
-            document.getElementById('current-date').innerText = fmt(maxYMD);
+            document.getElementById('current-date').innerText = fmt(maxDataYMD);
 
-            // --- ส่วนของปุ่ม Save as Image ---
+            // ปุ่ม Save as Image
             document.getElementById('btn-download').onclick = function() {
                 const container = document.getElementById('report-container');
                 html2canvas(container, { scale: 2 }).then(canvas => {
                     const link = document.createElement('a');
-                    link.download = `WorkingPile_Report_${fmt(maxYMD).replace(/ /g, '_')}.png`;
+                    link.download = `WorkingPile_Report_${fmt(maxDataYMD).replace(/ /g, '_')}.png`;
                     link.href = canvas.toDataURL("image/png");
                     link.click();
                 });
