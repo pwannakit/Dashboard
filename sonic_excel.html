@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Pile Sonic Logging & Grouting Summary</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .update-date {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 6px 4px;
+            text-align: center;
+        }
+        th {
+            background-color: #f9f9f9;
+        }
+        /* ไฮไลท์แถวล่าสุด */
+        .highlight-row {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .num-col {
+            width: 2.5%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h2>Working Pile Sonic Logging & Grouting</h2>
+        <div class="update-date">Update &nbsp;&nbsp;&nbsp; <span id="current-date">...</span></div>
+    </div>
+
+    <table id="zone-table">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 10%;">Date</th>
+                <th colspan="9">Piling Work ( Zone)</th>
+                <th colspan="9">Sonic Logging Work ( Zone)</th>
+                <th colspan="9">Grouting Work (Zone)</th>
+            </tr>
+            <tr>
+                <th class="num-col">ACC.</th>
+                <th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th>
+                <th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th>
+                <th class="num-col">7</th><th class="num-col">Total</th>
+                
+                <th class="num-col">ACC.</th>
+                <th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th>
+                <th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th>
+                <th class="num-col">7</th><th class="num-col">Total</th>
+
+                <th class="num-col">ACC.</th>
+                <th class="num-col">1</th><th class="num-col">2</th><th class="num-col">3</th>
+                <th class="num-col">4</th><th class="num-col">5</th><th class="num-col">6</th>
+                <th class="num-col">7</th><th class="num-col">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="28">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
+    </table>
+
+    <table id="ramp-table">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 10%;">Date</th>
+                <th colspan="8">Piling Work ( Ramp)</th>
+                <th colspan="8">Sonic Logging Work ( Ramp)</th>
+                <th colspan="8">Grouting Work (Ramp)</th>
+            </tr>
+            <tr>
+                <th class="num-col">ACC.</th>
+                <th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th>
+                <th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th>
+                <th class="num-col">Total</th>
+                
+                <th class="num-col">ACC.</th>
+                <th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th>
+                <th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th>
+                <th class="num-col">Total</th>
+
+                <th class="num-col">ACC.</th>
+                <th class="num-col">N1</th><th class="num-col">S1</th><th class="num-col">O3</th>
+                <th class="num-col">O4</th><th class="num-col">O6</th><th class="num-col">O7</th>
+                <th class="num-col">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="25">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const pileCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv';
+        const sonicGroutCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv';
+
+        async function fetchDatabase() {
+            try {
+                const [pileResponse, sonicGroutResponse] = await Promise.all([
+                    fetch(pileCsvUrl),
+                    fetch(sonicGroutCsvUrl)
+                ]);
+
+                const pileCsvText = await pileResponse.text();
+                const sonicGroutCsvText = await sonicGroutResponse.text();
+
+                const pileData = Papa.parse(pileCsvText, { header: true, skipEmptyLines: true }).data;
+                const sonicGroutData = Papa.parse(sonicGroutCsvText, { header: true, skipEmptyLines: true }).data;
+
+                processData(pileData, sonicGroutData);
+            } catch (error) {
+                console.error('Error:', error);
+                document.querySelector("#zone-table tbody").innerHTML = '<tr><td colspan="28" style="color:red;">ไม่สามารถโหลดข้อมูลได้ โปรดตรวจสอบการเชื่อมต่อ</td></tr>';
+                document.querySelector("#ramp-table tbody").innerHTML = '<tr><td colspan="25" style="color:red;">ไม่สามารถโหลดข้อมูลได้ โปรดตรวจสอบการเชื่อมต่อ</td></tr>';
+            }
+        }
+
+        function processData(pileData, sonicGroutData) {
+            const dailySummary = {};
+
+            function initializeDateStruct(dateStr) {
+                if (!dailySummary[dateStr]) {
+                    dailySummary[dateStr] = {
+                        pileZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
+                        sonicZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
+                        groutZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
+                        pileRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 },
+                        sonicRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 },
+                        groutRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }
+                    };
+                }
+            }
+
+            // ประมวลผล Piling
+            pileData.forEach(row => {
+                const finishDate = row['วันที่เสร็จงานจริงๆ'] ? row['วันที่เสร็จงานจริงๆ'].trim() : "";
+                const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
+
+                if (finishDate !== "") {
+                    initializeDateStruct(finishDate);
+                    const zoneMatch = responsible.match(/ZONE\s*(\d)/);
+                    const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
+
+                    if (zoneMatch) {
+                        const z = zoneMatch[1];
+                        if (dailySummary[finishDate].pileZone[z] !== undefined) {
+                            dailySummary[finishDate].pileZone[z]++;
+                            dailySummary[finishDate].pileZone.total++;
+                        }
+                    } else if (rampMatch) {
+                        const r = rampMatch[1].replace('OR', 'O'); 
+                        if (dailySummary[finishDate].pileRamp[r] !== undefined) {
+                            dailySummary[finishDate].pileRamp[r]++;
+                            dailySummary[finishDate].pileRamp.total++;
+                        }
+                    }
+                }
+            });
+
+            // ประมวลผล Sonic & Grouting
+            sonicGroutData.forEach(row => {
+                 const finishDate = row['วันที่เสร็จงานจริงๆ'] ? row['วันที่เสร็จงานจริงๆ'].trim() : "";
+                 const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
+                 
+                 if (finishDate !== "") {
+                     initializeDateStruct(finishDate);
+                     const isSonic = responsible.includes("SONIC");
+                     const isGrout = responsible.includes("GROUT");
+                     const zoneMatch = responsible.match(/Z(\d)/);
+                     const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
+
+                     if (isSonic || isGrout) {
+                         const typeKey = isSonic ? 'sonic' : 'grout';
+                         if (zoneMatch) {
+                             const z = zoneMatch[1];
+                             if (dailySummary[finishDate][typeKey + 'Zone'][z] !== undefined) {
+                                 dailySummary[finishDate][typeKey + 'Zone'][z]++;
+                                 dailySummary[finishDate][typeKey + 'Zone'].total++;
+                             }
+                         } else if (rampMatch) {
+                             const r = rampMatch[1].replace('OR', 'O');
+                             if (dailySummary[finishDate][typeKey + 'Ramp'][r] !== undefined) {
+                                 dailySummary[finishDate][typeKey + 'Ramp'][r]++;
+                                 dailySummary[finishDate][typeKey + 'Ramp'].total++;
+                             }
+                         }
+                     }
+                 }
+            });
+
+            renderTables(dailySummary);
+        }
+
+        function renderTables(dailySummary) {
+            // ฟังก์ชันสำหรับแปลงและเรียงวันที่
+            const parseDate = (dStr) => {
+                if(dStr.includes('/')) {
+                    const parts = dStr.split('/');
+                    return new Date(parts[2], parts[1] - 1, parts[0]); // รองรับ format DD/MM/YYYY
+                }
+                return new Date(dStr);
+            };
+
+            const sortedDates = Object.keys(dailySummary).sort((a, b) => parseDate(a) - parseDate(b));
+
+            // ฟังก์ชันสำหรับแสดงผลวันที่ (เช่น 11 May 26)
+            const formatDateDisplay = (dStr) => {
+                const d = parseDate(dStr);
+                if (isNaN(d.getTime())) return dStr; 
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const year = d.getFullYear().toString().slice(-2);
+                return `${d.getDate()} ${months[d.getMonth()]} ${year}`;
+            };
+
+            // Helper function: ถ้าเป็น 0 ให้ปล่อยว่าง
+            const val = (number) => number === 0 ? '' : number;
+
+            const zoneTbody = document.querySelector("#zone-table tbody");
+            const rampTbody = document.querySelector("#ramp-table tbody");
+            zoneTbody.innerHTML = "";
+            rampTbody.innerHTML = "";
+
+            let accPileZone = 0, accSonicZone = 0, accGroutZone = 0;
+            let accPileRamp = 0, accSonicRamp = 0, accGroutRamp = 0;
+
+            sortedDates.forEach((date, index) => {
+                const data = dailySummary[date];
+                const isLast = index === sortedDates.length - 1;
+                const trClass = isLast ? 'class="highlight-row"' : '';
+                const displayDate = formatDateDisplay(date);
+
+                // คำนวณยอดทบ ACC
+                accPileZone += data.pileZone.total;
+                accSonicZone += data.sonicZone.total;
+                accGroutZone += data.groutZone.total;
+
+                accPileRamp += data.pileRamp.total;
+                accSonicRamp += data.sonicRamp.total;
+                accGroutRamp += data.groutRamp.total;
+
+                // วาดแถวตาราง Zone
+                const zoneRow = `<tr ${trClass}>
+                    <td>${displayDate}</td>
+                    <td><b>${accPileZone}</b></td>
+                    <td>${val(data.pileZone['1'])}</td><td>${val(data.pileZone['2'])}</td><td>${val(data.pileZone['3'])}</td>
+                    <td>${val(data.pileZone['4'])}</td><td>${val(data.pileZone['5'])}</td><td>${val(data.pileZone['6'])}</td>
+                    <td>${val(data.pileZone['7'])}</td><td>${data.pileZone['total']}</td>
+                    
+                    <td><b>${accSonicZone}</b></td>
+                    <td>${val(data.sonicZone['1'])}</td><td>${val(data.sonicZone['2'])}</td><td>${val(data.sonicZone['3'])}</td>
+                    <td>${val(data.sonicZone['4'])}</td><td>${val(data.sonicZone['5'])}</td><td>${val(data.sonicZone['6'])}</td>
+                    <td>${val(data.sonicZone['7'])}</td><td>${data.sonicZone['total']}</td>
+
+                    <td><b>${accGroutZone}</b></td>
+                    <td>${val(data.groutZone['1'])}</td><td>${val(data.groutZone['2'])}</td><td>${val(data.groutZone['3'])}</td>
+                    <td>${val(data.groutZone['4'])}</td><td>${val(data.groutZone['5'])}</td><td>${val(data.groutZone['6'])}</td>
+                    <td>${val(data.groutZone['7'])}</td><td>${data.groutZone['total']}</td>
+                </tr>`;
+                zoneTbody.insertAdjacentHTML('beforeend', zoneRow);
+
+                // วาดแถวตาราง Ramp
+                const rampRow = `<tr ${trClass}>
+                    <td>${displayDate}</td>
+                    <td><b>${accPileRamp}</b></td>
+                    <td>${val(data.pileRamp['N1'])}</td><td>${val(data.pileRamp['S1'])}</td><td>${val(data.pileRamp['O3'])}</td>
+                    <td>${val(data.pileRamp['O4'])}</td><td>${val(data.pileRamp['O6'])}</td><td>${val(data.pileRamp['O7'])}</td>
+                    <td>${data.pileRamp['total']}</td>
+                    
+                    <td><b>${accSonicRamp}</b></td>
+                    <td>${val(data.sonicRamp['N1'])}</td><td>${val(data.sonicRamp['S1'])}</td><td>${val(data.sonicRamp['O3'])}</td>
+                    <td>${val(data.sonicRamp['O4'])}</td><td>${val(data.sonicRamp['O6'])}</td><td>${val(data.sonicRamp['O7'])}</td>
+                    <td>${data.sonicRamp['total']}</td>
+
+                    <td><b>${accGroutRamp}</b></td>
+                    <td>${val(data.groutRamp['N1'])}</td><td>${val(data.groutRamp['S1'])}</td><td>${val(data.groutRamp['O3'])}</td>
+                    <td>${val(data.groutRamp['O4'])}</td><td>${val(data.groutRamp['O6'])}</td><td>${val(data.groutRamp['O7'])}</td>
+                    <td>${data.groutRamp['total']}</td>
+                </tr>`;
+                rampTbody.insertAdjacentHTML('beforeend', rampRow);
+            });
+
+            // เพิ่มแถวเปล่าบรรทัดสุดท้ายสำหรับโชว์ยอดรวม ACC
+            const emptyZoneRow = `<tr>
+                <td></td>
+                <td><b>${accPileZone}</b></td><td colspan="8"></td>
+                <td><b>${accSonicZone}</b></td><td colspan="8"></td>
+                <td><b>${accGroutZone}</b></td><td colspan="8"></td>
+            </tr>`;
+            zoneTbody.insertAdjacentHTML('beforeend', emptyZoneRow);
+
+            const emptyRampRow = `<tr>
+                <td></td>
+                <td><b>${accPileRamp}</b></td><td colspan="7"></td>
+                <td><b>${accSonicRamp}</b></td><td colspan="7"></td>
+                <td><b>${accGroutRamp}</b></td><td colspan="7"></td>
+            </tr>`;
+            rampTbody.insertAdjacentHTML('beforeend', emptyRampRow);
+
+            // อัปเดตวันที่ล่าสุดบน Header
+            if (sortedDates.length > 0) {
+                document.getElementById('current-date').innerText = formatDateDisplay(sortedDates[sortedDates.length - 1]);
+            }
+        }
+
+        // เริ่มต้นการทำงาน
+        fetchDatabase();
+    </script>
+</body>
+</html>
