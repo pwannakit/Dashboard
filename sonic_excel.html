@@ -6,46 +6,15 @@
     <title>Working Pile Sonic Logging & Grouting Summary</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        h2 {
-            margin: 0;
-            font-size: 22px;
-        }
-        .update-date {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-            font-size: 13px;
-        }
-        th, td {
-            border: 1px solid #000;
-            padding: 6px 4px;
-            text-align: center;
-            height: 24px; /* กำหนดความสูงให้ตารางดูโปร่งขึ้นนิดนึง */
-        }
-        th {
-            background-color: #f9f9f9;
-        }
-        /* ไฮไลท์แถวล่าสุดสีเทาเหมือนในรูป */
-        .highlight-row {
-            background-color: #d9d9d9; 
-        }
-        .num-col {
-            width: 2.5%;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        h2 { margin: 0; font-size: 22px; }
+        .update-date { font-size: 18px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
+        th, td { border: 1px solid #000; padding: 6px 4px; text-align: center; height: 24px; }
+        th { background-color: #f9f9f9; }
+        .highlight-row { background-color: #d9d9d9; }
+        .num-col { width: 2.5%; }
     </style>
 </head>
 <body>
@@ -81,7 +50,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td colspan="28">กำลังโหลดข้อมูล...</td></tr>
+            <tr><td colspan="28" id="zone-status">กำลังโหลดข้อมูล...</td></tr>
         </tbody>
     </table>
 
@@ -111,7 +80,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td colspan="25">กำลังโหลดข้อมูล...</td></tr>
+            <tr><td colspan="25" id="ramp-status">กำลังโหลดข้อมูล...</td></tr>
         </tbody>
     </table>
 
@@ -128,31 +97,47 @@
                 const pileCsvText = await pileResponse.text();
                 const sonicGroutCsvText = await sonicGroutResponse.text();
 
-                const pileData = Papa.parse(pileCsvText, { header: true, skipEmptyLines: true }).data;
-                const sonicGroutData = Papa.parse(sonicGroutCsvText, { header: true, skipEmptyLines: true }).data;
+                // อุดรอยรั่วที่ 1: สั่ง PapaParse ให้ trim ช่องว่างตรง Header ทิ้งให้หมด
+                const parseConfig = { 
+                    header: true, 
+                    skipEmptyLines: true,
+                    transformHeader: function(h) { return h.trim(); } 
+                };
+
+                const pileData = Papa.parse(pileCsvText, parseConfig).data;
+                const sonicGroutData = Papa.parse(sonicGroutCsvText, parseConfig).data;
 
                 processData(pileData, sonicGroutData);
             } catch (error) {
-                console.error('Error:', error);
-                document.querySelector("#zone-table tbody").innerHTML = '<tr><td colspan="28" style="color:red;">ไม่สามารถโหลดข้อมูลได้</td></tr>';
-                document.querySelector("#ramp-table tbody").innerHTML = '<tr><td colspan="25" style="color:red;">ไม่สามารถโหลดข้อมูลได้</td></tr>';
+                console.error('Error fetching data:', error);
+                document.getElementById("zone-status").innerHTML = '<span style="color:red;">การเชื่อมต่อล้มเหลว โปรดตรวจสอบ Link Google Sheet</span>';
+                document.getElementById("ramp-status").innerHTML = '<span style="color:red;">การเชื่อมต่อล้มเหลว โปรดตรวจสอบ Link Google Sheet</span>';
             }
         }
 
-        // ตัวแปลงวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD เพื่อใช้เป็น Key และเรียงลำดับได้แม่นยำ
+        // อุดรอยรั่วที่ 2: ฟังก์ชันอ่านวันที่แบบยืดหยุ่น ป้องกัน Timezone เพี้ยน
         function parseDateToYMD(dStr) {
             if (!dStr) return null;
-            let d;
+            dStr = dStr.trim();
+            
+            // กรณีเจอรูปแบบมี / เช่น 11/05/2026
             if(dStr.includes('/')) {
                 const parts = dStr.split('/');
-                if (parts[2].length >= 4 || parseInt(parts[2]) > 31) {
-                    d = new Date(parts[2], parts[1] - 1, parts[0]);
-                } else {
-                    d = new Date(dStr);
+                let day = parseInt(parts[0]);
+                let month = parseInt(parts[1]);
+                let year = parseInt(parts[2]);
+
+                if (month > 12) { // สลับวัน-เดือน เผื่อ Sheet ส่งมากลับหน้าหลัง
+                    let temp = month; month = day; day = temp;
                 }
-            } else {
-                d = new Date(dStr);
-            }
+                if (year < 100) year += 2000; // แปลงปี 26 เป็น 2026
+                if (year > 2500) year -= 543; // แปลงปี พ.ศ. เป็น ค.ศ.
+
+                return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            } 
+            
+            // กรณีรูปแบบอื่นๆ
+            const d = new Date(dStr);
             if (isNaN(d.getTime())) return null;
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
@@ -173,16 +158,20 @@
                 }
             }
 
-            // ประมวลผล Piling (อ้างอิง วันที่เริ่มงาน)
+            // อุดรอยรั่วที่ 3: Regex ดักคำว่า Zone หรือ Z (เช่น Z4, Z-4, Zone4) และ Ramp
+            const regexZone = /(?:ZONE|Z)[-\s]*(\d)/i;
+            const regexRamp = /(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/i;
+
+            // --- งานเสาเข็ม (ใช้วันที่เริ่มงาน) ---
             pileData.forEach(row => {
-                const targetDate = row['วันที่เริ่มงาน'] ? row['วันที่เริ่มงาน'].trim() : "";
-                const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
+                const targetDate = row['วันที่เริ่มงาน'];
+                const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim() : "";
                 const ymd = parseDateToYMD(targetDate);
 
                 if (ymd) {
                     initializeDateStruct(ymd);
-                    const zoneMatch = responsible.match(/ZONE\s*(\d)/);
-                    const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
+                    const zoneMatch = responsible.match(regexZone);
+                    const rampMatch = responsible.match(regexRamp);
 
                     if (zoneMatch) {
                         const z = zoneMatch[1];
@@ -191,7 +180,7 @@
                             dailySummary[ymd].pileZone.total++;
                         }
                     } else if (rampMatch) {
-                        const r = rampMatch[1].replace('OR', 'O'); 
+                        const r = rampMatch[1].toUpperCase().replace('OR', 'O'); 
                         if (dailySummary[ymd].pileRamp[r] !== undefined) {
                             dailySummary[ymd].pileRamp[r]++;
                             dailySummary[ymd].pileRamp.total++;
@@ -200,10 +189,10 @@
                 }
             });
 
-            // ประมวลผล Sonic & Grouting
+            // --- งาน Sonic & Grouting ---
             sonicGroutData.forEach(row => {
-                 const startDate = row['วันที่เริ่มงาน'] ? row['วันที่เริ่มงาน'].trim() : "";
-                 const finishDate = row['วันที่เสร็จงานจริงๆ'] ? row['วันที่เสร็จงานจริงๆ'].trim() : "";
+                 const startDate = row['วันที่เริ่มงาน'];
+                 const finishDate = row['วันที่เสร็จงานจริงๆ'];
                  const responsible = row['ผู้รับผิดชอบ'] ? row['ผู้รับผิดชอบ'].trim().toUpperCase() : "";
                  
                  const isSonic = responsible.includes("SONIC");
@@ -217,8 +206,8 @@
 
                  if (ymd) {
                      initializeDateStruct(ymd);
-                     const zoneMatch = responsible.match(/Z(\d)/);
-                     const rampMatch = responsible.match(/(N1|S1|O3|O4|O6|O7|OR3|OR4|OR6|OR7)/);
+                     const zoneMatch = responsible.match(regexZone);
+                     const rampMatch = responsible.match(regexRamp);
 
                      if (isSonic || isGrout) {
                          const typeKey = isSonic ? 'sonic' : 'grout';
@@ -244,51 +233,42 @@
 
         function renderTables(dailySummary) {
             const sortedYMDs = Object.keys(dailySummary).sort();
-            if (sortedYMDs.length === 0) return;
+            
+            // ป้องกันเออเรอร์กรณีไม่มีข้อมูลหลุดมาถึงขั้นตอนนี้เลย
+            if (sortedYMDs.length === 0) {
+                document.getElementById("zone-status").innerHTML = '<span style="color:red;">ไม่พบข้อมูลวันที่ หรือรูปแบบข้อมูลไม่ตรงกัน</span>';
+                document.getElementById("ramp-status").innerHTML = '<span style="color:red;">ไม่พบข้อมูลวันที่ หรือรูปแบบข้อมูลไม่ตรงกัน</span>';
+                return;
+            }
 
-            // 1. คำนวณยอดสะสม (ACC) ของทุกวันที่มีในฐานข้อมูล
             const accData = {};
             let accPileZone = 0, accSonicZone = 0, accGroutZone = 0;
             let accPileRamp = 0, accSonicRamp = 0, accGroutRamp = 0;
 
             sortedYMDs.forEach(ymd => {
                 const data = dailySummary[ymd];
-                accPileZone += data.pileZone.total;
-                accSonicZone += data.sonicZone.total;
-                accGroutZone += data.groutZone.total;
-                accPileRamp += data.pileRamp.total;
-                accSonicRamp += data.sonicRamp.total;
-                accGroutRamp += data.groutRamp.total;
-
-                accData[ymd] = {
-                    accPileZone, accSonicZone, accGroutZone,
-                    accPileRamp, accSonicRamp, accGroutRamp
-                };
+                accPileZone += data.pileZone.total; accSonicZone += data.sonicZone.total; accGroutZone += data.groutZone.total;
+                accPileRamp += data.pileRamp.total; accSonicRamp += data.sonicRamp.total; accGroutRamp += data.groutRamp.total;
+                accData[ymd] = { accPileZone, accSonicZone, accGroutZone, accPileRamp, accSonicRamp, accGroutRamp };
             });
 
-            // 2. กำหนดวันที่อัปเดต (วันที่ล่าสุดที่มีงาน) และวันที่สิ้นสุดตาราง (+2 วัน)
             const maxDataYMD = sortedYMDs[sortedYMDs.length - 1];
-            const maxDateObj = new Date(maxDataYMD);
+            const [maxYear, maxMonth, maxDay] = maxDataYMD.split('-');
             
-            const endDateObj = new Date(maxDataYMD);
-            endDateObj.setDate(endDateObj.getDate() + 2); // สร้างตารางเผื่ออนาคต 2 วัน เหมือนในรูป
-
-            // สร้าง Array ของวันที่ ที่จะใช้แสดงผล (Zone 7 วัน, Ramp 4 วัน)
+            // ตาราง 7 วัน
             const zoneDatesYMD = [];
             for(let i=6; i>=0; i--) {
-                const d = new Date(endDateObj);
-                d.setDate(d.getDate() - i);
+                const d = new Date(parseInt(maxYear), parseInt(maxMonth) - 1, parseInt(maxDay) + 2 - i);
                 zoneDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
             }
 
+            // ตาราง 4 วัน
             const rampDatesYMD = [];
             for(let i=3; i>=0; i--) {
-                const d = new Date(endDateObj);
-                d.setDate(d.getDate() - i);
+                const d = new Date(parseInt(maxYear), parseInt(maxMonth) - 1, parseInt(maxDay) + 2 - i);
                 rampDatesYMD.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
             }
 
-            // ฟังก์ชันช่วยดึงยอดสะสม (ถ้าเป็นวันอนาคตที่ไม่มีใน DB ให้ดึงยอดของวันล่าสุดมาใช้)
             function getAccForDate(targetYMD) {
                 let lastAcc = { accPileZone:0, accSonicZone:0, accGroutZone:0, accPileRamp:0, accSonicRamp:0, accGroutRamp:0 };
                 for (let ymd of sortedYMDs) {
@@ -298,26 +278,23 @@
                 return lastAcc;
             }
 
-            // ฟังก์ชันช่วยดึงยอดรายวัน (ถ้าไม่มีใน DB ให้คืนค่า 0)
             function getDailyForDate(ymd) {
                 if (dailySummary[ymd]) return dailySummary[ymd];
                 return {
-                    pileZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 }, sonicZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 }, groutZone: { '1':0, '2':0, '3':0, '4':0, '5':0, '6':0, '7':0, 'total':0 },
-                    pileRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }, sonicRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }, groutRamp: { 'N1':0, 'S1':0, 'O3':0, 'O4':0, 'O6':0, 'O7':0, 'total':0 }
+                    pileZone: { '1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'total':0 }, sonicZone: { '1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'total':0 }, groutZone: { '1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'total':0 },
+                    pileRamp: { 'N1':0,'S1':0,'O3':0,'O4':0,'O6':0,'O7':0,'total':0 }, sonicRamp: { 'N1':0,'S1':0,'O3':0,'O4':0,'O6':0,'O7':0,'total':0 }, groutRamp: { 'N1':0,'S1':0,'O3':0,'O4':0,'O6':0,'O7':0,'total':0 }
                 };
             }
 
-            // ฟังก์ชันแปลงวันที่ให้แสดงผลสวยงาม (11 May 26)
             function formatDisplayDate(ymd) {
-                const d = new Date(ymd);
+                const [year, month, day] = ymd.split('-');
                 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`;
+                return `${parseInt(day)} ${months[parseInt(month)-1]} ${year.slice(-2)}`;
             }
 
-            // ถ้าค่าเป็น 0 ให้แสดงช่องว่าง
             const val = (number) => number === 0 ? '' : number;
 
-            // 3. เริ่มวาดตาราง Zone (7 วัน)
+            // วาด Zone
             const zoneTbody = document.querySelector("#zone-table tbody");
             zoneTbody.innerHTML = "";
             let finalZoneAcc = null;
@@ -325,15 +302,12 @@
             zoneDatesYMD.forEach((ymd) => {
                 const dData = getDailyForDate(ymd);
                 const dAcc = getAccForDate(ymd);
-                finalZoneAcc = dAcc; // เก็บก้อนสุดท้ายไว้สรุปบรรทัดล่าง
+                finalZoneAcc = dAcc;
 
-                // ไฮไลท์เฉพาะแถวที่เป็น Update Date
-                const isUpdateDate = (ymd === maxDataYMD);
-                const trClass = isUpdateDate ? 'class="highlight-row"' : '';
-                const displayDate = formatDisplayDate(ymd);
-
+                const trClass = (ymd === maxDataYMD) ? 'class="highlight-row"' : '';
+                
                 const rowHtml = `<tr ${trClass}>
-                    <td>${displayDate}</td>
+                    <td>${formatDisplayDate(ymd)}</td>
                     <td><b>${dAcc.accPileZone}</b></td>
                     <td>${val(dData.pileZone['1'])}</td><td>${val(dData.pileZone['2'])}</td><td>${val(dData.pileZone['3'])}</td>
                     <td>${val(dData.pileZone['4'])}</td><td>${val(dData.pileZone['5'])}</td><td>${val(dData.pileZone['6'])}</td>
@@ -352,16 +326,14 @@
                 zoneTbody.insertAdjacentHTML('beforeend', rowHtml);
             });
 
-            // แถวสรุป ACC ล่างสุดของ Zone
             const emptyZoneRow = `<tr>
-                <td></td>
-                <td><b>${finalZoneAcc.accPileZone}</b></td><td colspan="8"></td>
+                <td></td><td><b>${finalZoneAcc.accPileZone}</b></td><td colspan="8"></td>
                 <td><b>${finalZoneAcc.accSonicZone}</b></td><td colspan="8"></td>
                 <td><b>${finalZoneAcc.accGroutZone}</b></td><td colspan="8"></td>
             </tr>`;
             zoneTbody.insertAdjacentHTML('beforeend', emptyZoneRow);
 
-            // 4. เริ่มวาดตาราง Ramp (4 วัน)
+            // วาด Ramp
             const rampTbody = document.querySelector("#ramp-table tbody");
             rampTbody.innerHTML = "";
             let finalRampAcc = null;
@@ -371,12 +343,10 @@
                 const dAcc = getAccForDate(ymd);
                 finalRampAcc = dAcc;
 
-                const isUpdateDate = (ymd === maxDataYMD);
-                const trClass = isUpdateDate ? 'class="highlight-row"' : '';
-                const displayDate = formatDisplayDate(ymd);
-
+                const trClass = (ymd === maxDataYMD) ? 'class="highlight-row"' : '';
+                
                 const rowHtml = `<tr ${trClass}>
-                    <td>${displayDate}</td>
+                    <td>${formatDisplayDate(ymd)}</td>
                     <td><b>${dAcc.accPileRamp}</b></td>
                     <td>${val(dData.pileRamp['N1'])}</td><td>${val(dData.pileRamp['S1'])}</td><td>${val(dData.pileRamp['O3'])}</td>
                     <td>${val(dData.pileRamp['O4'])}</td><td>${val(dData.pileRamp['O6'])}</td><td>${val(dData.pileRamp['O7'])}</td>
@@ -395,16 +365,13 @@
                 rampTbody.insertAdjacentHTML('beforeend', rowHtml);
             });
 
-            // แถวสรุป ACC ล่างสุดของ Ramp
             const emptyRampRow = `<tr>
-                <td></td>
-                <td><b>${finalRampAcc.accPileRamp}</b></td><td colspan="7"></td>
+                <td></td><td><b>${finalRampAcc.accPileRamp}</b></td><td colspan="7"></td>
                 <td><b>${finalRampAcc.accSonicRamp}</b></td><td colspan="7"></td>
                 <td><b>${finalRampAcc.accGroutRamp}</b></td><td colspan="7"></td>
             </tr>`;
             rampTbody.insertAdjacentHTML('beforeend', emptyRampRow);
 
-            // 5. อัปเดตวันที่บน Header ตาม maxDataYMD
             document.getElementById('current-date').innerText = formatDisplayDate(maxDataYMD);
         }
 
