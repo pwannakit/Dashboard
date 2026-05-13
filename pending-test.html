@@ -63,11 +63,12 @@
             <div class="overflow-auto rounded-lg border border-gray-200 dark:border-slate-700 max-h-80 shadow-sm">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                     <thead class="bg-gray-100 dark:bg-slate-800 sticky top-0">
+                        <!-- 🟢 แก้ไข: เรียงคอลัมน์ใหม่ และ เปลี่ยนชื่อหัวตาราง 🟢 -->
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">ผู้รับผิดชอบ (Zone)</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">ชื่อเสาเข็ม</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">โซนพื้นที่</th>
                             <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">งานที่ต้องทำ</th>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">ชื่อโปรเจค</th>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">สถานะ</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">สถานะล่าสุด</th>
                         </tr>
                     </thead>
                     <tbody id="pendingTable" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800 text-sm">
@@ -140,12 +141,12 @@
                 if (!zoneStats[zone][task]) zoneStats[zone][task] = 0;
                 zoneStats[zone][task]++;
 
-                // สร้างแถวในตารางตรวจสอบข้อมูล
+                // 🟢 แก้ไข: เรียงลำดับคอลัมน์ใหม่ตอนสร้างตาราง 🟢
                 tableTbody.innerHTML += `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <td class="px-4 py-3 font-bold text-gray-700 dark:text-gray-300">${zone}</td>
-                        <td class="px-4 py-3 font-medium text-blue-600 dark:text-blue-400">📌 ${task}</td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${projName}</td>
+                        <td class="px-4 py-3 font-bold text-purple-700 dark:text-purple-400">📌 ${projName}</td>
+                        <td class="px-4 py-3 font-medium text-gray-700 dark:text-gray-300">${zone}</td>
+                        <td class="px-4 py-3 text-blue-600 dark:text-blue-400">${task}</td>
                         <td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${status || 'รอดำเนินการ'}</td>
                     </tr>
                 `;
@@ -228,10 +229,11 @@
                         },
                         tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } },
                         datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: textColor,
-                            font: { family: 'Sarabun', weight: 'bold', size: 12 },
+                            // 🟢 แก้ไข: ย้ายตัวเลขเข้ามาในแท่งกราฟ และปรับสีเป็นสีขาว 🟢
+                            anchor: 'center', 
+                            align: 'center',
+                            color: '#ffffff',
+                            font: { family: 'Sarabun', weight: 'bold', size: 13 },
                             formatter: function(value) { return value > 0 ? value : ''; }
                         }
                     },
