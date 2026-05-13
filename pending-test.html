@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module: Pending Piles</title>
+    <!-- โหลดฟอนต์ Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { fontFamily: { sans: ['Sarabun', 'sans-serif'] } }
+            }
+        }
+    </script>
+    <!-- โหลด Chart.js และ PapaParse -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { transition: background-color 0.3s, color 0.3s; }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark body { background-color: #0f172a; color: #f8fafc; }
+        .dark .glass-card { 
+            background: rgba(30, 41, 59, 0.95); 
+            border-color: rgba(51, 65, 85, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="p-8 text-gray-800 bg-slate-50">
+
+    <div class="max-w-5xl mx-auto glass-card p-6">
+        <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-4 mb-6">
+            <h2 class="text-2xl font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                <span>⏳</span> กราฟเสาเข็มรอดำเนินการทดสอบ (Pending)
+            </h2>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-sm font-bold shadow-sm">
+                สลับโหมดมืด/สว่าง
+            </button>
+        </div>
+        
+        <div id="status-message" class="mb-6 p-4 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 font-bold text-center shadow-sm">
+            กำลังดึงข้อมูลเสาเข็มที่รอทดสอบ... ⏳
+        </div>
+
+        <!-- พื้นที่แสดงกราฟ -->
+        <div class="relative w-full mb-8" style="height: 400px;">
+            <canvas id="pendingChart"></canvas>
+        </div>
+        
+        <!-- ตารางรายละเอียด (สำหรับตรวจสอบข้อมูล) -->
+        <div>
+            <h3 class="font-bold text-lg mb-3 text-gray-700 dark:text-gray-300">📋 รายละเอียดข้อมูลดิบที่ถูกคัดกรอง</h3>
+            <div class="overflow-auto rounded-lg border border-gray-200 dark:border-slate-700 max-h-80 shadow-sm">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                    <thead class="bg-gray-100 dark:bg-slate-800 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">ผู้รับผิดชอบ (Zone)</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">งานที่ต้องทำ</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">ชื่อโปรเจค</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTable" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800 text-sm">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // เปิดใช้งาน DataLabels
+        Chart.register(ChartDataLabels);
+        let pendingChartInstance = null;
+        
+        // ลิงก์ฐานข้อมูลใหม่ที่พี่เอ็กซ์ให้มา
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzJ44c5wXJlotG5S0SsFqlEncFgYDrhMbjDlJvgN1j_fgnjwPC8p8FnNquiTwQ_FGytzP81jZ1kICG/pub?gid=921370860&single=true&output=csv";
+
+        Papa.parse(CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                document.getElementById('status-message').style.display = 'none';
+                processPendingData(results.data);
+            },
+            error: function(err) {
+                const st = document.getElementById('status-message');
+                st.className = "mb-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold text-center shadow-sm";
+                st.innerText = "❌ เกิดข้อผิดพลาดในการดึงข้อมูล: " + err;
+            }
+        });
+
+        function formatZoneName(rawZone) {
+            let baseName = rawZone.trim();
+            if(baseName.includes('-')) {
+                baseName = baseName.split('-').slice(1).join('-').trim(); 
+            }
+            let displayZone = baseName;
+            const zMatch = baseName.match(/^z0*(\d+)$/i);
+            
+            if (zMatch) {
+                displayZone = 'Zone ' + zMatch[1];
+            } else if (/^(or|sr|n)\d+$/i.test(baseName)) { 
+                displayZone = 'Ramp-' + baseName.toUpperCase();
+            }
+            return displayZone;
+        }
+
+        function processPendingData(data) {
+            const zoneStats = {};
+            const tableTbody = document.getElementById('pendingTable');
+            tableTbody.innerHTML = '';
+
+            data.forEach(row => {
+                const projName = row['ชื่อโปรเจค'] || '';
+                const task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
+                const rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ';
+                const status = (row['สถานะ'] || '').trim();
+
+                // ข้ามข้อมูลที่ไม่มีชื่อโปรเจค หรือสถานะที่มีคำว่า "เสร็จ" 
+                if (!projName || status.includes('เสร็จ') || status.toLowerCase().includes('done')) {
+                    return; 
+                }
+
+                // จัดฟอร์แมตชื่อโซนให้สวยงาม
+                const zone = formatZoneName(rawZone);
+
+                // เก็บสถิติสำหรับวาดกราฟ
+                if (!zoneStats[zone]) zoneStats[zone] = {};
+                if (!zoneStats[zone][task]) zoneStats[zone][task] = 0;
+                zoneStats[zone][task]++;
+
+                // สร้างแถวในตารางตรวจสอบข้อมูล
+                tableTbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <td class="px-4 py-3 font-bold text-gray-700 dark:text-gray-300">${zone}</td>
+                        <td class="px-4 py-3 font-medium text-blue-600 dark:text-blue-400">📌 ${task}</td>
+                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${projName}</td>
+                        <td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${status || 'รอดำเนินการ'}</td>
+                    </tr>
+                `;
+            });
+
+            if(Object.keys(zoneStats).length === 0) {
+                tableTbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">✅ ไม่มีเสาเข็มรอดำเนินการทดสอบ</td></tr>`;
+            }
+
+            drawPendingChart(zoneStats);
+        }
+
+        function drawPendingChart(zoneStats) {
+            // โลจิกเรียงลำดับ Zone และ Ramp แบบเดียวกับ V1.4
+            const sortedZones = Object.keys(zoneStats).sort((a, b) => {
+                const getRank = (name) => {
+                    if (name.startsWith('Zone')) return 1;
+                    if (name.startsWith('Ramp')) return 2;
+                    return 3;
+                };
+                const rankA = getRank(a);
+                const rankB = getRank(b);
+                if (rankA !== rankB) return rankA - rankB; 
+                
+                const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0;
+                const numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
+                const textA = a.replace(/[\d]/g, '');
+                const textB = b.replace(/[\d]/g, '');
+                if (textA === textB) return numA - numB;
+                return a.localeCompare(b);
+            });
+
+            // ดึงประเภท "งานที่ต้องทำ" ทั้งหมดมาทำเป็น Dataset อัตโนมัติ
+            const allTasks = new Set();
+            sortedZones.forEach(z => {
+                Object.keys(zoneStats[z]).forEach(t => allTasks.add(t));
+            });
+            const taskArray = Array.from(allTasks).sort();
+
+            // กำหนดชุดสีออโต้เผื่อมีหลายงาน
+            const colors = [
+                { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },    // Red
+                { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgb(249, 115, 22)' },  // Orange
+                { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },  // Emerald
+                { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },  // Blue
+                { bg: 'rgba(139, 92, 246, 0.8)', border: 'rgb(139, 92, 246)' }   // Purple
+            ];
+
+            const datasets = taskArray.map((task, index) => {
+                const color = colors[index % colors.length];
+                return {
+                    label: task,
+                    data: sortedZones.map(z => zoneStats[z][task] || 0),
+                    backgroundColor: color.bg,
+                    borderColor: color.border,
+                    borderWidth: 1,
+                    borderRadius: 4
+                };
+            });
+
+            const ctx = document.getElementById('pendingChart').getContext('2d');
+            if (pendingChartInstance) pendingChartInstance.destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            pendingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedZones,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor, font: { family: 'Sarabun', size: 14 } }
+                        },
+                        tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: textColor,
+                            font: { family: 'Sarabun', weight: 'bold', size: 12 },
+                            formatter: function(value) { return value > 0 ? value : ''; }
+                        }
+                    },
+                    layout: { padding: { top: 30 } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor, font: { family: 'Sarabun', size: 12 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
