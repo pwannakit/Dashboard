@@ -52,12 +52,10 @@
         }
     </style>
 </head>
-<!-- 🟢 อัปเดตสีพื้นหลังของ Body ตามมาตรฐาน -->
 <body class="p-8 text-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-slate-100">
 
     <div class="max-w-5xl mx-auto glass-card p-6">
         <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-4">
-            <!-- 🟢 อัปเดต Page Title ใช้สี Indigo -->
             <h2 class="text-2xl md:text-3xl font-bold text-indigo-900 dark:text-indigo-400 flex items-center gap-2">
                 <span>⏳</span> เสาเข็มรอดำเนินการทดสอบ Sonic Logging
             </h2>
@@ -78,7 +76,6 @@
             
             <!-- ตารางรายละเอียด -->
             <div>
-                <!-- 🟢 อัปเดต Section Title <h3> ใช้ text-xl และสี Slate -->
                 <h3 class="text-xl font-bold mb-3 text-slate-800 dark:text-white flex items-center flex-wrap">
                     📋 เสาเข็มรอดำเนินงานทดสอบ (อายุคอนกรีตเกิน 14 วัน)
                     <span id="tableFilterStatus" class="ml-2 flex items-center"></span>
@@ -89,7 +86,8 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">ชื่อเสาเข็ม</th>
                                 <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">โซนพื้นที่</th>
-                                <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">งานที่ต้องทำ</th>
+                                <!-- 🟢 เปลี่ยนหัวข้อเป็น วันที่เทคอนกรีตเสาเข็ม -->
+                                <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">วันที่เทคอนกรีตเสาเข็ม</th>
                                 <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">สถานะล่าสุด</th>
                             </tr>
                         </thead>
@@ -157,9 +155,23 @@
         function processPendingData(data) {
             const zoneStats = {};
             currentTableData = [];
-
+            
+            // 🟢 1. สร้าง Map สำหรับเก็บวันที่เจาะเสาเข็ม ของแต่ละโปรเจค 🟢
+            const pileConcreteDates = {};
             data.forEach(row => {
-                const projName = row['ชื่อโปรเจค'] || '';
+                const projName = (row['ชื่อโปรเจค'] || '').trim();
+                const task = (row['งานที่ต้องทำ'] || '').trim();
+                const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                
+                // ถ้ารายการนี้คืองาน "เจาะเสาเข็ม" ให้จดวันที่เทคอนกรีตเอาไว้
+                if (projName && task.includes('เจาะเสาเข็ม') && finishDate) {
+                    pileConcreteDates[projName] = finishDate;
+                }
+            });
+
+            // 🟢 2. ประมวลผลรอบสองเพื่อกรองข้อมูลเข้าระบบตาราง/กราฟ 🟢
+            data.forEach(row => {
+                const projName = (row['ชื่อโปรเจค'] || '').trim();
                 let task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
                 const rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ';
                 const status = (row['สถานะ'] || '').trim();
@@ -172,12 +184,13 @@
                 const cleanProjName = projName.split(/-dia/i)[0].trim();
                 
                 let chartTask = task;
-                let tableTask = task;
                 if (task.toLowerCase().includes('sonic')) {
                     chartTask = 'เสาเข็มอายุคอนกรีตเกิน 14 วัน';
-                    tableTask = 'Sonic Logging Test';
                 }
                 const displayStatus = 'อายุคอนกรีตเกิน 14 วัน';
+                
+                // ดึงข้อมูลวันที่เทคอนกรีตจาก Map ที่เก็บไว้ ถ้าไม่พบให้แสดง '-'
+                const concreteDate = pileConcreteDates[projName] || '-';
 
                 if (!zoneStats[zone]) zoneStats[zone] = {};
                 if (!zoneStats[zone][chartTask]) zoneStats[zone][chartTask] = 0;
@@ -186,7 +199,7 @@
                 currentTableData.push({
                     name: cleanProjName,
                     zone: zone,
-                    task: tableTask,        
+                    concreteDate: concreteDate, // 🟢 ส่งวันที่ลงข้อมูลตาราง
                     chartTask: chartTask,   
                     status: displayStatus
                 });
@@ -234,12 +247,12 @@
             }
 
             filteredData.forEach(d => {
-                // 🟢 สีข้อความในตาราง คุมโทน Slate และสถานะใช้สี Orange
+                // 🟢 นำ d.concreteDate มาแสดงแทนงานที่ต้องทำ 🟢
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
                         <td class="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">📌 ${d.name}</td>
                         <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">${d.zone}</td>
-                        <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${d.task}</td>
+                        <td class="px-4 py-3 text-blue-600 dark:text-blue-400">${d.concreteDate}</td>
                         <td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${d.status}</td>
                     </tr>
                 `;
