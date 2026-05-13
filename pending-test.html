@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Module: Pending Piles</title>
+    <title>Module: Pending Piles Sonic</title>
     <!-- โหลดฟอนต์ Sarabun -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- โหลด Tailwind CSS -->
@@ -40,8 +40,9 @@
 
     <div class="max-w-5xl mx-auto glass-card p-6">
         <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-4 mb-6">
+            <!-- 🟢 แก้ไขข้อ 6: เปลี่ยนชื่อหัวเรื่อง -->
             <h2 class="text-2xl font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
-                <span>⏳</span> กราฟเสาเข็มรอดำเนินการทดสอบ (Pending)
+                <span>⏳</span> เสาเข็มรอดำเนินการทดสอบ Sonic Logging
             </h2>
             <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-sm font-bold shadow-sm">
                 สลับโหมดมืด/สว่าง
@@ -57,18 +58,22 @@
             <canvas id="pendingChart"></canvas>
         </div>
         
-        <!-- ตารางรายละเอียด (สำหรับตรวจสอบข้อมูล) -->
+        <!-- ตารางรายละเอียด -->
         <div>
-            <h3 class="font-bold text-lg mb-3 text-gray-700 dark:text-gray-300">📋 รายละเอียดข้อมูลดิบที่ถูกคัดกรอง</h3>
+            <!-- 🟢 แก้ไขข้อ 5: เปลี่ยนชื่อตาราง -->
+            <h3 class="font-bold text-lg mb-3 text-gray-700 dark:text-gray-300 flex items-center flex-wrap">
+                📋 เสาเข็มรอดำเนินงานทดสอบ (อายุคอนกรีตเกิน 14 วัน)
+                <span id="tableFilterStatus" class="ml-2"></span>
+            </h3>
             <div class="overflow-auto rounded-lg border border-gray-200 dark:border-slate-700 max-h-80 shadow-sm">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                     <thead class="bg-gray-100 dark:bg-slate-800 sticky top-0">
-                        <!-- 🟢 แก้ไข: เรียงคอลัมน์ใหม่ และ เปลี่ยนชื่อหัวตาราง 🟢 -->
+                        <!-- 🟢 แก้ไขข้อ 2 & 3: จัดเรียงหัวข้อใหม่ และ เปลี่ยนชื่อหัวข้อ -->
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">ชื่อเสาเข็ม</th>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">โซนพื้นที่</th>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">งานที่ต้องทำ</th>
-                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300">สถานะล่าสุด</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300 w-1/4">ชื่อเสาเข็ม</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300 w-1/4">โซนพื้นที่</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300 w-1/4">งานที่ต้องทำ</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-gray-600 dark:text-gray-300 w-1/4">สถานะล่าสุด</th>
                         </tr>
                     </thead>
                     <tbody id="pendingTable" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800 text-sm">
@@ -79,11 +84,10 @@
     </div>
 
     <script>
-        // เปิดใช้งาน DataLabels
         Chart.register(ChartDataLabels);
         let pendingChartInstance = null;
+        let currentTableData = []; // เก็บข้อมูลเพื่อใช้ทำ Interactive Table
         
-        // ลิงก์ฐานข้อมูลใหม่ที่พี่เอ็กซ์ให้มา
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzJ44c5wXJlotG5S0SsFqlEncFgYDrhMbjDlJvgN1j_fgnjwPC8p8FnNquiTwQ_FGytzP81jZ1kICG/pub?gid=921370860&single=true&output=csv";
 
         Papa.parse(CSV_URL, {
@@ -119,48 +123,93 @@
 
         function processPendingData(data) {
             const zoneStats = {};
-            const tableTbody = document.getElementById('pendingTable');
-            tableTbody.innerHTML = '';
+            currentTableData = [];
 
             data.forEach(row => {
                 const projName = row['ชื่อโปรเจค'] || '';
-                const task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
+                let task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
                 const rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ';
                 const status = (row['สถานะ'] || '').trim();
 
-                // ข้ามข้อมูลที่ไม่มีชื่อโปรเจค หรือสถานะที่มีคำว่า "เสร็จ" 
-                if (!projName || status.includes('เสร็จ') || status.toLowerCase().includes('done')) {
+                // 🟢 แก้ไขข้อ 3: กรองเอาเฉพาะ "เลยกำหนด"
+                if (!projName || status !== 'เลยกำหนด') {
                     return; 
                 }
 
-                // จัดฟอร์แมตชื่อโซนให้สวยงาม
                 const zone = formatZoneName(rawZone);
+                
+                // 🟢 แก้ไขข้อ 2: ตัดส่วน "-dia.xxx" ออก
+                const cleanProjName = projName.split(/-dia/i)[0].trim();
+                
+                // 🟢 แก้ไขข้อ 1 & 3: แปลงข้อความ Task และ สถานะ
+                let displayTask = task;
+                if (task.toLowerCase().includes('sonic')) {
+                    displayTask = 'เสาเข็มอายุคอนกรีตเกิน 14 วัน';
+                }
+                const displayStatus = 'อายุคอนกรีตเกิน 14 วัน';
 
-                // เก็บสถิติสำหรับวาดกราฟ
+                // เก็บสถิติสำหรับกราฟ
                 if (!zoneStats[zone]) zoneStats[zone] = {};
-                if (!zoneStats[zone][task]) zoneStats[zone][task] = 0;
-                zoneStats[zone][task]++;
+                if (!zoneStats[zone][displayTask]) zoneStats[zone][displayTask] = 0;
+                zoneStats[zone][displayTask]++;
 
-                // 🟢 แก้ไข: เรียงลำดับคอลัมน์ใหม่ตอนสร้างตาราง 🟢
-                tableTbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <td class="px-4 py-3 font-bold text-purple-700 dark:text-purple-400">📌 ${projName}</td>
-                        <td class="px-4 py-3 font-medium text-gray-700 dark:text-gray-300">${zone}</td>
-                        <td class="px-4 py-3 text-blue-600 dark:text-blue-400">${task}</td>
-                        <td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${status || 'รอดำเนินการ'}</td>
+                // เก็บข้อมูลดิบลง Array สำหรับตาราง
+                currentTableData.push({
+                    name: cleanProjName,
+                    zone: zone,
+                    task: displayTask,
+                    status: displayStatus
+                });
+            });
+
+            // 🟢 แก้ไขข้อ 2: จัดเรียงข้อมูลตามชื่อเสาเข็ม (น้อยไปมาก โดยอิงตามตัวเลขธรรมชาติ)
+            currentTableData.sort((a, b) => a.name.localeCompare(b.name, 'th', { numeric: true, sensitivity: 'base' }));
+
+            drawPendingChart(zoneStats);
+            renderTable(); // วาดตารางครั้งแรก (แสดงทั้งหมด)
+        }
+
+        // 🟢 เพิ่มฟังก์ชันวาดตารางแยกต่างหาก (สนับสนุนข้อ 4)
+        function renderTable(filterZone = null, filterTask = null) {
+            const tbody = document.getElementById('pendingTable');
+            const statusText = document.getElementById('tableFilterStatus');
+            tbody.innerHTML = '';
+            
+            let filteredData = currentTableData;
+            
+            // เช็คว่ามีการกรองข้อมูลหรือไม่
+            if (filterZone || filterTask) {
+                if (filterZone) filteredData = filteredData.filter(d => d.zone === filterZone);
+                if (filterTask) filteredData = filteredData.filter(d => d.task === filterTask);
+                
+                let filterLabels = [];
+                if (filterZone) filterLabels.push(filterZone);
+                if (filterTask) filterLabels.push(filterTask);
+                
+                // แสดงสถานะการกรอง พร้อมปุ่มล้างตัวกรอง
+                statusText.innerHTML = `<span class="text-blue-600 dark:text-blue-400 text-sm font-normal bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded ml-2 border border-blue-200 dark:border-blue-800">(กำลังกรอง: ${filterLabels.join(' | ')}) <u class="cursor-pointer text-gray-500 hover:text-red-500 ml-1" onclick="renderTable()">ล้างตัวกรอง ❌</u></span>`;
+            } else {
+                statusText.innerHTML = `<span class="text-gray-400 text-sm font-normal ml-2">(แสดงข้อมูลทั้งหมด)</span>`;
+            }
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">✅ ไม่มีข้อมูลในหมวดหมู่นี้</td></tr>`;
+                return;
+            }
+
+            filteredData.forEach(d => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-gray-100 dark:border-slate-800/50 last:border-0">
+                        <td class="px-4 py-3 font-bold text-purple-700 dark:text-purple-400">📌 ${d.name}</td>
+                        <td class="px-4 py-3 font-medium text-gray-700 dark:text-gray-300">${d.zone}</td>
+                        <td class="px-4 py-3 text-blue-600 dark:text-blue-400">${d.task}</td>
+                        <td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${d.status}</td>
                     </tr>
                 `;
             });
-
-            if(Object.keys(zoneStats).length === 0) {
-                tableTbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">✅ ไม่มีเสาเข็มรอดำเนินการทดสอบ</td></tr>`;
-            }
-
-            drawPendingChart(zoneStats);
         }
 
         function drawPendingChart(zoneStats) {
-            // โลจิกเรียงลำดับ Zone และ Ramp แบบเดียวกับ V1.4
             const sortedZones = Object.keys(zoneStats).sort((a, b) => {
                 const getRank = (name) => {
                     if (name.startsWith('Zone')) return 1;
@@ -179,20 +228,17 @@
                 return a.localeCompare(b);
             });
 
-            // ดึงประเภท "งานที่ต้องทำ" ทั้งหมดมาทำเป็น Dataset อัตโนมัติ
             const allTasks = new Set();
             sortedZones.forEach(z => {
                 Object.keys(zoneStats[z]).forEach(t => allTasks.add(t));
             });
             const taskArray = Array.from(allTasks).sort();
 
-            // กำหนดชุดสีออโต้เผื่อมีหลายงาน
             const colors = [
-                { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },    // Red
-                { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgb(249, 115, 22)' },  // Orange
-                { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },  // Emerald
-                { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },  // Blue
-                { bg: 'rgba(139, 92, 246, 0.8)', border: 'rgb(139, 92, 246)' }   // Purple
+                { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },
+                { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgb(249, 115, 22)' },
+                { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },
+                { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' }
             ];
 
             const datasets = taskArray.map((task, index) => {
@@ -223,17 +269,33 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    // 🟢 แก้ไขข้อ 4: ทำให้คลิกที่กราฟได้ 
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const firstPoint = elements[0];
+                            const selectedZone = chart.data.labels[firstPoint.index];
+                            const selectedTask = chart.data.datasets[firstPoint.datasetIndex].label;
+                            // กรองตารางตาม Zone และ Task ที่คลิก
+                            renderTable(selectedZone, selectedTask);
+                        } else {
+                            // คลิกพื้นที่ว่าง = ล้างการกรอง
+                            renderTable();
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
                     plugins: {
                         legend: {
                             labels: { color: textColor, font: { family: 'Sarabun', size: 14 } }
                         },
                         tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } },
                         datalabels: {
-                            // 🟢 แก้ไข: ย้ายตัวเลขเข้ามาในแท่งกราฟ และปรับสีเป็นสีขาว 🟢
+                            // 🟢 แก้ไขข้อ 1: ย้ายตัวเลขเข้ามาอยู่กลางกราฟและเปลี่ยนเป็นสีขาว
                             anchor: 'center', 
                             align: 'center',
                             color: '#ffffff',
-                            font: { family: 'Sarabun', weight: 'bold', size: 13 },
+                            font: { family: 'Sarabun', weight: 'bold', size: 14 },
                             formatter: function(value) { return value > 0 ? value : ''; }
                         }
                     },
