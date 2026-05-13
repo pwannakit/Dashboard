@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic & Grouting Dashboard V1.7.1</title>
+    <title>Sonic & Grouting Dashboard V1.8</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -82,7 +82,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 งานทดสอบ Sonic Logging & Grouting</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.7.1)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.8)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button onclick="toggleSection('data-source-container', 'toggle-data-btn')" id="toggle-data-btn" class="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
@@ -255,7 +255,7 @@
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-purple-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
                 <div>
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">🔍 ค้นหาตามชื่อโปรเจค</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400">พิมพ์ชื่อโปรเจคเพื่อดูลักษณะงาน วันที่ดำเนินการ และหมายเหตุ</p>
@@ -265,7 +265,7 @@
                 </button>
             </div>
             
-            <div id="search-content" class="collapsible-content">
+            <div id="search-content" class="collapsible-content pt-2">
                 <div class="mb-6 mt-2">
                     <input type="text" id="searchInput" class="w-full p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white focus:border-purple-500 outline-none transition-all" placeholder="ตัวอย่างเช่น: 81L/2 ...">
                 </div>
@@ -292,15 +292,57 @@
             </div>
         </div>
 
+        <div class="glass-card p-6 mb-8 border-t-4 border-red-500">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <span>⏳</span> เสาเข็มรอดำเนินการทดสอบ Sonic Logging
+                </h3>
+                <button onclick="togglePendingSection()" id="toggle-pending-btn" class="bg-red-50 dark:bg-slate-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-red-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
+                    🔽 ซ่อนเนื้อหา
+                </button>
+            </div>
+            
+            <div id="pending-content" class="collapsible-content pt-2">
+                <div id="pending-status-message" class="mb-6 p-4 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 font-bold text-center shadow-sm">
+                    กำลังดึงข้อมูลเสาเข็มที่รอทดสอบ... ⏳
+                </div>
+
+                <div class="relative w-full mb-8" style="height: 400px;">
+                    <canvas id="pendingChart"></canvas>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-800 dark:text-white flex items-center flex-wrap">
+                        📋 เสาเข็มรอดำเนินงานทดสอบ (อายุคอนกรีตเกิน 14 วัน)
+                        <span id="pendingTableFilterStatus" class="ml-2 flex items-center"></span>
+                    </h3>
+                    <div class="overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 max-h-80 shadow-sm">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead class="bg-slate-100 dark:bg-slate-800 sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">ชื่อเสาเข็ม</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">โซนพื้นที่</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">วันที่เทคอนกรีตเสาเข็ม</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-slate-600 dark:text-slate-300 w-1/4">สถานะล่าสุด</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingTable" class="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white">📋 สรุปเปรียบเทียบผลงานแยกตามบริเวณ (Zone)</h3>
                 <button onclick="toggleSection('zone-content', 'toggle-zone-btn')" id="toggle-zone-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
                     🔽 ซ่อนตาราง
                 </button>
             </div>
             
-            <div id="zone-content" class="collapsible-content">
+            <div id="zone-content" class="collapsible-content pt-2">
                 
                 <div class="w-full relative mb-6 mt-2" style="height: 350px;">
                     <canvas id="zoneChart"></canvas>
@@ -323,14 +365,14 @@
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-slate-400 dark:border-slate-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white">📌 สรุปผลงานอื่นๆ (Other Works)</h3>
                 <button onclick="toggleSection('other-zone-content', 'toggle-other-btn')" id="toggle-other-btn" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
                     🔽 ซ่อนตาราง
                 </button>
             </div>
             
-            <div id="other-zone-content" class="collapsible-content">
+            <div id="other-zone-content" class="collapsible-content pt-2">
                 <div class="rounded-lg border border-slate-200 dark:border-slate-700 w-full overflow-hidden mt-2 shadow-sm">
                     <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                         <thead class="bg-slate-100 dark:bg-slate-800 hidden md:table-header-group">
@@ -347,7 +389,7 @@
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-emerald-500">
-            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
                 <div>
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400">เปรียบเทียบผลงานรายเดือน (<span class="text-blue-500 font-bold">Sonic</span> อิงวันที่เริ่มงาน | <span class="text-orange-500 font-bold">Grouting</span> อิงวันที่เสร็จงาน)</p>
@@ -397,8 +439,13 @@
         let globalMonthlyData = {}; 
         let monthlyChartInstance = null;
         let zoneChartInstance = null; 
-        const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+        
+        // 🟢 ตัวแปรสำหรับ Pending Module
+        let pendingChartInstance = null;
+        let currentPendingTableData = []; 
+        const PENDING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzJ44c5wXJlotG5S0SsFqlEncFgYDrhMbjDlJvgN1j_fgnjwPC8p8FnNquiTwQ_FGytzP81jZ1kICG/pub?gid=921370860&single=true&output=csv";
 
+        const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
         let currentWeekStart, currentWeekEnd, currentMonthKey;
 
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
@@ -432,7 +479,29 @@
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
             
             loadFromUrl();
+            loadPendingData(); // 🟢 ดึงข้อมูลสำหรับ Pending Module ตอนเริ่มโหลดหน้า
         });
+
+        // 🟢 ฟังก์ชันดึงข้อมูลสำหรับ Pending Module
+        function loadPendingData() {
+            Papa.parse(PENDING_CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const st = document.getElementById('pending-status-message');
+                    if (st) st.style.display = 'none';
+                    processPendingData(results.data);
+                },
+                error: function(err) {
+                    const st = document.getElementById('pending-status-message');
+                    if (st) {
+                        st.className = "mb-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold text-center shadow-sm";
+                        st.innerText = "❌ เกิดข้อผิดพลาดในการดึงข้อมูล: " + err;
+                    }
+                }
+            });
+        }
 
         function setLastWeek() {
             const startVal = document.getElementById('startDate').value; 
@@ -470,7 +539,7 @@
                 btn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
                 btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
                 btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
-                btn.classList.remove('bg-slate-100', 'text-slate-700');
+                btn.classList.remove('bg-gray-100', 'text-gray-700');
             } else {
                 const btnText = btn.innerHTML.includes('ตาราง') ? '🔽 ซ่อนตาราง' : '🔽 ซ่อนเนื้อหา';
                 btn.innerHTML = btnText;
@@ -483,6 +552,22 @@
                 } else {
                     btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
                 }
+            }
+        }
+
+        // 🟢 ฟังก์ชันซ่อน/แสดงเนื้อหาสำหรับ Pending Module
+        function togglePendingSection() {
+            const container = document.getElementById('pending-content');
+            const btn = document.getElementById('toggle-pending-btn');
+            
+            container.classList.toggle('collapsed');
+            
+            if(container.classList.contains('collapsed')) {
+                btn.innerHTML = '▶️ แสดงเนื้อหา';
+                btn.className = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-300 dark:border-slate-600 flex items-center gap-1 shadow-sm';
+            } else {
+                btn.innerHTML = '🔽 ซ่อนเนื้อหา';
+                btn.className = 'bg-red-50 dark:bg-slate-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-red-200 dark:border-slate-600 flex items-center gap-1 shadow-sm';
             }
         }
 
@@ -509,6 +594,16 @@
                 zoneChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
                 zoneChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
                 zoneChartInstance.update();
+            }
+
+            // 🟢 อัปเดตสี Dark Mode ให้กราฟ Pending ด้วย
+            if (pendingChartInstance) {
+                pendingChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569';
+                pendingChartInstance.options.plugins.datalabels.color = '#ffffff'; 
+                pendingChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                pendingChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                pendingChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                pendingChartInstance.update();
             }
         }
 
@@ -582,6 +677,214 @@
             
             return new Date(year, month, day, 0, 0, 0, 0);
         }
+
+        // ==========================================
+        // 🟢 ฟังก์ชันประมวลผลสำหรับ Pending Module 🟢
+        // ==========================================
+        function processPendingData(data) {
+            const zoneStats = {};
+            currentPendingTableData = [];
+            
+            const pileConcreteDates = {};
+            data.forEach(row => {
+                const projName = (row['ชื่อโปรเจค'] || '').trim();
+                const task = (row['งานที่ต้องทำ'] || '').trim();
+                const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                
+                if (projName && task.includes('เจาะเสาเข็ม') && finishDate) {
+                    pileConcreteDates[projName] = finishDate;
+                }
+            });
+
+            data.forEach(row => {
+                const projName = (row['ชื่อโปรเจค'] || '').trim();
+                let task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
+                const rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ';
+                const status = (row['สถานะ'] || '').trim();
+
+                if (!projName || status !== 'เลยกำหนด') {
+                    return; 
+                }
+
+                const zone = formatZoneName(rawZone);
+                const cleanProjName = projName.split(/-dia/i)[0].trim();
+                
+                let chartTask = task;
+                if (task.toLowerCase().includes('sonic')) {
+                    chartTask = 'เสาเข็มอายุคอนกรีตเกิน 14 วัน';
+                }
+                const displayStatus = 'อายุคอนกรีตเกิน 14 วัน';
+                
+                const concreteDate = pileConcreteDates[projName] || '-';
+
+                if (!zoneStats[zone]) zoneStats[zone] = {};
+                if (!zoneStats[zone][chartTask]) zoneStats[zone][chartTask] = 0;
+                zoneStats[zone][chartTask]++;
+
+                currentPendingTableData.push({
+                    name: cleanProjName,
+                    zone: zone,
+                    concreteDate: concreteDate, 
+                    chartTask: chartTask,   
+                    status: displayStatus
+                });
+            });
+
+            currentPendingTableData.sort((a, b) => a.name.localeCompare(b.name, 'th', { numeric: true, sensitivity: 'base' }));
+
+            drawPendingChart(zoneStats);
+            renderPendingTable(); 
+        }
+
+        function renderPendingTable(filterZone = null, filterTask = null) {
+            const tbody = document.getElementById('pendingTable');
+            const statusText = document.getElementById('pendingTableFilterStatus');
+            tbody.innerHTML = '';
+            
+            let filteredData = currentPendingTableData;
+            
+            if (filterZone || filterTask) {
+                if (filterZone) filteredData = filteredData.filter(d => d.zone === filterZone);
+                if (filterTask) filteredData = filteredData.filter(d => d.chartTask === filterTask); 
+                
+                let filterLabels = [];
+                if (filterZone) filterLabels.push(filterZone);
+                if (filterTask) {
+                    let displayFilterTask = filterTask === 'เสาเข็มอายุคอนกรีตเกิน 14 วัน' ? 'Sonic Logging Test' : filterTask;
+                    filterLabels.push(displayFilterTask);
+                }
+                
+                statusText.innerHTML = `
+                    <span class="text-blue-600 dark:text-blue-400 text-sm font-normal bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded ml-2 border border-blue-200 dark:border-blue-800 mr-3">
+                        (กำลังกรอง: ${filterLabels.join(' | ')})
+                    </span> 
+                    <button class="cursor-pointer inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-bold dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700 shadow-sm" onclick="renderPendingTable()">
+                        📊 ภาพรวมทุกโซน (Summary)
+                    </button>
+                `;
+            } else {
+                statusText.innerHTML = `<span class="text-slate-400 text-sm font-normal ml-2">(แสดงข้อมูลทั้งหมด)</span>`;
+            }
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">✅ ไม่มีข้อมูลในหมวดหมู่นี้</td></tr>`;
+                return;
+            }
+
+            filteredData.forEach(d => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
+                        <td class="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">📌 ${d.name}</td>
+                        <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">${d.zone}</td>
+                        <td class="px-4 py-3 text-blue-600 dark:text-blue-400">${d.concreteDate}</td>
+                        <td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${d.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function drawPendingChart(zoneStats) {
+            const sortedZones = Object.keys(zoneStats).sort((a, b) => {
+                const getRank = (name) => {
+                    if (name.startsWith('Zone')) return 1;
+                    if (name.startsWith('Ramp')) return 2;
+                    return 3;
+                };
+                const rankA = getRank(a);
+                const rankB = getRank(b);
+                if (rankA !== rankB) return rankA - rankB; 
+                
+                const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0;
+                const numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
+                const textA = a.replace(/[\d]/g, '');
+                const textB = b.replace(/[\d]/g, '');
+                if (textA === textB) return numA - numB;
+                return a.localeCompare(b);
+            });
+
+            const allTasks = new Set();
+            sortedZones.forEach(z => {
+                Object.keys(zoneStats[z]).forEach(t => allTasks.add(t));
+            });
+            const taskArray = Array.from(allTasks).sort();
+
+            const colors = [
+                { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },
+                { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgb(249, 115, 22)' },
+                { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },
+                { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' }
+            ];
+
+            const datasets = taskArray.map((task, index) => {
+                const color = colors[index % colors.length];
+                return {
+                    label: task,
+                    data: sortedZones.map(z => zoneStats[z][task] || 0),
+                    backgroundColor: color.bg,
+                    borderColor: color.border,
+                    borderWidth: 1,
+                    borderRadius: 4
+                };
+            });
+
+            const ctx = document.getElementById('pendingChart').getContext('2d');
+            if (pendingChartInstance) pendingChartInstance.destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            pendingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedZones,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const firstPoint = elements[0];
+                            const selectedZone = chart.data.labels[firstPoint.index];
+                            const selectedTask = chart.data.datasets[firstPoint.datasetIndex].label;
+                            renderPendingTable(selectedZone, selectedTask);
+                        } else {
+                            renderPendingTable();
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor, font: { family: 'Sarabun', size: 14 } }
+                        },
+                        tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } },
+                        datalabels: {
+                            anchor: 'center', 
+                            align: 'center',
+                            color: '#ffffff',
+                            font: { family: 'Sarabun', weight: 'bold', size: 14 },
+                            formatter: function(value) { return value > 0 ? value : ''; }
+                        }
+                    },
+                    layout: { padding: { top: 30 } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor, font: { family: 'Sarabun', size: 12 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+        // ==========================================
 
         function processData(data) {
             let totalSonic = 0, currentMonthSonic = 0, currentWeekSonic = 0;
