@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Dashboard v1.9.1</title>
+    <title>Bored Pile Dashboard v1.9.3</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -76,11 +76,22 @@
             border-width: 0;
         }
 
-        /* ----- สไตล์สำหรับพิมพ์รายงาน (Print) ----- */
+        /* ----- สไตล์สำหรับตั้งค่าหน้ากระดาษ Export PDF ----- */
         @media print {
+            /* 🌟 บังคับให้เป็นแนวนอน (Landscape) ทั้งเอกสาร เพื่อให้ตารางและกราฟแสดงผลได้สวยงามที่สุด */
+            @page { size: A4 landscape; margin: 1cm; } 
+            
             body { background-color: #ffffff !important; color: #000000 !important; }
             .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
-            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: 24px; }
+            
+            /* ปรับแต่งกล่องให้สวยงามตอนพิมพ์ลงกระดาษ */
+            .glass-card { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important; 
+                break-inside: avoid; /* ป้องกันหน้าขาดกลางกล่อง */
+                margin-bottom: 24px !important; 
+                padding: 1.5rem !important;
+            }
             
             /* ซ่อนเมนู ปุ่ม และช่องค้นหา */
             .no-print { display: none !important; }
@@ -94,6 +105,9 @@
             .collapsible-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
             canvas { max-width: 100% !important; height: auto !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
         }
     </style>
 </head>
@@ -102,9 +116,12 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างเสาเข็มเจาะ</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.9.1)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.9.3)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto no-print">
+            <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
+                <span>📥 Export PDF</span>
+            </button>
             <button onclick="openTotalPilesModal()" class="px-4 py-2.5 rounded-lg bg-indigo-50 dark:bg-slate-800 shadow-sm hover:bg-indigo-100 dark:hover:bg-slate-700 transition-colors border border-indigo-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-2">
                 <span>📊 ปริมาณเป้าหมายเสาเข็ม</span>
             </button>
@@ -115,6 +132,13 @@
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
+    </div>
+
+    <!-- 📄 ส่วนหัวรายงานสำหรับหน้า PDF (บนเว็บจะถูกซ่อนไว้) -->
+    <div class="hidden print:block mb-8 text-center pb-4 border-b border-gray-300">
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">รายงานสรุปผลการดำเนินงาน โครงการเสาเข็มเจาะ</h2>
+        <p class="text-gray-600 text-sm">วิเคราะห์ข้อมูลและติดตามความคืบหน้าภาพรวม</p>
+        <p class="text-gray-800 font-bold mt-2" id="printDateTime"></p>
     </div>
 
     <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content no-print collapsed hide-on-print">
@@ -340,8 +364,8 @@
                 </div>
                 
                 <div class="flex items-center gap-2">
-                    <button onclick="window.print()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2 no-print">
-                        🖨️ พิมพ์รายงาน
+                    <button onclick="exportToPDF()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2 no-print">
+                        🖨️ Export PDF
                     </button>
                     
                     <button onclick="toggleSection('monthly-content', 'toggle-monthly-btn')" id="toggle-monthly-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
@@ -376,6 +400,7 @@
 
     </div>
 
+    <!-- 🌟 Modal ปริมาณเป้าหมายเสาเข็ม (ซ่อนไว้เป็นค่าเริ่มต้น) -->
     <div id="totalPilesModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity no-print">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-indigo-50 dark:bg-slate-800">
@@ -413,7 +438,25 @@
     </div>
 
     <script>
+        // เปิดใช้งานปลั๊กอิน DataLabels
         Chart.register(ChartDataLabels);
+
+        // --- 🌟 ฟังก์ชัน Export PDF ---
+        function exportToPDF() {
+            // อัปเดตเวลาพิมพ์ล่าสุดลงในหัวกระดาษ
+            const now = new Date();
+            const thDate = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            const thTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('printDateTime').innerText = `ข้อมูลอัปเดต ณ วันที่: ${thDate} | เวลา: ${thTime} น.`;
+            
+            // แจ้งเตือนเพื่อให้ผู้ใช้ตั้งค่า Print Dialog ได้ถูกต้อง
+            alert("💡 เคล็ดลับการ Export เป็น PDF:\n\n1. ปลายทาง (Destination): เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\n\n*ระบบได้ตั้งค่าหน้ากระดาษทั้งหมดเป็น 'แนวนอน (Landscape)' ให้แล้ว เพื่อให้ตารางและกราฟแสดงผลได้กว้างและสวยงามที่สุดครับ!");
+            
+            // ใช้ setTimeout เล็กน้อยเพื่อให้ Alert ปิดลงก่อนเรียกหน้าต่าง Print
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
 
         const TARGET_PILES_BY_ZONE = {
             "Zone 1": 48,
