@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.29</title>
+    <title>Column Dashboard V3.30</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -78,23 +78,39 @@
         @media (max-width: 1024px) { .kanban-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) { .kanban-grid { grid-template-columns: 1fr; } }
         
+        /* 🌟 ปรับแต่ง CSS สำหรับการ Print Report 🌟 */
         @media print {
+            @page { size: A4 landscape; margin: 1cm; }
+            body { background-color: #ffffff !important; color: #000000 !important; }
+            .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
+            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: 24px !important; padding: 1.5rem !important; }
             .no-print { display: none !important; }
-            .glass-card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; margin-bottom: 24px; }
-            body { background: white; color: black; }
-            .print-hide-section { display: none !important; }
+            .hide-on-print { display: none !important; }
+            .glass-card:has(.collapsed) { display: none !important; }
+            .collapsible-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            canvas { max-width: 100% !important; height: auto !important; }
         }
     </style>
 </head>
 <body class="p-4 md:p-8 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 relative">
 
+    <div class="hidden print:block mb-8 border-b-2 border-slate-800 pb-4">
+        <h1 class="text-3xl font-bold text-slate-900">รายงานสรุปงานก่อสร้างเสา (Column Dashboard)</h1>
+        <p class="text-slate-600 mt-2">เอกสารสรุปความคืบหน้า ปริมาณงาน และสถานะการดำเนินงานรายสัปดาห์/เดือน</p>
+        <p id="printDateTime" class="text-slate-800 font-bold mt-2"></p>
+    </div>
+
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏢 งานก่อสร้างเสา</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v3.29)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v3.30)</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
+            <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
+                <span>📥 Export PDF</span>
+            </button>
             <button onclick="openTotalColumnsModal()" class="px-4 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/40 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
                 <span>📊 ปริมาณเป้าหมายเสา</span>
             </button>
@@ -114,8 +130,8 @@
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <span class="text-blue-500">🌐</span> ลิงก์ฐานข้อมูล Google Sheets
                     </h3>
-                    <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 outline-none focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm">
-                    <button onclick="loadFromUrlBtn()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-colors shadow-sm">
+                    <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 outline-none focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm no-print">
+                    <button onclick="loadFromUrlBtn()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-colors shadow-sm no-print">
                         🚀 ดึงข้อมูลจากลิงก์
                     </button>
                 </div>
@@ -124,8 +140,8 @@
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <span class="text-yellow-500">📁</span> อัปโหลดไฟล์ CSV (กรณีออฟไลน์)
                     </h3>
-                    <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 outline-none bg-white dark:bg-slate-700 text-slate-800 dark:text-white file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-slate-200 dark:file:bg-slate-600 file:text-slate-700 dark:file:text-slate-200">
-                    <button onclick="loadFromFile()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-colors shadow-sm">
+                    <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 outline-none bg-white dark:bg-slate-700 text-slate-800 dark:text-white file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-slate-200 dark:file:bg-slate-600 file:text-slate-700 dark:file:text-slate-200 no-print">
+                    <button onclick="loadFromFile()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-colors shadow-sm no-print">
                         📥 ดึงข้อมูลจากไฟล์
                     </button>
                 </div>
@@ -198,7 +214,7 @@
                         <div class="text-4xl md:text-5xl font-bold text-emerald-600 dark:text-emerald-400" id="kpi-completed">0</div>
                     </div>
                     <div class="glass-card !mb-0 !p-5 text-center border-l-4 border-blue-500">
-                        <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">เสาพร้อมดำเนินการ<span id="kpi-zone-name" class="text-indigo-600 dark:text-indigo-400"></span></div>
+                        <div class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">สรุปจำนวนเสา<span id="kpi-zone-name" class="text-indigo-600 dark:text-indigo-400"></span></div>
                         <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400" id="kpi-total">0</div>
                     </div>
                     
@@ -227,14 +243,14 @@
             <div id="kanban-content" class="collapsible-content">
                 <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm w-fit mb-4 no-print">
                     <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
-                    <input type="date" id="startDate" class="p-1.5 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none text-sm">
+                    <input type="date" id="startDate" class="p-1.5 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none text-sm no-print">
                     <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">ถึง</label>
-                    <input type="date" id="endDate" class="p-1.5 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none text-sm">
-                    <button onclick="filterKanban()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
+                    <input type="date" id="endDate" class="p-1.5 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none text-sm no-print">
+                    <button onclick="filterKanban()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm no-print">ค้นหา</button>
                     
                     <div class="h-6 w-px bg-slate-300 dark:bg-slate-600 mx-1 hidden sm:block"></div>
-                    <button onclick="setLastWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm">⏪ สัปดาห์ก่อน</button>
-                    <button onclick="setThisWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm">▶️ สัปดาห์นี้</button>
+                    <button onclick="setLastWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm no-print">⏪ สัปดาห์ก่อน</button>
+                    <button onclick="setThisWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-md font-bold transition-colors text-sm shadow-sm no-print">▶️ สัปดาห์นี้</button>
                 </div>
                 <div id="kanban-status" class="hidden text-center font-bold mb-4"></div>
                 <div class="kanban-grid" id="kanban-board"></div>
@@ -273,12 +289,12 @@
                 
                 <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto no-print">
                     <div class="relative w-full sm:w-80">
-                        <input type="text" id="tableSearchInput" oninput="updateDashboard()" placeholder="ค้นหาชื่อเสา หรือ วันที่อัปเดต (เช่น 15/05)..." class="w-full py-2 pl-4 pr-4 border border-slate-300 dark:border-slate-600 rounded-lg outline-none bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm shadow-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900">
-                        <button onclick="document.getElementById('tableSearchInput').value=''; updateDashboard();" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-red-500" title="ล้างการค้นหา">
+                        <input type="text" id="tableSearchInput" oninput="updateDashboard()" placeholder="ค้นหาชื่อเสา หรือ วันที่อัปเดต (เช่น 15/05)..." class="w-full py-2 pl-4 pr-4 border border-slate-300 dark:border-slate-600 rounded-lg outline-none bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm shadow-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 no-print">
+                        <button onclick="document.getElementById('tableSearchInput').value=''; updateDashboard();" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-red-500 no-print" title="ล้างการค้นหา">
                             ✖
                         </button>
                     </div>
-                    <button onclick="toggleSection('table-content-wrapper', 'toggle-table-btn')" id="toggle-table-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center justify-center gap-1 shadow-sm w-full sm:w-auto">
+                    <button onclick="toggleSection('table-content-wrapper', 'toggle-table-btn')" id="toggle-table-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center justify-center gap-1 shadow-sm w-full sm:w-auto no-print">
                         🔽 ซ่อนเนื้อหา
                     </button>
                 </div>
@@ -355,7 +371,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
                 <div class="flex flex-wrap items-center gap-3 no-print w-full md:w-auto">
-                    <button onclick="window.print()" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-600 flex-1 md:flex-none flex justify-center gap-2">🖨️ พิมพ์รายงาน</button>
+                    <button onclick="exportToPDF()" class="bg-rose-50 dark:bg-slate-800 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold border border-rose-200 dark:border-slate-700 flex-1 md:flex-none flex justify-center gap-2">📥 Export PDF</button>
                     <button onclick="toggleSection('exec-content', 'toggle-exec-btn')" id="toggle-exec-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold border border-blue-200 dark:border-slate-600 flex-1 md:flex-none flex justify-center gap-2">🔽 ซ่อนเนื้อหา</button>
                 </div>
             </div>
@@ -363,15 +379,15 @@
             <div id="exec-content" class="collapsible-content">
                 <div class="flex flex-wrap items-center gap-3 bg-emerald-50/60 dark:bg-slate-800/50 p-4 rounded-xl border border-emerald-100 dark:border-slate-700 mb-6 no-print">
                     <span class="font-bold text-slate-700 dark:text-slate-300">⚖️ เปรียบเทียบผลงาน:</span>
-                    <select id="monthSelect1" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px] outline-none focus:border-emerald-500"></select>
+                    <select id="monthSelect1" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px] outline-none focus:border-emerald-500 no-print"></select>
                     <span class="font-bold text-slate-500">VS</span>
-                    <select id="monthSelect2" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px] outline-none focus:border-emerald-500"></select>
-                    <button onclick="compareMonthsAction(false)" class="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors">เปรียบเทียบ</button>
-                    <button onclick="resetMonthlyChart()" class="bg-[#94a3b8] hover:bg-[#64748b] text-white dark:bg-[#475569] dark:hover:bg-[#334155] px-5 py-2 rounded-lg font-bold text-sm ml-auto shadow-sm transition-colors">แสดงทั้งหมด</button>
+                    <select id="monthSelect2" class="p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:text-white text-sm min-w-[150px] outline-none focus:border-emerald-500 no-print"></select>
+                    <button onclick="compareMonthsAction(false)" class="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors no-print">เปรียบเทียบ</button>
+                    <button onclick="resetMonthlyChart()" class="bg-[#94a3b8] hover:bg-[#64748b] text-white dark:bg-[#475569] dark:hover:bg-[#334155] px-5 py-2 rounded-lg font-bold text-sm ml-auto shadow-sm transition-colors no-print">แสดงทั้งหมด</button>
                 </div>
 
                 <div class="bg-[#ebf9f1] dark:bg-slate-800 p-5 md:p-6 rounded-xl border border-emerald-200 dark:border-slate-700 mb-4 shadow-sm transition-all">
-                    <h4 class="font-bold mb-3 flex items-center gap-2 text-lg text-slate-700 dark:text-slate-200">
+                    <h4 class="text-xl font-bold mb-3 flex items-center gap-2 text-slate-800 dark:text-white">
                         📝 รายงานสรุปตามการเทคอนกรีต (Pouring Lifts):
                     </h4>
                     <div id="exec-summary-text" class="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">กำลังประมวลผล...</div>
@@ -386,7 +402,7 @@
                 <div class="h-px bg-slate-200 dark:bg-slate-700 my-8"></div>
 
                 <div class="bg-[#ebf9f1] dark:bg-slate-800 p-5 md:p-6 rounded-xl border border-emerald-200 dark:border-slate-700 mb-4 shadow-sm transition-all">
-                    <h4 class="font-bold mb-3 flex items-center gap-2 text-lg text-slate-700 dark:text-slate-200">
+                    <h4 class="text-xl font-bold mb-3 flex items-center gap-2 text-slate-800 dark:text-white">
                         ✅ รายงานสรุปเสาที่แล้วเสร็จ 100% (Completed Columns):
                     </h4>
                     <div id="exec-summary-completed-text" class="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">กำลังประมวลผล...</div>
@@ -402,7 +418,7 @@
 
     </div>
 
-    <div id="target-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-opacity">
+    <div id="target-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-opacity no-print">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -440,19 +456,8 @@
         Chart.register(ChartDataLabels);
 
         const PROJECT_COLUMN_TARGETS = {
-            "Zone 1": 12, 
-            "Zone 2": 47, 
-            "Zone 3": 42, 
-            "Zone 4": 11, 
-            "Zone 5": 6, 
-            "Zone 6": 20, 
-            "Zone 7": 76,
-            "Ramp-N01": 9, 
-            "Ramp-OR3": 21, 
-            "Ramp-OR4": 62, 
-            "Ramp-OR6": 40, 
-            "Ramp-OR7": 17, 
-            "Ramp-SR1": 0
+            "Zone 1": 12, "Zone 2": 47, "Zone 3": 42, "Zone 4": 11, "Zone 5": 6, "Zone 6": 20, "Zone 7": 76,
+            "Ramp-N01": 9, "Ramp-OR3": 21, "Ramp-OR4": 62, "Ramp-OR6": 40, "Ramp-OR7": 17, "Ramp-SR1": 0
         };
 
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpp6yhnCXCsyG4CHL1uFY1FNd9WudxzZWv8Z0OgsogmR4Sl40atSyElIxyM9TfdGx0bJMIb28T8bPW/pub?gid=1465792644&single=true&output=csv";
@@ -488,6 +493,24 @@
             document.getElementById('sheetUrl').value = savedUrl;
             loadFromUrl(savedUrl);
         });
+
+        // 🌟 ฟังก์ชัน Export PDF 🌟
+        function exportToPDF() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', month: 'long', day: 'numeric', 
+                hour: '2-digit', minute: '2-digit', second: '2-digit', 
+                timeZone: 'Asia/Bangkok' 
+            };
+            const formatter = new Intl.DateTimeFormat('th-TH', options);
+            document.getElementById('printDateTime').innerText = `พิมพ์เมื่อ: ${formatter.format(now)}`;
+
+            alert("💡 เคล็ดลับการ Export เป็น PDF ให้สวยงาม:\n1. ปลายทาง: เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\nระบบได้ตั้งค่าหน้ากระดาษเป็น 'แนวนอน (Landscape)' ให้เรียบร้อยแล้ว");
+
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
 
         function formatDateForInput(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
@@ -795,7 +818,7 @@
                     responsive: true, maintainAspectRatio: false, 
                     scales: { x: { stacked: true, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { stacked: true, title: { display: true, color: textColor, text: 'ระดับความสูง (เมตร)', font: { family: 'Sarabun' } }, ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } },
                     plugins: { 
-                        datalabels: { display: false }, 
+                        datalabels: { display: false },
                         legend: { labels: { color: textColor, font: { family: 'Sarabun' } } }, 
                         tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + context.raw.toFixed(2) + ' m' }, titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } } 
                     },
