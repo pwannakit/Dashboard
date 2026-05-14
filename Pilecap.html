@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foundation Dashboard V1.5.2</title>
+    <title>Foundation Dashboard V1.6</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=4tmUaBkj6GhLh0Lt53mY4PxPDvBebTTmCJmVO3Zys6bK3Vrgrud4J0rNkE1K6vaTenN_uh6YhGPrqLLjoff3BcoW80jdPrBe13boQ78_d078Ul_ybesWNkyqea_VeERxI1EGAGvamvUpgZMLApLaSMaMJXyAWtV_yGtKOzL-VxMTwHeeOk-oyUyht4RPEKrX30252901edFiXn-kOzz9f_KTVaBamBqzKhgoub-smUx3aTToncNUMi-0Qdtp-pOwHNEAaktTfWtyEWua7oqxkJkTMrZkZtug2h9FyGrQ10fwpSTxhfCKTywi-0BmqyXq" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://me.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jb250cmlidXRpb24udXNlcmNvbnRlbnQuZ29vZ2xlLmNvbS9kb3dubG9hZD9jPUNneGlZWEprWDNOMGIzSmhaMlVTVEJJSmRHVnRjRjlrWVhSaEdqOEtNRGhoTTJWa1lURmhOV05qWWpJNVlUSXdNREEyTlRGaVpUazROamMyT0RrMk1EWTJNemszTmpkaU9USmxNekV3WlJJTEVnY1FpdW51dk9ZS0dBRSZmaWxlbmFtZT1EYXNoYm9hcmRfVjEuNi5odG1sJm9waT0xMDMxMzUwNTA"/><script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -74,9 +74,10 @@
         }
 
         @media print {
+            @page { size: A4 landscape; margin: 1cm; }
             body { background-color: #ffffff !important; color: #000000 !important; }
             .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
-            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: 24px; }
+            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: 24px !important; padding: 1.5rem !important; }
             .no-print { display: none !important; }
             .hide-on-print { display: none !important; }
             .glass-card:has(.collapsed) { display: none !important; }
@@ -97,9 +98,12 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างฐานราก</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.5.2)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.6)</p>
         </div>
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
+            <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
+                <span>📥 Export PDF</span>
+            </button>
             <button onclick="openTargetModal()" class="px-4 py-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 shadow-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-2">
                 <span>📊 ปริมาณฐานรากทั้งโครงการ</span>
             </button>
@@ -111,6 +115,14 @@
             </button>
         </div>
     </div>
+
+    <!-- ======================= ส่วนหัวรายงาน Print Header ======================= -->
+    <div class="max-w-7xl mx-auto hidden print:block mb-6 border-b-2 border-slate-200 dark:border-slate-700 pb-4">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-white">รายงานสรุปงานก่อสร้างฐานราก</h2>
+        <p class="text-slate-600 dark:text-slate-400 mt-1">เอกสารฉบับนี้ถูกสร้างขึ้นจากระบบ Foundation Dashboard</p>
+        <p id="printDateTime" class="text-sm font-bold text-slate-500 dark:text-slate-400 mt-2"></p>
+    </div>
+    <!-- ======================================================================== -->
 
     <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content no-print collapsed hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -377,6 +389,24 @@
     </div>
 
     <script>
+        // ======================= ฟังก์ชันสำหรับ Print PDF =======================
+        function exportToPDF() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', month: 'long', day: 'numeric', 
+                weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit'
+            };
+            const thaiDateTime = now.toLocaleDateString('th-TH', options);
+            document.getElementById('printDateTime').innerText = `พิมพ์เมื่อ: ${thaiDateTime}`;
+
+            alert("💡 เคล็ดลับการ Export เป็น PDF ให้สวยงาม:\\n1. ปลายทาง: เลือก 'Save as PDF'\\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\\nระบบได้ตั้งค่าหน้ากระดาษเป็น 'แนวนอน (Landscape)' ให้เรียบร้อยแล้ว");
+
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+        // =======================================================================
+
         // =========================================================================
         // 🌟 ตั้งค่าเป้าหมายปริมาณฐานรากแต่ละโซน
         // =========================================================================
