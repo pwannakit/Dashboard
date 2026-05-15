@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Dashboard v2.0 (Map Integrated) </title>
+    <title>Bored Pile Dashboard v2.0 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -106,12 +106,9 @@
 
         /* ----- สไตล์สำหรับตั้งค่าหน้ากระดาษ Export PDF ----- */
         @media print {
-            /* 🌟 บังคับให้เป็นแนวนอน (Landscape) ทั้งเอกสาร */
             @page { size: A4 landscape; margin: 1cm; } 
-            
             body { background-color: #ffffff !important; color: #000000 !important; }
             .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
-            
             .glass-card { 
                 box-shadow: none !important; 
                 border: 1px solid #e2e8f0 !important; 
@@ -119,15 +116,12 @@
                 margin-bottom: 24px !important; 
                 padding: 1.5rem !important;
             }
-            
             .no-print { display: none !important; }
             .hide-on-print { display: none !important; }
             .glass-card:has(.collapsed) { display: none !important; }
-            
             .collapsible-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
             canvas { max-width: 100% !important; height: auto !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
         }
@@ -512,7 +506,8 @@
             
             const savedUrl = localStorage.getItem('boredPileUrl');
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
-            loadFromUrl(); // โหลดทุกอย่างรอบเดียว
+            loadFromUrl(); 
+            loadOtherWorksData(); // 🌟 โหลดข้อมูล Other Works ทันที
         });
 
         function initDateRanges() {
@@ -773,7 +768,7 @@
             }
         }
 
-        // ================= KANBAN & CHARTS (REMAIN THE SAME AS V1.9.3) =================
+        // ================= KANBAN & CHARTS =================
         function filterKanban() {
             const sVal = document.getElementById('startDate').value, eVal = document.getElementById('endDate').value;
             if(!sVal || !eVal) return;
@@ -838,6 +833,7 @@
             });
         }
 
+        // ================= NEW FULL REPORTING LOGIC =================
         function prepareMonthlyChart(data) {
             const mCounts = {};
             data.forEach(r => {
@@ -854,18 +850,81 @@
             drawMonthlyChart(mCounts);
         }
 
-        function drawMonthlyChart(dataObj) {
-            const keys = Object.keys(dataObj).sort(), sDiv = document.getElementById('monthlySummaryReport');
-            if (keys.length > 1) {
-                const diff = dataObj[keys[keys.length-1]].count - dataObj[keys[keys.length-2]].count, isInc = diff > 0, isEq = diff === 0;
-                sDiv.innerHTML = `📝 <b>รายงานสรุปสำหรับผู้บริหาร:</b> <br>เดือน <b>${dataObj[keys[keys.length-1]].label}</b> ทำได้ <b class="text-xl">${dataObj[keys[keys.length-1]].count}</b> ต้น เปรียบเทียบเดือน <b>${dataObj[keys[keys.length-2]].label}</b> พบว่า <b class="${isInc ? 'text-emerald-500' : (isEq ? 'text-yellow-500' : 'text-red-500')} text-xl">${isInc ? 'เพิ่มขึ้น 📈' : (isEq ? 'คงที่ ➖' : 'ลดลง 📉')} ${Math.abs(diff)} ต้น</b>`;
-            } else sDiv.innerHTML = '';
+        function generateSummaryText(dataObj) {
+            const div = document.getElementById('monthlySummaryReport');
+            const keys = Object.keys(dataObj).sort();
+            
+            if (keys.length === 0) {
+                div.innerHTML = '<span class="text-slate-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>';
+                return;
+            }
 
+            if (keys.length === 1) {
+                const k = keys[0];
+                div.innerHTML = `💡 <b>ข้อสรุป:</b> ข้อมูลที่แสดงมีเพียงเดือนเดียวคือ <b>${dataObj[k].label}</b> โดยมีปริมาณผลงานเสร็จสิ้นทั้งสิ้น <b class="text-emerald-600 dark:text-emerald-400 text-2xl">${dataObj[k].count}</b> ต้น`;
+                return;
+            }
+
+            const lastData = dataObj[keys[keys.length - 1]];
+            const prevData = dataObj[keys[keys.length - 2]];
+
+            const diff = lastData.count - prevData.count;
+            const isIncrease = diff > 0;
+            const isEqual = diff === 0;
+
+            let trendText, colorClass;
+            if(isIncrease) {
+                trendText = "เพิ่มขึ้น 📈";
+                colorClass = "text-emerald-600 dark:text-emerald-400";
+            } else if (isEqual) {
+                trendText = "คงที่ ➖";
+                colorClass = "text-yellow-600 dark:text-yellow-400";
+            } else {
+                trendText = "ลดลง 📉";
+                colorClass = "text-red-600 dark:text-red-400";
+            }
+
+            const diffAbs = Math.abs(diff);
+            let percentText = "";
+            if (prevData.count > 0) {
+                const percent = ((diffAbs / prevData.count) * 100).toFixed(2);
+                percentText = `คิดเป็น <b>${percent}%</b>`;
+            } else {
+                percentText = `(เดือนก่อนหน้าไม่มีผลงาน)`;
+            }
+
+            div.innerHTML = `
+                📝 <b>รายงานสรุปสำหรับผู้บริหาร:</b> <br>
+                ผลการดำเนินงานเดือน <b>${lastData.label}</b> สามารถทำผลงานได้ <b class="text-xl">${lastData.count}</b> ต้น 
+                เมื่อนำมาเปรียบเทียบกับเดือน <b>${prevData.label}</b> (ที่ทำได้ ${prevData.count} ต้น) <br>
+                พบว่าปริมาณงาน <b class="${colorClass} text-xl">${trendText} จำนวน ${diffAbs} ต้น</b> ${isEqual ? '' : percentText}
+            `;
+        }
+
+        function drawMonthlyChart(dataObj) {
+            generateSummaryText(dataObj);
+            const keys = Object.keys(dataObj).sort();
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
             if(monthlyChartInstance) monthlyChartInstance.destroy();
             const isDark = document.documentElement.classList.contains('dark');
-            monthlyChartInstance = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
-                type: 'bar', data: { labels: keys.map(k=>dataObj[k].label), datasets: [{ label: 'จำนวน (ต้น)', data: keys.map(k=>dataObj[k].count), backgroundColor: '#10b981', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: isDark ? '#f8fafc' : '#334155' }, legend: { labels: { color: isDark ? '#cbd5e1' : '#475569', font:{family:'Sarabun'} } } }, scales: { y: { beginAtZero: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' } }, x: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } } } }
+            
+            monthlyChartInstance = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: keys.map(k => dataObj[k].label), 
+                    datasets: [{ label: 'จำนวน (ต้น)', data: keys.map(k => dataObj[k].count), backgroundColor: '#10b981', borderRadius: 6 }] 
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { labels: { color: isDark ? '#cbd5e1' : '#475569', font:{family:'Sarabun'} } }, 
+                        datalabels: { anchor: 'end', align: 'top', color: isDark ? '#f8fafc' : '#334155', font: {family: 'Sarabun', weight: 'bold'} } 
+                    }, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' } }, 
+                        x: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } } 
+                    } 
+                } 
             });
         }
 
@@ -907,6 +966,83 @@
             const now = new Date(); document.getElementById('printDateTime').innerText = `ข้อมูลอัปเดต ณ วันที่: ${now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })} | เวลา: ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
             alert("💡 เคล็ดลับการ Export เป็น PDF:\n\n1. ปลายทาง: เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\n\n*ระบบตั้งค่าเป็น A4 แนวนอนให้แล้วครับ แผนที่จะพิมพ์ออกมาด้วยถ้าไม่พับซ่อนไว้!");
             setTimeout(() => { window.print(); }, 500);
+        }
+
+        // ================= ADDED FUNCTIONS FOR V2.0 FIX =================
+        function openTotalPilesModal() {
+            const modal = document.getElementById('totalPilesModal');
+            const tbody = document.getElementById('totalPilesModalBody');
+            tbody.innerHTML = ''; 
+            let sum = 0;
+            for (const [zone, target] of Object.entries(TARGET_PILES_BY_ZONE)) {
+                sum += target;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 font-medium border-r border-slate-100 dark:border-slate-700">${zone}</td>
+                        <td class="px-4 py-3 text-sm text-indigo-600 dark:text-indigo-400 font-bold text-right">${target.toLocaleString()}</td>
+                    </tr>
+                `;
+            }
+            document.getElementById('totalPilesSum').innerText = sum.toLocaleString();
+            modal.classList.remove('hidden');
+        }
+
+        function closeTotalPilesModal() { 
+            document.getElementById('totalPilesModal').classList.add('hidden'); 
+        }
+
+        function loadOtherWorksData() {
+            const OTHER_WORKS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
+            Papa.parse(OTHER_WORKS_URL, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) { renderOtherWorksTable(results.data); },
+                error: function(err) {
+                    const tbody = document.getElementById('otherWorksTableBody');
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-red-500 font-bold w-full">❌ ไม่สามารถดึงข้อมูลงานอื่นๆ ได้</td></tr>`;
+                }
+            });
+        }
+
+        function renderOtherWorksTable(data) {
+            const tbody = document.getElementById('otherWorksTableBody');
+            if(!tbody) return;
+            const otherWorks = {};
+            data.forEach(row => {
+                const projName = row['ชื่อโปรเจค'];
+                const jobType = row['ผู้รับผิดชอบ'] || '';
+                const finishDate = row['วันที่เสร็จงานจริงๆ'];
+                const typeLower = jobType.toLowerCase();
+                if (projName && jobType && !typeLower.includes('sonic') && !typeLower.includes('grout') && !typeLower.includes('defective')) { 
+                    if (!otherWorks[jobType]) otherWorks[jobType] = { count: 0, completed: 0, remaining: 0, projects: [] };
+                    otherWorks[jobType].count++;
+                    const hasDate = !!finishDate && finishDate.toString().trim() !== '';
+                    if (hasDate) otherWorks[jobType].completed++;
+                    else otherWorks[jobType].remaining++;
+                    otherWorks[jobType].projects.push({ name: projName, isCompleted: hasDate });
+                }
+            });
+            const sortedItems = Object.entries(otherWorks).sort((a, b) => b[1].count - a[1].count);
+            if (sortedItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 dark:text-slate-400 w-full">ไม่พบข้อมูลงานอื่นๆ</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            sortedItems.forEach(([jobName, info]) => {
+                const tags = info.projects.map(p => {
+                    let shortName = p.name;
+                    const diaIndex = shortName.toLowerCase().indexOf('-dia');
+                    if (diaIndex !== -1) shortName = shortName.substring(0, diaIndex).trim();
+                    const colorClass = p.isCompleted ? "bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700/50" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600";
+                    return `<span class="inline-block text-[11px] ${colorClass} border px-2 py-0.5 rounded shadow-sm m-0.5">${shortName}</span>`;
+                }).join('');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <td class="px-6 py-5 w-2/5"><div class="flex items-start gap-3"><span class="text-pink-500 mt-1">📌</span><div><div class="font-bold text-slate-800 dark:text-slate-200 mb-2 text-sm">${jobName}</div><div class="flex flex-wrap">${tags}</div></div></div></td>
+                        <td class="px-6 py-5 text-center align-top font-bold text-slate-700 dark:text-slate-300 text-sm w-1/5">${info.count}</td>
+                        <td class="px-6 py-5 text-center align-top font-bold text-emerald-600 dark:text-emerald-400 text-sm w-1/5">${info.completed > 0 ? info.completed : '-'}</td>
+                        <td class="px-6 py-5 text-center align-top font-bold text-orange-500 dark:text-orange-400 text-sm w-1/5">${info.remaining > 0 ? info.remaining : '-'}</td>
+                    </tr>`;
+            });
         }
     </script>
 </body>
