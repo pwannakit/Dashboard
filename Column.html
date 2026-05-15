@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Column Dashboard V3.30</title>
+    <title>Column Dashboard V3.30 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -15,6 +15,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         body { transition: background-color 0.3s, color 0.3s; }
         .glass-card { background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; transition: all 0.3s; }
@@ -78,6 +82,23 @@
         @media (max-width: 1024px) { .kanban-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) { .kanban-grid { grid-template-columns: 1fr; } }
         
+        /* 🌟 สไตล์หมุดและ Popup ของแผนที่ */
+        .custom-marker {
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 10px;
+        }
+        .custom-marker:hover { transform: scale(1.3); z-index: 1000 !important; }
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0; }
+
         /* 🌟 ปรับแต่ง CSS สำหรับการ Print Report 🌟 */
         @media print {
             @page { size: A4 landscape; margin: 1cm; }
@@ -287,14 +308,15 @@
                     <span id="table-count-badge" class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300 text-xs px-3 py-1.5 rounded-full font-bold"></span>
                 </h3>
                 
-                <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto no-print">
-                    <div class="relative w-full sm:w-80">
-                        <input type="text" id="tableSearchInput" oninput="updateDashboard()" placeholder="ค้นหาชื่อเสา หรือ วันที่อัปเดต (เช่น 15/05)..." class="w-full py-2 pl-4 pr-4 border border-slate-300 dark:border-slate-600 rounded-lg outline-none bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm shadow-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 no-print">
-                        <button onclick="document.getElementById('tableSearchInput').value=''; updateDashboard();" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-red-500 no-print" title="ล้างการค้นหา">
-                            ✖
-                        </button>
+                <div class="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto no-print">
+                    <div class="flex flex-col sm:flex-row gap-2 w-full">
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="tableSearchInput" oninput="updateDashboard()" placeholder="ค้นหาชื่อเสา หรือ วันที่..." class="w-full py-2 pl-4 pr-8 border border-slate-300 dark:border-slate-600 rounded-lg outline-none bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm shadow-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 no-print">
+                            <button onclick="document.getElementById('tableSearchInput').value=''; updateDashboard();" class="absolute inset-y-0 right-0 px-2 flex items-center text-slate-400 hover:text-red-500 no-print" title="ล้างการค้นหา">✖</button>
+                        </div>
+                        <button onclick="searchAndLocateMap()" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm whitespace-nowrap">📍 ค้นหาแผนที่</button>
                     </div>
-                    <button onclick="toggleSection('table-content-wrapper', 'toggle-table-btn')" id="toggle-table-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center justify-center gap-1 shadow-sm w-full sm:w-auto no-print">
+                    <button onclick="toggleSection('table-content-wrapper', 'toggle-table-btn')" id="toggle-table-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center justify-center gap-1 shadow-sm w-full lg:w-auto no-print whitespace-nowrap">
                         🔽 ซ่อนเนื้อหา
                     </button>
                 </div>
@@ -320,6 +342,30 @@
             </div>
         </div>
 
+        <div class="glass-card section-wrapper mb-8 border-t-4 border-orange-500">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">🗺️ พิกัดงานเสา (Spatial Map)</h3>
+                    <select id="mapZoneFilter" onchange="renderMap()" class="p-1.5 rounded border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 outline-none text-slate-800 dark:text-white text-sm min-w-[150px] no-print">
+                        <option value="ALL">ภาพรวมทุกโซน</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                    <div class="flex flex-wrap items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 px-3 rounded border border-slate-200 dark:border-slate-700 text-xs font-bold no-print flex-1 md:flex-none">
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-emerald-700 dark:text-emerald-400">ครบ (<span id="count-done">0</span>)</span></div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-orange-500"></div><span class="text-orange-700 dark:text-orange-400">ทำอยู่ (<span id="count-wip">0</span>)</span></div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-slate-400"></div><span class="text-slate-600 dark:text-slate-400">รอ (<span id="count-pending">0</span>)</span></div>
+                    </div>
+                    <button onclick="toggleSection('map-content', 'toggle-map-btn')" id="toggle-map-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center justify-center gap-1 shadow-sm w-full md:w-auto no-print whitespace-nowrap">
+                        🔽 ซ่อนเนื้อหา
+                    </button>
+                </div>
+            </div>
+            <div id="map-content" class="collapsible-content pt-2">
+                <div id="map" class="w-full rounded-xl z-0" style="height: 550px; border: 1px solid #cbd5e1;"></div>
+            </div>
+        </div>
         <div class="glass-card section-wrapper mb-8" id="zone-summary-card">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
@@ -470,6 +516,9 @@
         let monthlyStatsData = [];
         let monthlyCompletedStatsData = []; 
 
+        let map, markerLayerGroup;
+        let groupedPileData = [];
+
         let currentWeekStart, currentWeekEnd, currentMonthKey;
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
@@ -489,12 +538,135 @@
             document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
             document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
             document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
+            
+            initMap(); // 🌟 เปิดใช้งานแผนที่
+            
             const savedUrl = localStorage.getItem('columnDbUrl') || DEFAULT_URL;
             document.getElementById('sheetUrl').value = savedUrl;
             loadFromUrl(savedUrl);
         });
 
-        // 🌟 ฟังก์ชัน Export PDF 🌟
+        // 🌟 ฟังก์ชันแผนที่ 🌟
+        function initMap() {
+            map = L.map('map').setView([13.9540, 100.5170], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
+            markerLayerGroup = L.layerGroup().addTo(map);
+        }
+
+        function processGroupedMapData(csvData) {
+            const tempGroups = {};
+            const mapZones = new Set();
+            
+            const coordsMap = {};
+            csvData.forEach(row => {
+                const colName = row['ชื่อเสา'] ? row['ชื่อเสา'].trim() : '';
+                const lat = parseFloat(row['Latitude']);
+                const lng = parseFloat(row['Longitude']);
+                if (colName && !isNaN(lat) && !isNaN(lng)) {
+                    coordsMap[colName] = { lat, lng };
+                }
+            });
+
+            Object.keys(globalDatabase).forEach(colName => {
+                const info = globalDatabase[colName];
+                
+                let baseName = colName;
+                if (baseName.includes('/')) baseName = baseName.split('/')[0].trim();
+                else {
+                    const diaIndex = baseName.toLowerCase().indexOf('-dia');
+                    if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
+                }
+
+                if (!tempGroups[baseName]) tempGroups[baseName] = { baseName: baseName, zone: info.zone, lat: null, lng: null, columns: [] };
+                
+                if (coordsMap[colName]) {
+                    tempGroups[baseName].lat = coordsMap[colName].lat;
+                    tempGroups[baseName].lng = coordsMap[colName].lng;
+                }
+
+                mapZones.add(info.zone);
+
+                const isCompleted = info.currentPouredElev >= info.target && info.target > 0;
+                tempGroups[baseName].columns.push({ 
+                    id: colName, 
+                    isCompleted: isCompleted, 
+                    status: info.latestStatus,
+                    date: info.latestDateStr || '-',
+                    percent: info.target > 0 ? Math.min((info.currentPouredElev / info.target) * 100, 100).toFixed(0) : 0
+                });
+            });
+
+            groupedPileData = Object.values(tempGroups).filter(group => group.lat !== null && group.lng !== null);
+
+            const select = document.getElementById('mapZoneFilter');
+            select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
+            const sortedZones = Array.from(mapZones).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+            sortedZones.forEach(zone => select.innerHTML += `<option value="${zone}">${zone}</option>`);
+
+            renderMap();
+        }
+
+        function renderMap() {
+            markerLayerGroup.clearLayers();
+            const selectedZone = document.getElementById('mapZoneFilter').value;
+            let done = 0, wip = 0, pending = 0; const bounds = []; 
+            groupedPileData.forEach(group => {
+                if (selectedZone !== 'ALL' && group.zone !== selectedZone) return;
+                
+                const total = group.columns.length;
+                const comp = group.columns.filter(p => p.isCompleted).length;
+                
+                let sColor = '#94a3b8', sText = 'รอดำเนินการ', bgClass = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+                
+                const anyStarted = group.columns.some(p => p.status !== 'ยังไม่เริ่ม');
+
+                if (comp === total && total > 0) { done++; sColor = '#10b981'; sText = 'เสร็จสมบูรณ์'; bgClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400'; } 
+                else if (anyStarted) { wip++; sColor = '#f97316'; sText = 'กำลังดำเนินการ'; bgClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-400'; } 
+                else { pending++; }
+                
+                const customIcon = L.divIcon({ className: 'custom-marker', html: `<div style="background-color: ${sColor}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.9;"><span>${total}</span></div>`, iconSize: [20, 20] });
+                const marker = L.marker([group.lat, group.lng], { icon: customIcon });
+                
+                let pHTML = '<ul class="mt-2 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-2">';
+                group.columns.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).forEach(p => {
+                    const icon = p.isCompleted ? '<span class="text-emerald-500 text-[10px]">✅</span>' : (p.status !== 'ยังไม่เริ่ม' ? '<span class="text-orange-500 text-[10px]">🚧</span>' : '<span class="text-slate-400 text-[10px]">⏳</span>');
+                    pHTML += `<li class="text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 pb-1 flex justify-between items-center"><span class="flex items-center gap-1">${icon} <b class="text-xs">${p.id}</b> <span class="text-[10px] text-blue-500 ml-1">(${p.percent}%)</span></span><span class="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">${p.date}</span></li>`;
+                }); pHTML += '</ul>';
+                
+                marker.bindPopup(`<div class="p-3 min-w-[240px] dark:bg-slate-800"><h4 class="font-bold text-lg text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4><div class="text-xs text-slate-500 mb-2">พื้นที่: ${group.zone}</div><div class="mb-2 flex justify-between items-center"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${comp}/${total} ต้น)</span></div>${pHTML}</div>`);
+                markerLayerGroup.addLayer(marker); bounds.push([group.lat, group.lng]);
+            });
+            document.getElementById('count-done').innerText = done; document.getElementById('count-wip').innerText = wip; document.getElementById('count-pending').innerText = pending;
+            if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 }); }
+        }
+
+        function searchAndLocateMap() {
+            const keyword = document.getElementById('tableSearchInput').value.toLowerCase().trim();
+            if(!keyword) return alert('กรุณาพิมพ์ชื่อเสาที่ต้องการค้นหาในช่องค้นหาก่อนครับ');
+            
+            let targetGroup = null;
+            for (const group of groupedPileData) {
+                if (group.baseName.toLowerCase().includes(keyword) || group.columns.some(p => p.id.toLowerCase().includes(keyword))) {
+                    targetGroup = group; break;
+                }
+            }
+
+            if(targetGroup) {
+                map.setView([targetGroup.lat, targetGroup.lng], 18);
+                if(document.getElementById('map-content').classList.contains('collapsed')) {
+                    toggleSection('map-content', 'toggle-map-btn');
+                }
+                markerLayerGroup.eachLayer(function(layer) {
+                    if (layer.getLatLng().lat === targetGroup.lat && layer.getLatLng().lng === targetGroup.lng) {
+                        setTimeout(() => layer.openPopup(), 500); 
+                    }
+                });
+                document.getElementById('map-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                alert(`❌ ไม่พบพิกัดแผนที่ของเสา: "${keyword}"\n(เสาต้นนี้อาจจะยังไม่ได้กรอกพิกัดลงใน Sheet ครับ)`);
+            }
+        }
+
         function exportToPDF() {
             const now = new Date();
             const options = { 
@@ -568,6 +740,7 @@
                 if (container.classList.contains('collapsed')) wrapper.classList.add('print-hide-section');
                 else wrapper.classList.remove('print-hide-section');
             }
+            if (contentId === 'map-content' && !container.classList.contains('collapsed')) setTimeout(() => map.invalidateSize(), 300);
             if (btn) {
                 if(container.classList.contains('collapsed')) btn.innerHTML = '▶️ แสดงเนื้อหา';
                 else btn.innerHTML = '🔽 ซ่อนเนื้อหา';
@@ -617,9 +790,13 @@
         function handleParseResult(results) {
             if(!results.data || results.data.length === 0) return;
             processData(results.data);
+            processGroupedMapData(results.data); // 🌟 ประมวลผลพิกัดแผนที่
             showStatus('✅ โหลดข้อมูลสำเร็จ!', 'ok');
             document.getElementById('mainContent').classList.remove('hide');
-            setTimeout(() => document.getElementById('loading-status').classList.add('hidden'), 2000);
+            setTimeout(() => {
+                document.getElementById('loading-status').classList.add('hidden');
+                map.invalidateSize(); // 🌟 รีเฟรชแผนที่
+            }, 2000);
         }
 
         function processData(csvData) {
