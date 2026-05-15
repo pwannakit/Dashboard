@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Map Module V2.2</title>
+    <title>Bored Pile Map Module V2.3</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -66,7 +66,7 @@
     <div class="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🗺️ โมดูลแผนที่เสาเข็มเจาะ (Group View)</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">แสดงผลแผนที่แบบรวมกลุ่มเสาเข็มไว้ในฐาน/เสาเดียวกัน</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">แสดงผลแผนที่แบบรวมกลุ่มเสาเข็มไว้ในฐาน/เสาเดียวกัน (v2.3)</p>
         </div>
         <div class="flex items-center gap-3">
             <button onclick="fetchData()" class="px-4 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold transition-colors shadow-sm flex items-center gap-2">
@@ -211,7 +211,30 @@
 
             const select = document.getElementById('zoneFilter');
             select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน (Summary)</option>';
-            Array.from(availableZones).sort().forEach(zone => {
+            
+            // 🌟 ลอจิกการเรียงลำดับ Zone ให้อยู่ก่อน Ramp
+            const sortedZones = Array.from(availableZones).sort((a, b) => {
+                const getRank = (name) => {
+                    if (name.startsWith('Zone')) return 1;
+                    if (name.startsWith('Ramp')) return 2;
+                    return 3;
+                };
+                
+                const rankA = getRank(a);
+                const rankB = getRank(b);
+                
+                if (rankA !== rankB) return rankA - rankB; 
+                
+                const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0;
+                const numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
+                const textA = a.replace(/[\d]/g, '');
+                const textB = b.replace(/[\d]/g, '');
+                
+                if (textA === textB) return numA - numB;
+                return a.localeCompare(b);
+            });
+
+            sortedZones.forEach(zone => {
                 select.innerHTML += `<option value="${zone}">${zone}</option>`;
             });
 
@@ -220,21 +243,18 @@
 
         // 🌟 ฟังก์ชันจัดฟอร์แมตชื่อเสาเข็มใหม่ 🌟
         function formatPileName(rawName) {
-            // แพทเทิร์น 1: มีทั้ง / และ -dia (เช่น OR4-65/1-dia1.20)
             const regex1 = /(.+)\/(\d+)-dia([\d\.]+)/i;
             const match1 = rawName.match(regex1);
             if (match1) {
                 return `${match1[1]} No.B${match1[2]} (${match1[3]} m.)`;
             }
             
-            // แพทเทิร์น 2: มีแค่ / ไม่มี -dia (เช่น OR4-65/1)
             const regex2 = /(.+)\/(\d+)/i;
             const match2 = rawName.match(regex2);
             if (match2) {
                 return `${match2[1]} No.B${match2[2]}`;
             }
 
-            // ถ้าไม่ตรงแพทเทิร์นเลย ให้ส่งชื่อเดิมกลับไป
             return rawName;
         }
 
@@ -288,7 +308,6 @@
                 sortedPiles.forEach(p => {
                     const icon = p.isCompleted ? '<span class="text-emerald-500 text-[10px]">✅</span>' : '<span class="text-slate-400 text-[10px]">⏳</span>';
                     
-                    // เรียกใช้ฟังก์ชันแปลงชื่อเสาเข็มที่นี่
                     const displayName = formatPileName(p.id);
 
                     pilesListHTML += `
