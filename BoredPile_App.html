@@ -106,9 +106,12 @@
 
         /* ----- สไตล์สำหรับตั้งค่าหน้ากระดาษ Export PDF ----- */
         @media print {
+            /* 🌟 บังคับให้เป็นแนวนอน (Landscape) ทั้งเอกสาร */
             @page { size: A4 landscape; margin: 1cm; } 
+            
             body { background-color: #ffffff !important; color: #000000 !important; }
             .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
+            
             .glass-card { 
                 box-shadow: none !important; 
                 border: 1px solid #e2e8f0 !important; 
@@ -116,12 +119,15 @@
                 margin-bottom: 24px !important; 
                 padding: 1.5rem !important;
             }
+            
             .no-print { display: none !important; }
             .hide-on-print { display: none !important; }
             .glass-card:has(.collapsed) { display: none !important; }
+            
             .collapsible-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
             canvas { max-width: 100% !important; height: auto !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
         }
@@ -506,7 +512,7 @@
             
             const savedUrl = localStorage.getItem('boredPileUrl');
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
-            loadFromUrl(); 
+            loadFromUrl(); // โหลดทุกอย่างรอบเดียว
             loadOtherWorksData(); // 🌟 โหลดข้อมูล Other Works ทันที
         });
 
@@ -822,14 +828,39 @@
             tfoot.innerHTML = `<tr><td class="px-6 py-5 font-bold text-center border-r dark:border-slate-700">รวมทั้งโครงการ:</td><td class="px-4 py-5 text-center text-blue-600 font-bold">${sumTarget}</td><td class="px-4 py-5 text-center text-emerald-600 font-bold">${sumCompleted}</td><td class="px-4 py-5 text-center text-orange-500 font-bold">${sumRemaining}</td><td class="px-6 py-5 font-bold border-l dark:border-slate-700">${totalPercent}%</td></tr>`;
         }
 
+        // ================= PROGRESS CHART & OPACITY FIX =================
         function drawProgressChart(zoneCounts) {
             if (progressChartInstance) progressChartInstance.destroy();
             const labels = Object.keys(TARGET_PILES_BY_ZONE), compData = [], remData = [];
             labels.forEach(z => { const t = TARGET_PILES_BY_ZONE[z], c = zoneCounts[z] ? zoneCounts[z].count : 0; compData.push(c); remData.push(Math.max(0, t - c)); });
             const isDark = document.documentElement.classList.contains('dark');
             progressChartInstance = new Chart(document.getElementById('progressChart').getContext('2d'), {
-                type: 'bar', data: { labels: labels, datasets: [{ label: 'แล้วเสร็จ', data: compData, backgroundColor: '#10b981', stack: 'Stack 0' }, { label: 'คงเหลือ', data: remData, backgroundColor: isDark ? '#334155' : '#94a3b8', stack: 'Stack 0' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: (c) => c.datasetIndex === 0 ? '#fff' : (isDark ? '#cbd5e1' : '#475569'), display: (c) => c.dataset.data[c.dataIndex] > 0 }, legend: { labels: { color: isDark ? '#cbd5e1' : '#475569', font:{family:'Sarabun'} } } }, scales: { y: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' } }, x: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } } } }
+                type: 'bar', 
+                data: { 
+                    labels: labels, 
+                    datasets: [
+                        { label: 'แล้วเสร็จ', data: compData, backgroundColor: '#10b981', stack: 'Stack 0' }, 
+                        { 
+                            label: 'คงเหลือ', 
+                            data: remData, 
+                            backgroundColor: isDark ? 'rgba(51, 65, 85, 0.8)' : 'rgba(148, 163, 184, 0.5)', 
+                            borderColor: isDark ? 'rgb(71, 85, 105)' : 'rgb(148, 163, 184)',
+                            borderWidth: 1,
+                            stack: 'Stack 0' 
+                        }
+                    ] 
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        datalabels: { color: (c) => c.datasetIndex === 0 ? '#fff' : (isDark ? '#cbd5e1' : '#475569'), display: (c) => c.dataset.data[c.dataIndex] > 0 }, 
+                        legend: { labels: { color: isDark ? '#cbd5e1' : '#475569', font:{family:'Sarabun'} } } 
+                    }, 
+                    scales: { 
+                        y: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' } }, 
+                        x: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } } 
+                    } 
+                }
             });
         }
 
@@ -951,14 +982,26 @@
         }
 
         function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark'); document.getElementById('theme-icon').textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+            document.documentElement.classList.toggle('dark'); 
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
+            
             if (monthlyChartInstance) {
-                const isDark = document.documentElement.classList.contains('dark');
-                monthlyChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569'; monthlyChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155'; monthlyChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b'; monthlyChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b'; monthlyChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; monthlyChartInstance.update();
+                monthlyChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569'; 
+                monthlyChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155'; 
+                monthlyChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b'; 
+                monthlyChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b'; 
+                monthlyChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; 
+                monthlyChartInstance.update();
             }
             if (progressChartInstance) {
-                const isDark = document.documentElement.classList.contains('dark');
-                progressChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569'; progressChartInstance.data.datasets[1].backgroundColor = isDark ? '#334155' : '#94a3b8'; progressChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b'; progressChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b'; progressChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; progressChartInstance.update();
+                progressChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569'; 
+                progressChartInstance.data.datasets[1].backgroundColor = isDark ? 'rgba(51, 65, 85, 0.8)' : 'rgba(148, 163, 184, 0.5)'; 
+                progressChartInstance.data.datasets[1].borderColor = isDark ? 'rgb(71, 85, 105)' : 'rgb(148, 163, 184)';
+                progressChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b'; 
+                progressChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b'; 
+                progressChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; 
+                progressChartInstance.update();
             }
         }
 
