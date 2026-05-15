@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foundation Dashboard V1.6</title>
+    <title>Foundation Dashboard V2.0 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=4tmUaBkj6GhLh0Lt53mY4PxPDvBebTTmCJmVO3Zys6bK3Vrgrud4J0rNkE1K6vaTenN_uh6YhGPrqLLjoff3BcoW80jdPrBe13boQ78_d078Ul_ybesWNkyqea_VeERxI1EGAGvamvUpgZMLApLaSMaMJXyAWtV_yGtKOzL-VxMTwHeeOk-oyUyht4RPEKrX30252901edFiXn-kOzz9f_KTVaBamBqzKhgoub-smUx3aTToncNUMi-0Qdtp-pOwHNEAaktTfWtyEWua7oqxkJkTMrZkZtug2h9FyGrQ10fwpSTxhfCKTywi-0BmqyXq" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://me.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jb250cmlidXRpb24udXNlcmNvbnRlbnQuZ29vZ2xlLmNvbS9kb3dubG9hZD9jPUNneGlZWEprWDNOMGIzSmhaMlVTVEJJSmRHVnRjRjlrWVhSaEdqOEtNRGhoTTJWa1lURmhOV05qWWpJNVlUSXdNREEyTlRGaVpUazROamMyT0RrMk1EWTJNemszTmpkaU9USmxNekV3WlJJTEVnY1FpdW51dk9ZS0dBRSZmaWxlbmFtZT1EYXNoYm9hcmRfVjEuNi5odG1sJm9waT0xMDMxMzUwNTA"/><script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -19,6 +19,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         body { transition: background-color 0.3s, color 0.3s; }
         .glass-card { 
@@ -73,6 +77,27 @@
             border-width: 0;
         }
 
+        /* 🌟 สไตล์หมุดและ Popup ของแผนที่ */
+        .custom-marker {
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 10px;
+        }
+        .custom-marker:hover { transform: scale(1.3); z-index: 1000 !important; }
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
         @media print {
             @page { size: A4 landscape; margin: 1cm; }
             body { background-color: #ffffff !important; color: #000000 !important; }
@@ -98,7 +123,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างฐานราก</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.6)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.0)</p>
         </div>
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
@@ -116,13 +141,11 @@
         </div>
     </div>
 
-    <!-- ======================= ส่วนหัวรายงาน Print Header ======================= -->
     <div class="max-w-7xl mx-auto hidden print:block mb-6 border-b-2 border-slate-200 dark:border-slate-700 pb-4">
         <h2 class="text-3xl font-bold text-slate-800 dark:text-white">รายงานสรุปงานก่อสร้างฐานราก</h2>
         <p class="text-slate-600 dark:text-slate-400 mt-1">เอกสารฉบับนี้ถูกสร้างขึ้นจากระบบ Foundation Dashboard</p>
         <p id="printDateTime" class="text-sm font-bold text-slate-500 dark:text-slate-400 mt-2"></p>
     </div>
-    <!-- ======================================================================== -->
 
     <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content no-print collapsed hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,7 +155,7 @@
                 </h3>
                 <input type="text" id="sheetUrl" placeholder="วางลิงก์ที่ลงท้ายด้วย output=csv ที่นี่..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none focus:border-blue-500">
                 <button onclick="loadFromUrl()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-sm">
-                    🚀 ดึงข้อมูลจากลิงก์
+                    🚀 ดึงข้อมูลและสร้างแผนที่
                 </button>
             </div>
 
@@ -142,14 +165,11 @@
                 </h3>
                 <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white outline-none bg-slate-50 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-slate-200 file:text-slate-700">
                 <button onclick="loadFromFile()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-sm">
-                    📥 ดึงข้อมูลจากไฟล์
+                    📥 ดึงข้อมูลและสร้างแผนที่
                 </button>
             </div>
         </div>
-        
-        <div id="loading-status" class="mt-4 text-center p-3 rounded-lg font-bold hide">
-            รอรับคำสั่งครับพี่เอ็กซ์...
-        </div>
+        <div id="loading-status" class="mt-4 text-center p-3 rounded-lg font-bold hide">รอรับคำสั่งครับพี่เอ็กซ์...</div>
     </div>
 
     <div id="dashboardContent" class="max-w-7xl mx-auto hide">
@@ -161,27 +181,20 @@
                     🔽 ซ่อนเนื้อหา
                 </button>
             </div>
-            
             <div id="kpi-content" class="collapsible-content">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
                         <h3 class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">เสร็จสมบูรณ์ 100%</h3>
-                        <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400 mt-2">
-                            <span id="kpi-total">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span>
-                        </div>
+                        <div class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400 mt-2"><span id="kpi-total">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
                         <h3 id="kpi-month-label" class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">เดือนปัจจุบัน</h3>
-                        <div class="text-4xl md:text-5xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-                            <span id="kpi-month">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span>
-                        </div>
+                        <div class="text-4xl md:text-5xl font-bold text-emerald-600 dark:text-emerald-400 mt-2"><span id="kpi-month">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span></div>
                         <div class="absolute -right-4 -top-4 opacity-5 text-emerald-500 text-8xl">📅</div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
                         <h3 id="kpi-week-label" class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1 text-xs md:text-sm">สัปดาห์ปัจจุบัน</h3>
-                        <div class="text-4xl md:text-5xl font-bold text-purple-600 dark:text-purple-400 mt-2">
-                            <span id="kpi-week">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span>
-                        </div>
+                        <div class="text-4xl md:text-5xl font-bold text-purple-600 dark:text-purple-400 mt-2"><span id="kpi-week">0</span> <span class="text-xl text-slate-500 dark:text-slate-400 font-normal">ฐาน</span></div>
                         <div class="absolute -right-4 -top-4 opacity-5 text-purple-500 text-8xl">🗓️</div>
                     </div>
                 </div>
@@ -191,30 +204,21 @@
         <div class="glass-card p-6 mb-8 border-t-4 border-indigo-500">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white">📅 ติดตามงานรายสัปดาห์ (Kanban)</h3>
-                
                 <div class="flex items-center gap-3 no-print">
-                    <button onclick="toggleSection('kanban-content', 'toggle-kanban-btn')" id="toggle-kanban-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">
-                        🔽 ซ่อนเนื้อหา
-                    </button>
+                    <button onclick="toggleSection('kanban-content', 'toggle-kanban-btn')" id="toggle-kanban-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm">🔽 ซ่อนเนื้อหา</button>
                 </div>
             </div>
-
             <div id="kanban-content" class="collapsible-content">
                 <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-3 px-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm w-fit mb-4 no-print">
                     <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">🗓️ ดูงานตั้งแต่:</label>
                     <input type="date" id="startDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
                     <label class="text-slate-600 dark:text-slate-300 font-medium text-sm">ถึง</label>
                     <input type="date" id="endDate" class="p-1 border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 outline-none focus:border-indigo-500 text-sm">
-                    
                     <button onclick="filterKanban()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold transition-colors text-sm">ค้นหา</button>
                     <button onclick="setLastWeek()" class="px-4 py-1.5 rounded-lg font-bold transition-colors text-sm bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300">⏪ สัปดาห์ก่อน</button>
                     <button onclick="setThisWeek()" class="px-4 py-1.5 rounded-lg font-bold transition-colors text-sm bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-300">▶️ สัปดาห์นี้</button>
                 </div>
-
-                <div id="kanban-status" class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-4 border border-emerald-200 dark:border-emerald-800 no-print">
-                    ✅ โปรดระบุวันที่และกดค้นหาเพื่อแสดงข้อมูล
-                </div>
-
+                <div id="kanban-status" class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-4 border border-emerald-200 dark:border-emerald-800 no-print">✅ โปรดระบุวันที่และกดค้นหาเพื่อแสดงข้อมูล</div>
                 <div class="kanban-grid" id="kanban-board"></div>
             </div>
         </div>
@@ -225,16 +229,13 @@
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">🔍 ค้นหาตามชื่อโปรเจค</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 no-print">พิมพ์ชื่อโปรเจคเพื่อดูวันที่เสร็จงานและหมายเหตุ</p>
                 </div>
-                <button onclick="toggleSection('search-content', 'toggle-search-btn')" id="toggle-search-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
-                    🔽 ซ่อนเนื้อหา
-                </button>
+                <button onclick="toggleSection('search-content', 'toggle-search-btn')" id="toggle-search-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">🔽 ซ่อนเนื้อหา</button>
             </div>
-            
             <div id="search-content" class="collapsible-content">
-                <div class="mb-6 mt-2 no-print">
-                    <input type="text" id="searchInput" class="w-full p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white focus:border-purple-500 outline-none transition-all" placeholder="ตัวอย่างเช่น: F1, F2 ...">
+                <div class="mb-6 mt-2 no-print flex gap-2">
+                    <input type="text" id="searchInput" class="flex-1 p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white focus:border-purple-500 outline-none transition-all" placeholder="ตัวอย่างเช่น: F1, F2 ...">
+                    <button onclick="searchAndLocateMap()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 rounded-lg font-bold shadow-sm transition-colors">📍 ค้นหาบนแผนที่</button>
                 </div>
-
                 <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700" style="max-height: 400px;">
                     <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                         <thead class="bg-purple-50 dark:bg-slate-800 sticky top-0 z-10">
@@ -245,14 +246,35 @@
                             </tr>
                         </thead>
                         <tbody id="searchTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
-                            <tr>
-                                <td colspan="3" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">
-                                    👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์
-                                </td>
-                            </tr>
+                            <tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 mb-8 border-t-4 border-orange-500">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">🗺️ พิกัดงานฐานราก (Spatial Map)</h3>
+                    <select id="mapZoneFilter" onchange="renderMap()" class="p-1.5 rounded border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 outline-none text-slate-800 dark:text-white text-sm min-w-[150px] no-print">
+                        <option value="ALL">ภาพรวมทุกโซน</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 px-3 rounded border border-slate-200 dark:border-slate-700 text-xs font-bold no-print">
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-emerald-700 dark:text-emerald-400">ครบ (<span id="count-done">0</span>)</span></div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-orange-500"></div><span class="text-orange-700 dark:text-orange-400">ทำอยู่ (<span id="count-wip">0</span>)</span></div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-slate-400"></div><span class="text-slate-600 dark:text-slate-400">รอ (<span id="count-pending">0</span>)</span></div>
+                    </div>
+                    <button onclick="toggleSection('map-content', 'toggle-map-btn')" id="toggle-map-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
+                        🔽 ซ่อนเนื้อหา
+                    </button>
+                </div>
+            </div>
+            <div id="map-content" class="collapsible-content pt-2">
+                <div id="map" class="w-full rounded-xl z-0" style="height: 550px; border: 1px solid #cbd5e1;"></div>
             </div>
         </div>
 
@@ -262,26 +284,16 @@
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 ความคืบหน้าภาพรวมแยกตามโซน</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 no-print">(เปรียบเทียบผลงานที่ทำได้ กับเป้าหมายคงเหลือ)</p>
                 </div>
-                <button onclick="toggleSection('zone-chart-content', 'toggle-zone-chart-btn')" id="toggle-zone-chart-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
-                    🔽 ซ่อนเนื้อหา
-                </button>
+                <button onclick="toggleSection('zone-chart-content', 'toggle-zone-chart-btn')" id="toggle-zone-chart-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">🔽 ซ่อนเนื้อหา</button>
             </div>
-            
-            <div id="zone-chart-content" class="collapsible-content">
-                <div class="w-full relative" style="height: 450px;">
-                    <canvas id="zoneProgressChart"></canvas>
-                </div>
-            </div>
+            <div id="zone-chart-content" class="collapsible-content"><div class="w-full relative" style="height: 450px;"><canvas id="zoneProgressChart"></canvas></div></div>
         </div>
 
         <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white">📋 สรุปจำนวนฐานรากแยกตามพื้นที่ (Zone)</h3>
-                <button onclick="toggleSection('zone-content', 'toggle-zone-btn')" id="toggle-zone-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
-                    🔽 ซ่อนตาราง
-                </button>
+                <button onclick="toggleSection('zone-content', 'toggle-zone-btn')" id="toggle-zone-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">🔽 ซ่อนตาราง</button>
             </div>
-            
             <div id="zone-content" class="collapsible-content">
                 <div class="rounded-lg border border-slate-200 dark:border-slate-700 w-full overflow-x-auto mt-2">
                     <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
@@ -294,8 +306,7 @@
                                 <th class="px-6 py-4 text-left text-sm font-bold text-slate-700 dark:text-slate-300 w-auto">คืบหน้า (%)</th>
                             </tr>
                         </thead>
-                        <tbody id="zoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
-                        </tbody>
+                        <tbody id="zoneTableBody" class="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                         <tfoot class="bg-slate-50 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
                             <tr>
                                 <td class="px-6 py-4 text-center text-sm font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</td>
@@ -316,39 +327,22 @@
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 no-print">ภาพรวมและเปรียบเทียบผลงานฐานรากรายเดือน (ไม่รวมงานแก้/แซม)</p>
                 </div>
-                
                 <div class="flex items-center gap-2">
-                    <button onclick="window.print()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2 no-print">
-                        🖨️ พิมพ์รายงาน
-                    </button>
-                    
-                    <button onclick="toggleSection('monthly-content', 'toggle-monthly-btn')" id="toggle-monthly-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
-                        🔽 ซ่อนเนื้อหา
-                    </button>
+                    <button onclick="exportToPDF()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2 no-print">🖨️ Export PDF</button>
+                    <button onclick="toggleSection('monthly-content', 'toggle-monthly-btn')" id="toggle-monthly-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">🔽 ซ่อนเนื้อหา</button>
                 </div>
             </div>
-            
             <div id="monthly-content" class="collapsible-content pt-2">
                 <div class="flex flex-wrap items-center gap-3 mb-4 bg-emerald-50 dark:bg-slate-800/80 p-4 rounded-lg border border-emerald-100 dark:border-slate-700 shadow-sm no-print">
                     <label class="text-sm font-bold text-emerald-800 dark:text-emerald-400">⚖️ เปรียบเทียบผลงาน:</label>
                     <select id="compareMonth1" class="p-2 border rounded-md dark:bg-slate-700 dark:text-white dark:border-slate-600 text-sm outline-none focus:border-emerald-500"></select>
                     <span class="text-slate-500 dark:text-slate-400 font-bold text-sm">VS</span>
                     <select id="compareMonth2" class="p-2 border rounded-md dark:bg-slate-700 dark:text-white dark:border-slate-600 text-sm outline-none focus:border-emerald-500"></select>
-                    
-                    <button onclick="compareMonths()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md font-bold text-sm transition-colors shadow-sm">
-                        เปรียบเทียบ
-                    </button>
-                    <button onclick="resetMonthlyChart()" class="bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-md font-bold text-sm transition-colors shadow-sm ml-auto">
-                        แสดงทั้งหมด
-                    </button>
+                    <button onclick="compareMonths()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md font-bold text-sm transition-colors shadow-sm">เปรียบเทียบ</button>
+                    <button onclick="resetMonthlyChart()" class="bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-md font-bold text-sm transition-colors shadow-sm ml-auto">แสดงทั้งหมด</button>
                 </div>
-
-                <div id="monthlySummaryReport" class="mb-6 p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 border border-emerald-100 dark:border-slate-600 shadow-sm text-slate-700 dark:text-slate-200 text-lg leading-relaxed">
-                </div>
-                
-                <div class="w-full relative" style="height: 380px;">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
+                <div id="monthlySummaryReport" class="mb-6 p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 border border-emerald-100 dark:border-slate-600 shadow-sm text-slate-700 dark:text-slate-200 text-lg leading-relaxed"></div>
+                <div class="w-full relative" style="height: 380px;"><canvas id="monthlyChart"></canvas></div>
             </div>
         </div>
 
@@ -357,296 +351,103 @@
     <div id="target-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    📊 ปริมาณฐานรากทั้งโครงการ
-                </h3>
-                <button onclick="closeTargetModal()" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📊 ปริมาณฐานรากทั้งโครงการ</h3>
+                <button onclick="closeTargetModal()" class="text-slate-400 hover:text-red-500 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-0 overflow-y-auto custom-scrollbar">
                 <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-slate-500 uppercase bg-slate-100 dark:bg-slate-700 dark:text-slate-400 sticky top-0">
-                        <tr>
-                            <th class="py-3 px-4 border-b border-slate-200 dark:border-slate-600">โซนพื้นที่ (Zone)</th>
-                            <th class="py-3 px-4 text-center border-b border-slate-200 dark:border-slate-600">เป้าหมาย (ฐาน)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="target-tbody" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800">
-                        </tbody>
-                    <tfoot class="bg-slate-50 dark:bg-slate-700/50 sticky bottom-0 border-t-2 border-slate-200 dark:border-slate-600">
-                        <tr>
-                            <th class="py-3 px-4 text-right font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</th>
-                            <th class="py-3 px-4 text-center font-bold text-blue-600 dark:text-blue-400 text-base" id="target-sum">0</th>
-                        </tr>
-                    </tfoot>
+                    <thead class="text-xs text-slate-500 uppercase bg-slate-100 dark:bg-slate-700 dark:text-slate-400 sticky top-0"><tr><th class="py-3 px-4 border-b border-slate-200 dark:border-slate-600">โซนพื้นที่ (Zone)</th><th class="py-3 px-4 text-center border-b border-slate-200 dark:border-slate-600">เป้าหมาย (ฐาน)</th></tr></thead>
+                    <tbody id="target-tbody" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"></tbody>
+                    <tfoot class="bg-slate-50 dark:bg-slate-700/50 sticky bottom-0 border-t-2 border-slate-200 dark:border-slate-600"><tr><th class="py-3 px-4 text-right font-bold text-slate-800 dark:text-white">รวมทั้งโครงการ:</th><th class="py-3 px-4 text-center font-bold text-blue-600 dark:text-blue-400 text-base" id="target-sum">0</th></tr></tfoot>
                 </table>
             </div>
-            <div class="p-3 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 text-center">
-                *สามารถแก้ไขตัวเลขเป้าหมายได้ใน Source Code<br>(ที่ตัวแปร PROJECT_FOUNDATION_TARGETS)
-            </div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 text-center">*สามารถแก้ไขตัวเลขเป้าหมายได้ใน Source Code</div>
         </div>
     </div>
 
     <script>
-        // ======================= ฟังก์ชันสำหรับ Print PDF =======================
-        function exportToPDF() {
-            const now = new Date();
-            const options = { 
-                year: 'numeric', month: 'long', day: 'numeric', 
-                weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit'
-            };
-            const thaiDateTime = now.toLocaleDateString('th-TH', options);
-            document.getElementById('printDateTime').innerText = `พิมพ์เมื่อ: ${thaiDateTime}`;
-
-            alert("💡 เคล็ดลับการ Export เป็น PDF ให้สวยงาม:\\n1. ปลายทาง: เลือก 'Save as PDF'\\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\\nระบบได้ตั้งค่าหน้ากระดาษเป็น 'แนวนอน (Landscape)' ให้เรียบร้อยแล้ว");
-
-            setTimeout(() => {
-                window.print();
-            }, 500);
-        }
-        // =======================================================================
-
-        // =========================================================================
-        // 🌟 ตั้งค่าเป้าหมายปริมาณฐานรากแต่ละโซน
-        // =========================================================================
-        const PROJECT_FOUNDATION_TARGETS = {
-            "Zone 1": 12, 
-            "Zone 2": 47, 
-            "Zone 3": 42, 
-            "Zone 4": 11, 
-            "Zone 5": 6, 
-            "Zone 6": 20, 
-            "Zone 7": 76,
-            "Ramp-N01": 10, 
-            "Ramp-OR3": 24, 
-            "Ramp-OR4": 63, 
-            "Ramp-OR6": 41, 
-            "Ramp-OR7": 18, 
-            "Ramp-SR1": 0
-        };
-        // =========================================================================
-
+        // ======================= Global & Constants =======================
         Chart.register(ChartDataLabels);
+
+        const PROJECT_FOUNDATION_TARGETS = {
+            "Zone 1": 12, "Zone 2": 47, "Zone 3": 42, "Zone 4": 11, "Zone 5": 6, "Zone 6": 20, "Zone 7": 76,
+            "Ramp-N01": 10, "Ramp-OR3": 24, "Ramp-OR4": 63, "Ramp-OR6": 41, "Ramp-OR7": 18, "Ramp-SR1": 0
+        };
 
         let globalDatabase = [];
         let globalMonthlyData = {}; 
+        let groupedPileData = []; // พิกัดสำหรับแผนที่
         let monthlyChartInstance = null;
         let zoneProgressChartInstance = null;
+        let map, markerLayerGroup;
+
         const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-
         let currentWeekStart, currentWeekEnd, currentMonthKey;
 
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4dIYwcGhQc26MLY3gV3WCs0ysILjC6uE1NLbwUKEkpx_7989SE0DEpNnqT7KLeiyzxZfgKRY89ci1/pub?gid=921370860&single=true&output=csv";
-        
-        function formatDateForInput(d) {
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
 
-        function setLastWeek() {
-            const sInput = document.getElementById('startDate');
-            const eInput = document.getElementById('endDate');
-            let sDate = new Date(sInput.value);
-            let eDate = new Date(eInput.value);
-            sDate.setDate(sDate.getDate() - 7);
-            eDate.setDate(eDate.getDate() - 7);
-            sInput.value = formatDateForInput(sDate);
-            eInput.value = formatDateForInput(eDate);
-            filterKanban();
-        }
-
-        function setThisWeek() {
-            document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
-            document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
-            filterKanban();
-        }
-
-        function searchFromKanban(keyword) {
-            const searchInput = document.getElementById('searchInput');
-            const searchSection = document.getElementById('search-content');
-            
-            if (searchSection.classList.contains('collapsed')) {
-                toggleSection('search-content', 'toggle-search-btn');
-            }
-            
-            searchInput.value = keyword;
-            searchInput.dispatchEvent(new Event('input'));
-            
-            setTimeout(() => {
-                searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                searchInput.focus(); 
-            }, 300); 
-        }
-
+        // ======================= Init & Layouts =======================
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-            const currentDay = today.getDay(); 
-            const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-            
-            currentWeekStart = new Date(today);
-            currentWeekStart.setDate(diffToMonday);
-            currentWeekStart.setHours(0, 0, 0, 0);
-            
-            currentWeekEnd = new Date(currentWeekStart);
-            currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
-            currentWeekEnd.setHours(23, 59, 59, 999);
-
-            const monthLabelText = `${monthNames[today.getMonth()]} ${today.getFullYear() + 543}`;
-            document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
-            document.getElementById('kpi-week-label').innerText = `สัปดาห์ปัจจุบัน`;
-
-            document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
-            document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
-
+            initDateRanges();
+            initMap(); // เริ่มต้นสร้างแผนที่
             const savedUrl = localStorage.getItem('foundationUrl');
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
             loadFromUrl();
         });
 
-        function openTargetModal() {
-            const modal = document.getElementById('target-modal');
-            const tbody = document.getElementById('target-tbody');
-            tbody.innerHTML = '';
-            let sumTarget = 0;
-            for (const [zone, target] of Object.entries(PROJECT_FOUNDATION_TARGETS)) {
-                sumTarget += target;
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="py-2 px-4 font-medium">${zone}</td><td class="py-2 px-4 text-center text-blue-600 dark:text-blue-400 font-bold">${target.toLocaleString()}</td></tr>`;
-            }
-            document.getElementById('target-sum').innerText = sumTarget.toLocaleString();
-            modal.classList.remove('hidden');
+        function initDateRanges() {
+            const today = new Date();
+            currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            const currentDay = today.getDay(); 
+            const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+            currentWeekStart = new Date(today); currentWeekStart.setDate(diffToMonday); currentWeekStart.setHours(0, 0, 0, 0);
+            currentWeekEnd = new Date(currentWeekStart); currentWeekEnd.setDate(currentWeekStart.getDate() + 6); currentWeekEnd.setHours(23, 59, 59, 999);
+            const monthLabelText = `${monthNames[today.getMonth()]} ${today.getFullYear() + 543}`;
+            document.getElementById('kpi-month-label').innerText = `เดือนปัจจุบัน (${monthLabelText})`;
+            document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
+            document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
         }
 
-        function closeTargetModal() { document.getElementById('target-modal').classList.add('hidden'); }
-
-        function toggleSection(contentId, btnId) {
-            const container = document.getElementById(contentId);
-            const btn = document.getElementById(btnId);
-            container.classList.toggle('collapsed');
-            const parentCard = container.closest('.glass-card');
-            if (parentCard) container.classList.contains('collapsed') ? parentCard.classList.add('hide-on-print') : parentCard.classList.remove('hide-on-print');
-            
-            if(container.classList.contains('collapsed')) {
-                btn.innerHTML = btn.innerHTML.includes('ตาราง') ? '▶️ แสดงตาราง' : '▶️ แสดงเนื้อหา';
-                btn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
-                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
-            } else {
-                btn.innerHTML = btn.innerHTML.includes('ตาราง') ? '🔽 ซ่อนตาราง' : '🔽 ซ่อนเนื้อหา';
-                btn.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
-                btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
-            }
-        }
-
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            html.classList.toggle('dark');
-            const icon = document.getElementById('theme-icon');
-            const isDark = html.classList.contains('dark');
-            icon.textContent = isDark ? '☀️' : '🌙';
-            
-            if (monthlyChartInstance) {
-                const color = isDark ? '#cbd5e1' : '#475569';
-                monthlyChartInstance.options.plugins.legend.labels.color = color;
-                monthlyChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155';
-                monthlyChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
-                monthlyChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
-                monthlyChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-                monthlyChartInstance.update();
-            }
-
-            if (zoneProgressChartInstance) {
-                const color = isDark ? '#cbd5e1' : '#475569';
-                zoneProgressChartInstance.options.plugins.legend.labels.color = color;
-                zoneProgressChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
-                zoneProgressChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
-                zoneProgressChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-                zoneProgressChartInstance.data.datasets[1].backgroundColor = isDark ? '#475569' : '#cbd5e1';
-                zoneProgressChartInstance.data.datasets[1].borderColor = isDark ? '#334155' : '#94a3b8';
-                zoneProgressChartInstance.update();
-            }
-        }
-
-        function showStatus(msg, type) {
-            const st = document.getElementById('loading-status');
-            st.classList.remove('hide');
-            st.innerHTML = msg;
-            st.className = 'mt-4 text-center p-3 rounded-lg font-bold ';
-            if(type === 'load') st.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900/40', 'dark:text-blue-400');
-            else if(type === 'err') st.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/40', 'dark:text-red-400');
-            else if(type === 'ok') st.classList.add('bg-emerald-100', 'text-emerald-800', 'dark:bg-emerald-900/40', 'dark:text-emerald-400');
-            else st.classList.add('bg-slate-100', 'text-slate-800', 'dark:bg-slate-800', 'dark:text-slate-300'); 
-        }
-
+        // ======================= Data Fetching =======================
         function loadFromUrl() {
             const url = document.getElementById('sheetUrl').value.trim();
-            if(!url) { showStatus('❌ กรุณาวางลิงก์ก่อนครับ', 'err'); return; }
+            if(!url) return showStatus('❌ กรุณาวางลิงก์ก่อนครับ', 'err');
             localStorage.setItem('foundationUrl', url);
-            showStatus('กำลังดึงข้อมูลจากฐานข้อมูล... ⏳', 'load');
-            Papa.parse(url, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: (res) => handleParseResult(res),
-                error: (err) => { showStatus(`❌ ดึงข้อมูลไม่สำเร็จ`, 'err'); toggleSection('data-source-container', 'toggle-data-btn'); }
-            });
+            showStatus('กำลังดึงข้อมูลและสร้างแผนที่... ⏳', 'load');
+            Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: (res) => handleParseResult(res), error: (err) => showStatus(`❌ ดึงข้อมูลไม่สำเร็จ`, 'err') });
         }
 
         function loadFromFile() {
             const file = document.getElementById('csvFile').files[0];
-            if(!file) { showStatus('❌ กรุณาเลือกไฟล์ก่อนครับ', 'err'); return; }
-            showStatus('กำลังอ่านไฟล์... ⏳', 'load');
+            if(!file) return showStatus('❌ กรุณาเลือกไฟล์ก่อนครับ', 'err');
+            showStatus('กำลังอ่านไฟล์และสร้างแผนที่... ⏳', 'load');
             Papa.parse(file, { header: true, skipEmptyLines: true, complete: (res) => handleParseResult(res), error: (err) => showStatus(`❌ อ่านไฟล์ไม่สำเร็จ`, 'err') });
         }
 
         function handleParseResult(res) {
-            if(!res.data || res.data.length === 0) { showStatus('❌ ไม่พบข้อมูล', 'err'); return; }
-            if(JSON.stringify(res.data[0]).includes('<!DOCTYPE html>')) { showStatus('❌ ลิงก์ที่ใส่ไม่ใช่ไฟล์ CSV', 'err'); return; }
+            if(!res.data || res.data.length === 0) return showStatus('❌ ไม่พบข้อมูล', 'err');
             globalDatabase = res.data;
-            processData(globalDatabase);
-            showStatus('✅ โหลดข้อมูลสำเร็จ!', 'ok');
-            setTimeout(() => { if(!document.getElementById('data-source-container').classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn'); }, 800);
+            processData(globalDatabase); // ประมวลผลตาราง กราฟ KPI
+            processGroupedMapData(globalDatabase); // ประมวลผลแผนที่
+            showStatus('✅ โหลดข้อมูลและสร้างแผนที่สำเร็จ!', 'ok');
+            setTimeout(() => {
+                const container = document.getElementById('data-source-container');
+                if(!container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
+                document.getElementById('dashboardContent').classList.remove('hide');
+                map.invalidateSize(); // รีเฟรชขนาดแผนที่
+            }, 800);
         }
 
-        function parseThaiDate(dateStr) {
-            if (!dateStr) return null;
-            let str = dateStr.toString().trim().replace(/"/g, '');
-            let parts = str.split(/[\/\- ]+/); 
-            if (parts.length < 3) return null;
-            let day = parseInt(parts[0], 10);
-            let monthStr = parts[1].trim();
-            let year = parseInt(parts[2], 10);
-            if (year < 100) year += 2000;
-            if (year > 2500) year -= 543;
-            const thaiMonths = { 'ม.ค.': 0, 'ก.พ.': 1, 'มี.ค.': 2, 'เม.ย.': 3, 'พ.ค.': 4, 'มิ.ย.': 5, 'ก.ค.': 6, 'ส.ค.': 7, 'ก.ย.': 8, 'ต.ค.': 9, 'พ.ย.': 10, 'ธ.ค.': 11 };
-            let month = thaiMonths[monthStr] !== undefined ? thaiMonths[monthStr] : (parseInt(monthStr, 10) - 1); 
-            if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-            return new Date(year, month, day, 0, 0, 0, 0);
-        }
-
-        function getStandardZoneName(rawZone) {
-            if (!rawZone) return 'ไม่ระบุ';
-            const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
-            if (text.includes("แซม")) return "ฐาน-แซม (Re-work Foundation)";
-            const zones = ["ZONE1", "ZONE2", "ZONE3", "ZONE4", "ZONE5", "ZONE6", "ZONE7"];
-            for (let i=0; i<zones.length; i++) if(text.includes(zones[i])) return `Zone ${i+1}`;
-            const ramps = ["N01", "OR3", "OR4", "OR6", "OR7", "SR1"];
-            for (let r of ramps) if(text.includes(r)) return `Ramp-${r}`;
-            return rawZone;
-        }
-
+        // ======================= General Logic =======================
         function processData(data) {
             let totalPiles = 0, currentMonthPiles = 0, currentWeekPiles = 0;
             const zoneCounts = {};
             data.forEach(row => {
-                const projName = row['ชื่อโปรเจค'];
-                const zone = getStandardZoneName(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
-                const dateStr = row['วันที่เสร็จงานจริงๆ'];
+                const projName = row['ชื่อโปรเจค'], zone = getStandardZoneName(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ'), dateStr = row['วันที่เสร็จงานจริงๆ'];
                 if (projName && !zone.includes("ฐาน-แซม")) {
                     if (!zoneCounts[zone]) zoneCounts[zone] = { count: 0 };
-                    zoneCounts[zone].count++;
-                    totalPiles++; 
+                    zoneCounts[zone].count++; totalPiles++; 
                     if(dateStr) {
                         const taskDate = parseThaiDate(dateStr);
                         if(taskDate) {
@@ -660,296 +461,256 @@
             document.getElementById('kpi-total').innerText = totalPiles.toLocaleString();
             document.getElementById('kpi-month').innerText = currentMonthPiles.toLocaleString();
             document.getElementById('kpi-week').innerText = currentWeekPiles.toLocaleString();
-            
-            renderZoneTable(zoneCounts);
-            drawZoneProgressChart(zoneCounts); 
-            filterKanban();
-            prepareMonthlyChart(data);
-            document.getElementById('dashboardContent').classList.remove('hide');
+            renderZoneTable(zoneCounts); drawZoneProgressChart(zoneCounts); filterKanban(); prepareMonthlyChart(data);
         }
 
-        function drawZoneProgressChart(zoneCounts) {
-            const labels = Object.keys(PROJECT_FOUNDATION_TARGETS);
-            const actualData = [];
-            const remainData = [];
+        // ======================= Map Logic (V2.0 Core) =======================
+        function initMap() {
+            map = L.map('map').setView([13.9540, 100.5170], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
+            markerLayerGroup = L.layerGroup().addTo(map);
+        }
 
-            labels.forEach(zone => {
-                const target = PROJECT_FOUNDATION_TARGETS[zone];
-                const actual = zoneCounts[zone] ? zoneCounts[zone].count : 0;
-                const remain = Math.max(0, target - actual); 
-                actualData.push(actual);
-                remainData.push(remain);
-            });
+        function formatPileName(rawName) {
+            const match1 = rawName.match(/(.+)\/(\d+)-dia([\d\.]+)/i);
+            if (match1) return `${match1[1]} No.B${match1[2]} (${match1[3]} m.)`;
+            const match2 = rawName.match(/(.+)\/(\d+)/i);
+            if (match2) return `${match2[1]} No.B${match2[2]}`;
+            return rawName;
+        }
 
-            const ctx = document.getElementById('zoneProgressChart').getContext('2d');
-            if(zoneProgressChartInstance) zoneProgressChartInstance.destroy();
-            const isDark = document.documentElement.classList.contains('dark');
-
-            zoneProgressChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'แล้วเสร็จ (ต้น)',
-                            data: actualData,
-                            backgroundColor: '#10b981', // ปรับเป็น emerald
-                            borderWidth: 0,
-                        },
-                        {
-                            label: 'คงเหลือ (เป้าหมาย)',
-                            data: remainData,
-                            backgroundColor: isDark ? '#475569' : '#cbd5e1',
-                            borderColor: isDark ? '#334155' : '#94a3b8',
-                            borderWidth: 1,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { 
-                            stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Sarabun' } }, 
-                            grid: { display: false } 
-                        },
-                        y: { 
-                            stacked: true, 
-                            beginAtZero: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Sarabun' } }, 
-                            grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' } 
-                        }
-                    },
-                    plugins: {
-                        legend: { 
-                            labels: { color: isDark ? '#cbd5e1' : '#475569', font: { family: 'Sarabun' } } 
-                        },
-                        datalabels: {
-                            color: (context) => {
-                                return context.datasetIndex === 0 ? '#ffffff' : (isDark ? '#f8fafc' : '#334155');
-                            },
-                            font: { family: 'Sarabun', weight: 'bold' },
-                            formatter: (value) => value > 0 ? value : ''
-                        }
+        function processGroupedMapData(data) {
+            const tempGroups = {};
+            const mapZones = new Set();
+            data.forEach(row => {
+                const projName = row['ชื่อโปรเจค'], rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ', finishDate = row['วันที่เสร็จงานจริงๆ'] || '';
+                const lat = parseFloat(row['Latitude']), lng = parseFloat(row['Longitude']);
+                if (projName) {
+                    let baseName = projName;
+                    if (baseName.includes('/')) baseName = baseName.split('/')[0].trim();
+                    else {
+                        const diaIndex = baseName.toLowerCase().indexOf('-dia');
+                        if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
                     }
+                    const zone = getStandardZoneName(rawZone);
+                    if (!zone.includes("ฐาน-แซม")) mapZones.add(zone);
+                    if (!tempGroups[baseName]) tempGroups[baseName] = { baseName: baseName, zone: zone, lat: null, lng: null, piles: [] };
+                    if (!isNaN(lat) && !isNaN(lng)) { tempGroups[baseName].lat = lat; tempGroups[baseName].lng = lng; }
+                    tempGroups[baseName].piles.push({ id: projName, isCompleted: finishDate.trim() !== '', date: finishDate.trim() !== '' ? finishDate : '-' });
                 }
             });
+            groupedPileData = Object.values(tempGroups).filter(group => group.lat !== null && group.lng !== null);
+            
+            const select = document.getElementById('mapZoneFilter');
+            select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
+            const sortedZones = Array.from(mapZones).sort((a, b) => {
+                const getRank = (name) => { if (name.startsWith('Zone')) return 1; if (name.startsWith('Ramp')) return 2; return 3; };
+                if (getRank(a) !== getRank(b)) return getRank(a) - getRank(b); 
+                return (parseInt(a.replace(/[^\d]/g, '')) || 0) - (parseInt(b.replace(/[^\d]/g, '')) || 0);
+            });
+            sortedZones.forEach(zone => select.innerHTML += `<option value="${zone}">${zone}</option>`);
+            renderMap();
         }
 
+        function renderMap() {
+            markerLayerGroup.clearLayers();
+            const selectedZone = document.getElementById('mapZoneFilter').value;
+            let done = 0, wip = 0, pending = 0; const bounds = []; 
+            groupedPileData.forEach(group => {
+                if (selectedZone !== 'ALL' && group.zone !== selectedZone) return;
+                const total = group.piles.length, comp = group.piles.filter(p => p.isCompleted).length;
+                let sColor = '#94a3b8', sText = 'รอดำเนินการ', bgClass = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+                if (comp === total) { done++; sColor = '#10b981'; sText = 'เสร็จสมบูรณ์'; bgClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400'; } 
+                else if (comp > 0) { wip++; sColor = '#f97316'; sText = 'กำลังดำเนินการ'; bgClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-400'; } 
+                else { pending++; }
+                
+                const customIcon = L.divIcon({ className: 'custom-marker', html: `<div style="background-color: ${sColor}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.9;"><span>${total}</span></div>`, iconSize: [20, 20] });
+                const marker = L.marker([group.lat, group.lng], { icon: customIcon });
+                let pHTML = '<ul class="mt-2 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-2">';
+                group.piles.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).forEach(p => {
+                    const icon = p.isCompleted ? '<span class="text-emerald-500 text-[10px]">✅</span>' : '<span class="text-slate-400 text-[10px]">⏳</span>';
+                    pHTML += `<li class="text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 pb-1 flex justify-between items-center"><span class="flex items-center gap-1">${icon} <b class="text-xs">${formatPileName(p.id)}</b></span><span class="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">${p.date}</span></li>`;
+                }); pHTML += '</ul>';
+                marker.bindPopup(`<div class="p-3 min-w-[220px] dark:bg-slate-800"><h4 class="font-bold text-lg text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4><div class="mb-2 flex justify-between"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${comp}/${total})</span></div>${pHTML}</div>`);
+                markerLayerGroup.addLayer(marker); bounds.push([group.lat, group.lng]);
+            });
+            document.getElementById('count-done').innerText = done; document.getElementById('count-wip').innerText = wip; document.getElementById('count-pending').innerText = pending;
+            if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 }); }
+        }
+
+        // ======================= Search on Map =======================
+        function searchAndLocateMap() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            if(!keyword) return alert('กรุณาพิมพ์ชื่อโปรเจคที่ต้องการค้นหาบนแผนที่ครับ');
+            let target = null;
+            for (const group of groupedPileData) {
+                if (group.baseName.toLowerCase().includes(keyword) || group.piles.some(p => p.id.toLowerCase().includes(keyword))) { target = group; break; }
+            }
+            if(target) {
+                map.setView([target.lat, target.lng], 18);
+                if(document.getElementById('map-content').classList.contains('collapsed')) toggleSection('map-content', 'toggle-map-btn');
+                markerLayerGroup.eachLayer(function(layer) { if (layer.getLatLng().lat === target.lat && layer.getLatLng().lng === target.lng) setTimeout(() => layer.openPopup(), 500); });
+                document.getElementById('searchInput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else alert(`❌ ไม่พบพิกัดแผนที่ของ: "${keyword}"\n(โปรดตรวจสอบคอลัมน์ Latitude/Longitude ใน Sheet ครับ)`);
+        }
+
+        // ======================= Utility Functions (v1.6 Original) =======================
+        function formatDateForInput(d) { const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+        function showStatus(msg, type) { const st = document.getElementById('loading-status'); st.classList.remove('hide'); st.innerHTML = msg; st.className = 'mt-4 text-center p-3 rounded-lg font-bold '; if(type==='load') st.classList.add('bg-blue-100','text-blue-800','dark:bg-blue-900/40','dark:text-blue-400'); else if(type==='err') st.classList.add('bg-red-100','text-red-800','dark:bg-red-900/40','dark:text-red-400'); else if(type==='ok') st.classList.add('bg-emerald-100','text-emerald-800','dark:bg-emerald-900/40','dark:text-emerald-400'); }
+        function parseThaiDate(dateStr) { if(!dateStr) return null; let str = dateStr.toString().trim().replace(/"/g,''); let parts = str.split(/[\/\- ]+/); if(parts.length<3) return null; let day=parseInt(parts[0],10), mStr=parts[1].trim(), yr=parseInt(parts[2],10); if(yr<100) yr+=2000; if(yr>2500) yr-=543; const thaiMonths={'ม.ค.':0,'ก.พ.':1,'มี.ค.':2,'เม.ย.':3,'พ.ค.':4,'มิ.ย.':5,'ก.ค.':6,'ส.ค.':7,'ก.ย.':8,'ต.ค.':9,'พ.ย.':10,'ธ.ค.':11}; let m=thaiMonths[mStr]!==undefined?thaiMonths[mStr]:(parseInt(mStr,10)-1); return new Date(yr,m,day,0,0,0,0); }
+        function getStandardZoneName(rawZone) { if(!rawZone) return 'ไม่ระบุ'; const t=String(rawZone).toUpperCase().replace(/\s+/g,''); if(t.includes("แซม")) return "ฐาน-แซม (Re-work Foundation)"; const zones=["ZONE1","ZONE2","ZONE3","ZONE4","ZONE5","ZONE6","ZONE7"]; for(let i=0; i<zones.length; i++) if(t.includes(zones[i])) return `Zone ${i+1}`; const ramps=["N01","OR3","OR4","OR6","OR7","SR1"]; for(let r of ramps) if(t.includes(r)) return `Ramp-${r}`; return rawZone; }
+
+        function toggleSection(contentId, btnId) {
+            const container = document.getElementById(contentId), btn = document.getElementById(btnId);
+            container.classList.toggle('collapsed');
+            const parentCard = container.closest('.glass-card');
+            if (parentCard) container.classList.contains('collapsed') ? parentCard.classList.add('hide-on-print') : parentCard.classList.remove('hide-on-print');
+            if (contentId === 'map-content' && !container.classList.contains('collapsed')) setTimeout(() => map.invalidateSize(), 300);
+            if(container.classList.contains('collapsed')) { btn.innerHTML = btn.innerHTML.includes('ตาราง') ? '▶️ แสดงตาราง' : '▶️ แสดงเนื้อหา'; btn.classList.add('bg-slate-100','text-slate-600','border-slate-300','dark:bg-slate-800','dark:text-slate-300'); btn.classList.remove('bg-blue-50','text-blue-600','border-blue-200','dark:bg-slate-700'); }
+            else { btn.innerHTML = btn.innerHTML.includes('ตาราง') ? '🔽 ซ่อนตาราง' : '🔽 ซ่อนเนื้อหา'; btn.classList.remove('bg-slate-100','text-slate-600','border-slate-300','dark:bg-slate-800','dark:text-slate-300'); btn.classList.add('bg-blue-50','text-blue-600','border-blue-200','dark:bg-slate-700'); }
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
+            if (monthlyChartInstance) { 
+                const color = isDark ? '#cbd5e1' : '#475569';
+                monthlyChartInstance.options.plugins.legend.labels.color = color;
+                monthlyChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155';
+                monthlyChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                monthlyChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                monthlyChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                monthlyChartInstance.update();
+            }
+            if (zoneProgressChartInstance) {
+                const color = isDark ? '#cbd5e1' : '#475569';
+                zoneProgressChartInstance.options.plugins.legend.labels.color = color;
+                zoneProgressChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                zoneProgressChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                zoneProgressChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                zoneProgressChartInstance.data.datasets[1].backgroundColor = isDark ? '#475569' : '#cbd5e1';
+                zoneProgressChartInstance.data.datasets[1].borderColor = isDark ? '#334155' : '#94a3b8';
+                zoneProgressChartInstance.update();
+            }
+        }
+
+        function exportToPDF() {
+            const now = new Date(); document.getElementById('printDateTime').innerText = `พิมพ์เมื่อ: ${now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: '2-digit', minute: '2-digit' })}`;
+            alert("💡 เคล็ดลับการ Export เป็น PDF:\n1. ปลายทาง: เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\nระบบได้ตั้งค่าหน้ากระดาษเป็น 'แนวนอน (Landscape)' ให้เรียบร้อยแล้ว");
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        // ======================= UI Helpers (v1.6 Original) =======================
+        function openTargetModal() {
+            const modal = document.getElementById('target-modal'), tbody = document.getElementById('target-tbody');
+            tbody.innerHTML = ''; let sum = 0;
+            for (const [zone, target] of Object.entries(PROJECT_FOUNDATION_TARGETS)) { sum += target; tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="py-2 px-4 font-medium">${zone}</td><td class="py-2 px-4 text-center text-blue-600 dark:text-blue-400 font-bold">${target.toLocaleString()}</td></tr>`; }
+            document.getElementById('target-sum').innerText = sum.toLocaleString(); modal.classList.remove('hidden');
+        }
+        function closeTargetModal() { document.getElementById('target-modal').classList.add('hidden'); }
+        function setLastWeek() { const s = document.getElementById('startDate'), e = document.getElementById('endDate'); let sd = new Date(s.value), ed = new Date(e.value); sd.setDate(sd.getDate()-7); ed.setDate(ed.getDate()-7); s.value=formatDateForInput(sd); e.value=formatDateForInput(ed); filterKanban(); }
+        function setThisWeek() { document.getElementById('startDate').value=formatDateForInput(currentWeekStart); document.getElementById('endDate').value=formatDateForInput(currentWeekEnd); filterKanban(); }
+        
         function filterKanban() {
-            const startDate = new Date(document.getElementById('startDate').value + "T00:00:00");
-            const endDate = new Date(document.getElementById('endDate').value + "T23:59:59");
-            const board = document.getElementById('kanban-board');
-            board.innerHTML = '';
-            const columns = [1, 2, 3, 4, 5, 6, 0]; 
-            columns.forEach(dayIdx => board.innerHTML += `<div class="k-col"><div class="k-header day-${dayIdx}">${days[dayIdx]}</div><div id="k-tasks-${dayIdx}"></div></div>`);
-            let foundCount = 0;
+            const sd = new Date(document.getElementById('startDate').value + "T00:00:00"), ed = new Date(document.getElementById('endDate').value + "T23:59:59");
+            const board = document.getElementById('kanban-board'); board.innerHTML = '';
+            [1, 2, 3, 4, 5, 6, 0].forEach(di => board.innerHTML += `<div class="k-col"><div class="k-header day-${di}">${days[di]}</div><div id="k-tasks-${di}"></div></div>`);
+            let count = 0;
             globalDatabase.forEach(row => {
-                const taskDate = parseThaiDate(row['วันที่เสร็จงานจริงๆ']);
-                if (row['ชื่อโปรเจค'] && taskDate && taskDate >= startDate && taskDate <= endDate) {
-                    foundCount++;
-                    const dayIndex = taskDate.getDay(); 
-                    const displayDate = taskDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-                    let shortName = row['ชื่อโปรเจค'].split('-dia')[0].trim();
-                    
-                    let safeKeyword = row['ชื่อโปรเจค'].replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    
-                    document.getElementById(`k-tasks-${dayIndex}`).innerHTML += `
-                        <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-500" 
-                             onclick="searchFromKanban('${safeKeyword}')" title="คลิกเพื่อดูรายละเอียดในช่องค้นหา">
-                            <div class="font-bold text-sm mb-1 text-slate-800 dark:text-slate-100">📌 ${shortName}</div>
-                            <div class="text-xs text-slate-500 dark:text-slate-400">📅 ${displayDate}</div>
-                        </div>`;
+                const td = parseThaiDate(row['วันที่เสร็จงานจริงๆ']);
+                if (row['ชื่อโปรเจค'] && td && td >= sd && td <= ed) {
+                    count++; const di = td.getDay(), dStr = td.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
+                    let sn = row['ชื่อโปรเจค'].split('-dia')[0].trim();
+                    document.getElementById(`k-tasks-${di}`).innerHTML += `<div class="k-card card-${di} cursor-pointer hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-500" onclick="searchFromKanban('${row['ชื่อโปรเจค'].replace(/'/g, "\\'")}')"><div class="font-bold text-sm mb-1 text-slate-800 dark:text-slate-100">📌 ${sn}</div><div class="text-xs text-slate-500 dark:text-slate-400">📅 ${dStr}</div></div>`;
                 }
             });
-            const banner = document.getElementById('kanban-status');
-            if(foundCount > 0) {
-                banner.className = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-4 border border-emerald-200 dark:border-emerald-800 no-print";
-                banner.innerHTML = `✅ ดึงข้อมูลสำเร็จ! พบงานเสร็จสิ้นจำนวน ${foundCount} ฐาน`;
-            } else {
-                banner.className = "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400 p-3 rounded-lg text-center font-bold mb-4 border border-red-200 dark:border-red-800 no-print";
-                banner.innerHTML = `❌ ไม่พบข้อมูลฐานรากที่เสร็จสิ้นในช่วงวันที่เลือก`;
-            }
+            const b = document.getElementById('kanban-status');
+            if(count>0){ b.className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 p-3 rounded-lg text-center font-bold mb-4 border border-emerald-200 no-print"; b.innerHTML=`✅ พบงานเสร็จสิ้นจำนวน ${count} ฐาน`; }
+            else { b.className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400 p-3 rounded-lg text-center font-bold mb-4 border border-red-200 no-print"; b.innerHTML=`❌ ไม่พบข้อมูลฐานรากในช่วงวันที่เลือก`; }
         }
 
         document.getElementById('searchInput').addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase().trim();
-            const tbody = document.getElementById('searchTableBody');
-            if (keyword === '') { tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจค...</td></tr>`; return; }
-            const results = globalDatabase.filter(row => (row['ชื่อโปรเจค'] || '').toLowerCase().includes(keyword));
-            if (results.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-red-500 font-medium">❌ ไม่พบข้อมูล</td></tr>`; return; }
-            tbody.innerHTML = '';
-            results.slice(0, 100).forEach(row => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-purple-700 dark:text-purple-400">📌 ${row['ชื่อโปรเจค']}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">📅 ${row['วันที่เสร็จงานจริงๆ']}</td><td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">${row['หมายเหตุ'] || '-'}</td></tr>`;
-            });
+            const k = e.target.value.toLowerCase().trim(), tbody = document.getElementById('searchTableBody');
+            if (k==='') { tbody.innerHTML=`<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 font-medium">👆 พิมพ์ชื่อโปรเจค...</td></tr>`; return; }
+            const res = globalDatabase.filter(r => (r['ชื่อโปรเจค']||'').toLowerCase().includes(k));
+            if (res.length===0) { tbody.innerHTML=`<tr><td colspan="3" class="px-6 py-8 text-center text-red-500 font-medium">❌ ไม่พบข้อมูล</td></tr>`; return; }
+            tbody.innerHTML='';
+            res.slice(0, 100).forEach(r => tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><td class="px-6 py-4 text-sm font-bold text-purple-700 dark:text-purple-400">📌 ${r['ชื่อโปรเจค']}</td><td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">📅 ${r['วันที่เสร็จงานจริงๆ']}</td><td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">${r['หมายเหตุ']||'-'}</td></tr>`);
         });
 
-        function renderZoneTable(zoneCounts) {
-            const tbody = document.getElementById('zoneTableBody');
-            tbody.innerHTML = '';
-            
-            let sumTarget = 0;
-            let sumActual = 0;
-            let sumRemain = 0;
-            
-            const renderRow = (zone, target, actual) => {
-                const remain = Math.max(0, target - actual);
-                let percent = target > 0 ? (actual / target) * 100 : (actual > 0 ? 100 : 0);
-                let displayPercent = percent > 100 ? 100 : percent; 
+        function searchFromKanban(k) { document.getElementById('searchInput').value=k; document.getElementById('searchInput').dispatchEvent(new Event('input')); if(document.getElementById('search-content').classList.contains('collapsed')) toggleSection('search-content', 'toggle-search-btn'); setTimeout(() => { document.getElementById('searchInput').scrollIntoView({ behavior:'smooth', block:'center' }); document.getElementById('searchInput').focus(); }, 300); }
 
-                sumTarget += target;
-                sumActual += actual;
-                sumRemain += remain;
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <td class="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">${zone}</td>
-                        <td class="px-6 py-4 text-sm text-center font-bold text-blue-600 dark:text-blue-400">${target > 0 ? target.toLocaleString() : '-'}</td>
-                        <td class="px-6 py-4 text-sm text-center font-bold text-emerald-600 dark:text-emerald-400">${actual.toLocaleString()}</td>
-                        <td class="px-6 py-4 text-sm text-center font-bold text-orange-500 dark:text-orange-400">${remain.toLocaleString()}</td>
-                        <td class="px-6 py-4 text-sm w-48">
-                            <div class="flex items-center gap-3">
-                                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                                    <div class="bg-blue-500 h-2.5 rounded-full" style="width: ${displayPercent}%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-600 dark:text-slate-300 min-w-[40px]">${percent.toFixed(1)}%</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+        function renderZoneTable(zc) {
+            const tbody = document.getElementById('zoneTableBody'); tbody.innerHTML='';
+            let st=0, sa=0, sr=0;
+            const r = (z, t, a) => {
+                const rem = Math.max(0, t-a); let p = t>0 ? (a/t)*100 : (a>0?100:0); let dp = p>100?100:p;
+                st+=t; sa+=a; sr+=rem;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><td class="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">${z}</td><td class="px-6 py-4 text-sm text-center font-bold text-blue-600 dark:text-blue-400">${t>0?t.toLocaleString():'-'}</td><td class="px-6 py-4 text-sm text-center font-bold text-emerald-600 dark:text-emerald-400">${a.toLocaleString()}</td><td class="px-6 py-4 text-sm text-center font-bold text-orange-500 dark:text-orange-400">${rem.toLocaleString()}</td><td class="px-6 py-4 text-sm w-48"><div class="flex items-center gap-3"><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: ${dp}%"></div></div><span class="text-xs font-medium text-slate-600 dark:text-slate-300 min-w-[40px]">${p.toFixed(1)}%</span></div></td></tr>`;
             };
+            const disp = new Set();
+            Object.keys(PROJECT_FOUNDATION_TARGETS).forEach(z => { disp.add(z); r(z, PROJECT_FOUNDATION_TARGETS[z], zc[z]?zc[z].count:0); });
+            Object.entries(zc).filter(([z])=>!disp.has(z) && !z.includes("ฐาน-แซม")).forEach(([z,d])=>r(z,0,d.count));
+            let tp = st>0 ? (sa/st)*100 : 0; if(tp>100) tp=100;
+            document.getElementById('total-target').innerText=st.toLocaleString(); document.getElementById('total-actual').innerText=sa.toLocaleString(); document.getElementById('total-remain').innerText=sr.toLocaleString(); document.getElementById('total-percent').innerText=tp.toFixed(1)+'%';
+        }
 
-            const displayed = new Set();
-            
-            Object.keys(PROJECT_FOUNDATION_TARGETS).forEach(zone => {
-                displayed.add(zone);
-                const target = PROJECT_FOUNDATION_TARGETS[zone];
-                const actual = zoneCounts[zone] ? zoneCounts[zone].count : 0;
-                renderRow(zone, target, actual);
+        function drawZoneProgressChart(zc) {
+            const labels = Object.keys(PROJECT_FOUNDATION_TARGETS), act = [], rem = [];
+            labels.forEach(z => { const t = PROJECT_FOUNDATION_TARGETS[z], a = zc[z]?zc[z].count:0; act.push(a); rem.push(Math.max(0, t-a)); });
+            const ctx = document.getElementById('zoneProgressChart').getContext('2d');
+            if(zoneProgressChartInstance) zoneProgressChartInstance.destroy();
+            const isDark = document.documentElement.classList.contains('dark');
+            zoneProgressChartInstance = new Chart(ctx, {
+                type:'bar', data: { labels: labels, datasets: [{ label:'แล้วเสร็จ', data:act, backgroundColor:'#10b981' }, { label:'คงเหลือ', data:rem, backgroundColor:isDark?'#475569':'#cbd5e1', borderColor:isDark?'#334155':'#94a3b8', borderWidth:1 }] },
+                options: { responsive:true, maintainAspectRatio:false, scales:{ x:{ stacked:true, ticks:{color:isDark?'#94a3b8':'#64748b', font:{family:'Sarabun'}}, grid:{display:false} }, y:{ stacked:true, beginAtZero:true, ticks:{color:isDark?'#94a3b8':'#64748b', font:{family:'Sarabun'}}, grid:{color:isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)'} } }, plugins:{ legend:{labels:{color:isDark?'#cbd5e1':'#475569', font:{family:'Sarabun'}}}, datalabels:{color:(c)=>c.datasetIndex===0?'#fff':(isDark?'#f8fafc':'#334155'), font:{family:'Sarabun', weight:'bold'}, formatter:(v)=>v>0?v:''} } }
             });
+        }
 
-            Object.entries(zoneCounts).filter(([z]) => !displayed.has(z) && !z.includes("ฐาน-แซม")).forEach(([z, d]) => {
-                renderRow(z, 0, d.count);
-            });
-
-            let totalPercent = sumTarget > 0 ? (sumActual / sumTarget) * 100 : 0;
-            if(totalPercent > 100) totalPercent = 100;
-            
-            document.getElementById('total-target').innerText = sumTarget.toLocaleString();
-            document.getElementById('total-actual').innerText = sumActual.toLocaleString();
-            document.getElementById('total-remain').innerText = sumRemain.toLocaleString();
-            document.getElementById('total-percent').innerText = totalPercent.toFixed(1) + '%';
+        function generateSummaryText(dataObj) {
+            const summaryDiv = document.getElementById('monthlySummaryReport'), keys = Object.keys(dataObj).sort();
+            if (keys.length === 0) { summaryDiv.innerHTML = '<span class="text-slate-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>'; return; }
+            if (keys.length === 1) { const k = keys[0]; summaryDiv.innerHTML = `💡 <b>ข้อสรุป:</b> ข้อมูลที่แสดงมีเพียงเดือนเดียวคือ <b>${dataObj[k].label}</b> โดยมีปริมาณผลงานเสร็จสิ้นทั้งสิ้น <b class="text-emerald-600 dark:text-emerald-400 text-2xl">${dataObj[k].count}</b> ฐาน`; return; }
+            const lastData = dataObj[keys[keys.length - 1]], prevData = dataObj[keys[keys.length - 2]], diff = lastData.count - prevData.count;
+            const isIncrease = diff > 0, isEqual = diff === 0;
+            let trendText = isIncrease ? "เพิ่มขึ้น 📈" : (isEqual ? "คงที่ ➖" : "ลดลง 📉"), colorClass = isIncrease ? "text-emerald-600 dark:text-emerald-400" : (isEqual ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400");
+            let percentText = prevData.count > 0 ? `คิดเป็น <b>${((Math.abs(diff) / prevData.count) * 100).toFixed(2)}%</b>` : `(เดือนก่อนหน้าไม่มีผลงาน)`;
+            summaryDiv.innerHTML = `📝 <b>รายงานสรุปสำหรับผู้บริหาร:</b> <br>ผลการดำเนินงานเดือน <b>${lastData.label}</b> สามารถทำผลงานได้ <b class="text-xl">${lastData.count}</b> ฐาน เมื่อเปรียบเทียบกับเดือน <b>${prevData.label}</b> (ที่ทำได้ ${prevData.count} ฐาน) <br>พบว่าปริมาณงาน <b class="${colorClass} text-xl">${trendText} จำนวน ${Math.abs(diff)} ฐาน</b> ${isEqual ? '' : percentText}`;
         }
 
         function prepareMonthlyChart(data) {
-            const monthlyCounts = {};
+            const mc = {};
             data.forEach(row => {
-                const taskDate = parseThaiDate(row['วันที่เสร็จงานจริงๆ']);
-                const zone = getStandardZoneName(row['ผู้รับผิดชอบ'] || '');
-                if (row['ชื่อโปรเจค'] && taskDate && !zone.includes("ฐาน-แซม")) {
-                    const key = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
-                    if (!monthlyCounts[key]) monthlyCounts[key] = { label: `${monthNames[taskDate.getMonth()]} ${taskDate.getFullYear() + 543}`, count: 0 };
-                    monthlyCounts[key].count++;
+                const td = parseThaiDate(row['วันที่เสร็จงานจริงๆ']), zone = getStandardZoneName(row['ผู้รับผิดชอบ']||'');
+                if (row['ชื่อโปรเจค'] && td && !zone.includes("ฐาน-แซม")) {
+                    const key = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}`;
+                    if (!mc[key]) mc[key] = { label:`${monthNames[td.getMonth()]} ${td.getFullYear()+543}`, count:0 };
+                    mc[key].count++;
                 }
             });
-            globalMonthlyData = monthlyCounts; 
-            const sorted = Object.keys(monthlyCounts).sort();
-            const s1 = document.getElementById('compareMonth1'), s2 = document.getElementById('compareMonth2');
-            s1.innerHTML = ''; s2.innerHTML = '';
-            sorted.forEach(k => {
-                const o1 = document.createElement('option'); o1.value = k; o1.text = monthlyCounts[k].label; s1.appendChild(o1);
-                const o2 = document.createElement('option'); o2.value = k; o2.text = monthlyCounts[k].label; s2.appendChild(o2);
-            });
-            if(sorted.length > 1) { s2.selectedIndex = sorted.length - 1; s1.selectedIndex = sorted.length - 2; }
+            globalMonthlyData = mc; const sorted = Object.keys(mc).sort(), s1 = document.getElementById('compareMonth1'), s2 = document.getElementById('compareMonth2');
+            s1.innerHTML=''; s2.innerHTML='';
+            sorted.forEach(k => { const o1=document.createElement('option'); o1.value=k; o1.text=mc[k].label; s1.appendChild(o1); const o2=document.createElement('option'); o2.value=k; o2.text=mc[k].label; s2.appendChild(o2); });
+            if(sorted.length>1) { s2.selectedIndex=sorted.length-1; s1.selectedIndex=sorted.length-2; }
             drawMonthlyChart(globalMonthlyData);
         }
 
-        function compareMonths() {
-            const m1 = document.getElementById('compareMonth1').value, m2 = document.getElementById('compareMonth2').value;
-            const filtered = {};
-            [m1, m2].forEach(k => { if(globalMonthlyData[k]) filtered[k] = globalMonthlyData[k]; });
-            drawMonthlyChart(filtered);
-        }
-
-        function resetMonthlyChart() { drawMonthlyChart(globalMonthlyData); }
-
-        function generateSummaryText(dataObj) {
-            const div = document.getElementById('monthlySummaryReport');
-            const keys = Object.keys(dataObj).sort();
-            
-            if (keys.length === 0) {
-                div.innerHTML = '<span class="text-slate-500">ไม่พบข้อมูลสำหรับสร้างรายงานสรุป</span>';
-                return;
-            }
-
-            if (keys.length === 1) {
-                const k = keys[0];
-                div.innerHTML = `💡 <b>ข้อสรุป:</b> ข้อมูลที่แสดงมีเพียงเดือนเดียวคือ <b>${dataObj[k].label}</b> โดยมีปริมาณผลงานเสร็จสิ้นทั้งสิ้น <b class="text-emerald-600 dark:text-emerald-400 text-2xl">${dataObj[k].count}</b> ฐาน`;
-                return;
-            }
-
-            const lastData = dataObj[keys[keys.length - 1]];
-            const prevData = dataObj[keys[keys.length - 2]];
-
-            const diff = lastData.count - prevData.count;
-            const isIncrease = diff > 0;
-            const isEqual = diff === 0;
-
-            let trendText, colorClass;
-            if(isIncrease) {
-                trendText = "เพิ่มขึ้น 📈";
-                colorClass = "text-emerald-600 dark:text-emerald-400";
-            } else if (isEqual) {
-                trendText = "คงที่ ➖";
-                colorClass = "text-yellow-600 dark:text-yellow-400";
-            } else {
-                trendText = "ลดลง 📉";
-                colorClass = "text-red-600 dark:text-red-400";
-            }
-
-            const diffAbs = Math.abs(diff);
-            let percentText = "";
-            if (prevData.count > 0) {
-                const percent = ((diffAbs / prevData.count) * 100).toFixed(2);
-                percentText = `คิดเป็น <b>${percent}%</b>`;
-            } else {
-                percentText = `(เดือนก่อนหน้าไม่มีผลงาน)`;
-            }
-
-            div.innerHTML = `
-                📝 <b>รายงานสรุปสำหรับผู้บริหาร:</b> <br>
-                ผลการดำเนินงานเดือน <b>${lastData.label}</b> สามารถทำผลงานได้ <b class="text-xl">${lastData.count}</b> ฐาน 
-                เมื่อนำมาเปรียบเทียบกับเดือน <b>${prevData.label}</b> (ที่ทำได้ ${prevData.count} ฐาน) <br>
-                พบว่าปริมาณงาน <b class="${colorClass} text-xl">${trendText} จำนวน ${diffAbs} ฐาน</b> ${isEqual ? '' : percentText}
-            `;
-        }
-
         function drawMonthlyChart(dataObj) {
-            generateSummaryText(dataObj);
+            generateSummaryText(dataObj); // 🌟 เรียกใช้งานฟังก์ชันที่กู้คืนมาแล้ว
             const keys = Object.keys(dataObj).sort();
             const ctx = document.getElementById('monthlyChart').getContext('2d');
             if(monthlyChartInstance) monthlyChartInstance.destroy();
             const isDark = document.documentElement.classList.contains('dark');
-            monthlyChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: keys.map(k => dataObj[k].label),
-                    datasets: [{ label: 'จำนวนผลงาน (ฐาน)', data: keys.map(k => dataObj[k].count), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 6 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { labels: { color: isDark ? '#cbd5e1' : '#475569', font: { family: 'Sarabun' } } },
-                        datalabels: { anchor: 'end', align: 'top', color: isDark ? '#f8fafc' : '#334155', font: { family: 'Sarabun', weight: 'bold' } }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' } },
-                        x: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } }
-                    }
-                }
+            monthlyChartInstance = new Chart(ctx, { 
+                type:'bar', 
+                data:{ labels:keys.map(k=>dataObj[k].label), datasets:[{ label:'จำนวนฐานราก', data:keys.map(k=>dataObj[k].count), backgroundColor:'rgba(16, 185, 129, 0.8)', borderRadius:6 }] }, 
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{labels:{color:isDark?'#cbd5e1':'#475569', font:{family:'Sarabun'}}}, datalabels:{anchor:'end', align:'top', color:isDark?'#f8fafc':'#334155', font:{family:'Sarabun', weight:'bold'}} }, scales:{ y:{beginAtZero:true, ticks:{color:isDark?'#94a3b8':'#64748b'}, grid:{color:isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)'}}, x:{ticks:{color:isDark?'#94a3b8':'#64748b'}, grid:{display:false}} } } 
             });
         }
+
+        function compareMonths() { const m1 = document.getElementById('compareMonth1').value, m2 = document.getElementById('compareMonth2').value, f = {}; [m1, m2].forEach(k => { if(globalMonthlyData[k]) f[k]=globalMonthlyData[k]; }); drawMonthlyChart(f); }
+        function resetMonthlyChart() { drawMonthlyChart(globalMonthlyData); }
     </script>
 </body>
 </html>
