@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bored Pile Map Module</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Sarabun', 'sans-serif'] } } }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        body { transition: background-color 0.3s, color 0.3s; }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark .glass-card { 
+            background: rgba(30, 41, 59, 0.95); 
+            border-color: rgba(51, 65, 85, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .dark body { background-color: #0f172a; }
+
+        /* ปรับแต่งหมุดบนแผนที่ */
+        .custom-marker {
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        .custom-marker:hover {
+            transform: scale(1.3);
+            z-index: 1000 !important;
+        }
+        
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0; }
+    </style>
+</head>
+<body class="text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 p-6 min-h-screen relative">
+
+    <div class="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🗺️ โมดูลแผนที่เสาเข็มเจาะ</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">ทดสอบระบบดึงพิกัด (Latitude/Longitude) จาก Sheet</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="fetchData()" class="px-4 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold transition-colors shadow-sm flex items-center gap-2">
+                <span>🔄 โหลดพิกัดล่าสุด</span>
+            </button>
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-xl hover:bg-slate-50 transition-colors">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto glass-card p-5 mb-6 border-t-4 border-indigo-500 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <label class="font-bold text-slate-700 dark:text-slate-300">📍 เลือกโซนพื้นที่:</label>
+            <select id="zoneFilter" onchange="renderMap()" class="p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 outline-none focus:border-blue-500 text-slate-800 dark:text-white font-medium min-w-[150px] w-full md:w-auto">
+                <option value="ALL">ภาพรวมทุกโซน (Summary)</option>
+            </select>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 bg-slate-100 dark:bg-slate-800 p-2.5 px-5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-bold w-full md:w-auto justify-center">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm"></div>
+                <span class="text-emerald-700 dark:text-emerald-400">เสร็จสมบูรณ์ (<span id="count-done">0</span>)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full bg-slate-400 border-2 border-white shadow-sm"></div>
+                <span class="text-slate-600 dark:text-slate-400">รอดำเนินการ (<span id="count-pending">0</span>)</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-status" class="max-w-6xl mx-auto mb-6 p-4 rounded-lg font-bold text-center bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+        กำลังโหลดข้อมูลพิกัดจากฐานข้อมูล... ⏳
+    </div>
+
+    <div class="max-w-6xl mx-auto glass-card p-2 overflow-hidden border-t-4 border-emerald-500">
+        <div id="map" class="w-full rounded-xl z-0" style="height: 600px;"></div>
+    </div>
+
+    <script>
+        // ลิงก์ฐานข้อมูลเดิมของเสาเข็มเจาะ
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
+        
+        let map;
+        let markerLayerGroup; 
+        let globalPileData = [];
+        let availableZones = new Set();
+
+        function initMap() {
+            // ตั้งจุดศูนย์กลางเริ่มต้น (แผนที่จะซูมอัตโนมัติไปที่หมุดในภายหลัง)
+            map = L.map('map').setView([13.9540, 100.5170], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            markerLayerGroup = L.layerGroup().addTo(map);
+            fetchData();
+        }
+
+        // ฟังก์ชันแปลงชื่อโซนให้เป็นมาตรฐานเดียวกับ v1.9.3
+        function getStandardZoneName(rawZone) {
+            if (!rawZone) return 'ไม่ระบุ';
+            const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
+            if (text.includes("แซม")) return "เข็ม-แซม (Re-Drilling Pile)";
+            if (text.includes("ZONE1")) return "Zone 1"; if (text.includes("ZONE2")) return "Zone 2"; if (text.includes("ZONE3")) return "Zone 3"; if (text.includes("ZONE4")) return "Zone 4"; if (text.includes("ZONE5")) return "Zone 5"; if (text.includes("ZONE6")) return "Zone 6"; if (text.includes("ZONE7")) return "Zone 7";
+            if (text.includes("N01")) return "Ramp-N01"; if (text.includes("OR3")) return "Ramp-OR3"; if (text.includes("OR4")) return "Ramp-OR4"; if (text.includes("OR6")) return "Ramp-OR6"; if (text.includes("OR7")) return "Ramp-OR7"; if (text.includes("SR1")) return "Ramp-SR1";
+            return rawZone;
+        }
+
+        function fetchData() {
+            const statusDiv = document.getElementById('loading-status');
+            statusDiv.classList.remove('hidden');
+            statusDiv.className = 'max-w-6xl mx-auto mb-6 p-4 rounded-lg font-bold text-center bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800';
+            statusDiv.innerText = 'กำลังโหลดข้อมูลพิกัดจากฐานข้อมูล... ⏳';
+
+            Papa.parse(SHEET_URL, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: (results) => {
+                    processData(results.data);
+                    statusDiv.className = 'max-w-6xl mx-auto mb-6 p-4 rounded-lg font-bold text-center bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800';
+                    statusDiv.innerText = '✅ โหลดข้อมูลและสร้างพิกัดสำเร็จ!';
+                    setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+                },
+                error: (err) => {
+                    statusDiv.className = 'max-w-6xl mx-auto mb-6 p-4 rounded-lg font-bold text-center bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400 border border-red-200 dark:border-red-800';
+                    statusDiv.innerText = '❌ เกิดข้อผิดพลาดในการโหลดข้อมูล';
+                }
+            });
+        }
+
+        function processData(data) {
+            globalPileData = [];
+            availableZones.clear();
+
+            data.forEach(row => {
+                const projName = row['ชื่อโปรเจค'];
+                const rawZone = row['ผู้รับผิดชอบ'];
+                const finishDate = row['วันที่เสร็จงานจริงๆ'] || '';
+                const lat = parseFloat(row['Latitude']);
+                const lng = parseFloat(row['Longitude']);
+
+                // ดักจับเฉพาะต้นที่มีพิกัดถูกต้อง
+                if (projName && !isNaN(lat) && !isNaN(lng)) {
+                    const zone = getStandardZoneName(rawZone);
+                    if (!zone.includes("เข็ม-แซม")) availableZones.add(zone); // เก็บรายชื่อโซนไปใส่ Dropdown
+                    
+                    const isCompleted = finishDate.trim() !== '';
+                    
+                    globalPileData.push({
+                        id: projName,
+                        zone: zone,
+                        lat: lat,
+                        lng: lng,
+                        status: isCompleted ? 'เสร็จสมบูรณ์' : 'รอดำเนินการ',
+                        date: isCompleted ? finishDate : '-'
+                    });
+                }
+            });
+
+            // อัปเดต Dropdown เลือกโซน
+            const select = document.getElementById('zoneFilter');
+            select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน (Summary)</option>';
+            Array.from(availableZones).sort().forEach(zone => {
+                select.innerHTML += `<option value="${zone}">${zone}</option>`;
+            });
+
+            renderMap();
+        }
+
+        function renderMap() {
+            markerLayerGroup.clearLayers();
+            const selectedZone = document.getElementById('zoneFilter').value;
+            let done = 0, pending = 0;
+            const bounds = []; 
+
+            globalPileData.forEach(pile => {
+                if (selectedZone !== 'ALL' && pile.zone !== selectedZone) return;
+
+                if (pile.status === 'เสร็จสมบูรณ์') done++;
+                else pending++;
+
+                const markerColor = pile.status === 'เสร็จสมบูรณ์' ? '#10b981' : '#94a3b8';
+                
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${markerColor}; width: 100%; height: 100%; border-radius: 50%;"></div>`,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+
+                const marker = L.marker([pile.lat, pile.lng], { icon: customIcon });
+
+                const badge = pile.status === 'เสร็จสมบูรณ์' 
+                    ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-xs">✅ เสร็จสมบูรณ์</span>'
+                    : '<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold text-xs">⚪ รอดำเนินการ</span>';
+
+                const popupContent = `
+                    <div class="p-4 min-w-[200px]">
+                        <h4 class="font-bold text-lg text-slate-800 mb-1 border-b pb-1">📌 เสาเข็ม: ${pile.id}</h4>
+                        <div class="text-sm text-slate-600 mb-2"><b>พื้นที่:</b> ${pile.zone}</div>
+                        <div class="mb-2">${badge}</div>
+                        <div class="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+                            ${pile.date !== '-' ? '📅 วันที่เสร็จ: ' + pile.date : 'รอการดำเนินงาน'}
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                markerLayerGroup.addLayer(marker);
+                bounds.push([pile.lat, pile.lng]);
+            });
+
+            document.getElementById('count-done').innerText = done.toLocaleString();
+            document.getElementById('count-pending').innerText = pending.toLocaleString();
+
+            // เลื่อนกล้องไปหาพื้นที่ที่เลือกอัตโนมัติ
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
+            }
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            document.getElementById('theme-icon').textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+</body>
+</html>
