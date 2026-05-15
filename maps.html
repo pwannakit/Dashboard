@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Map Module V2</title>
+    <title>Bored Pile Map Module V2.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -111,16 +111,15 @@
     </div>
 
     <script>
-        // ลิงก์ฐานข้อมูลเดิมของเสาเข็มเจาะ (ดึงข้อมูลล่าสุด)
+        // ลิงก์ฐานข้อมูลเดิมของเสาเข็มเจาะ
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
         
         let map;
         let markerLayerGroup; 
-        let groupedPileData = []; // เก็บข้อมูลแบบจัดกลุ่มแล้ว
+        let groupedPileData = []; 
         let availableZones = new Set();
 
         function initMap() {
-            // ตั้งจุดศูนย์กลางเริ่มต้น 
             map = L.map('map').setView([13.9540, 100.5170], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
@@ -171,17 +170,24 @@
                 const lng = parseFloat(row['Longitude']);
 
                 if (projName) {
-                    // ตัดแยกชื่อกลุ่มเสา (เอา -dia หรือ ขีดย่อยอื่นๆ ออก เพื่อหารากของชื่อโปรเจค)
+                    // 🌟 1. โลจิกใหม่: หั่นตามเครื่องหมาย ทับ ( / ) 🌟
                     let baseName = projName;
-                    const diaIndex = baseName.toLowerCase().indexOf('-dia');
-                    if (diaIndex !== -1) {
-                        baseName = baseName.substring(0, diaIndex).trim();
+                    
+                    if (baseName.includes('/')) {
+                        // 06L/1-dia1.20 ตัดด้วย '/' เอาตัวแรก จะได้ '06L'
+                        baseName = baseName.split('/')[0].trim();
+                    } else {
+                        // กรณีคนกรอกลืมใส่ / แต่ดันใส่ -dia เลย ก็ดักเอาไว้
+                        const diaIndex = baseName.toLowerCase().indexOf('-dia');
+                        if (diaIndex !== -1) {
+                            baseName = baseName.substring(0, diaIndex).trim();
+                        }
                     }
 
                     const zone = getStandardZoneName(rawZone);
                     if (!zone.includes("เข็ม-แซม")) availableZones.add(zone);
 
-                    // สร้างกลุ่มใหม่ถ้ายังไม่มี
+                    // 2. สร้างกลุ่มใหม่ถ้ายังไม่มี
                     if (!tempGroups[baseName]) {
                         tempGroups[baseName] = {
                             baseName: baseName,
@@ -192,13 +198,13 @@
                         };
                     }
 
-                    // ถ้ารรทัดนี้มีการกรอกพิกัดมา ให้บันทึกพิกัดให้กลุ่มนั้นเลย
+                    // 3. ถ้ารรทัดนี้มีการกรอกพิกัดมา ให้บันทึกพิกัดให้กลุ่มนั้นเลย
                     if (!isNaN(lat) && !isNaN(lng)) {
                         tempGroups[baseName].lat = lat;
                         tempGroups[baseName].lng = lng;
                     }
 
-                    // บันทึกเสาเข็มย่อยเข้าไปในกลุ่ม
+                    // 4. บันทึกเสาเข็มย่อยเข้าไปในกลุ่ม
                     tempGroups[baseName].piles.push({
                         id: projName,
                         isCompleted: finishDate.trim() !== '',
@@ -229,7 +235,6 @@
             groupedPileData.forEach(group => {
                 if (selectedZone !== 'ALL' && group.zone !== selectedZone) return;
 
-                // คำนวณความคืบหน้าของกลุ่มเสานี้
                 const totalPiles = group.piles.length;
                 const completedPiles = group.piles.filter(p => p.isCompleted).length;
 
@@ -254,7 +259,6 @@
                     bgColorClass = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
                 }
                 
-                // สร้างไอคอนที่มีตัวเลขกำกับ
                 const customIcon = L.divIcon({
                     className: 'custom-marker',
                     html: `<div style="background-color: ${statusColor}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.9;">
@@ -266,14 +270,18 @@
 
                 const marker = L.marker([group.lat, group.lng], { icon: customIcon });
 
-                // สร้างรายการเสาเข็มย่อยสำหรับแสดงใน Popup
+                // สร้าง HTML รายชื่อเสาเข็มย่อย
                 let pilesListHTML = '<ul class="mt-2 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-2">';
-                group.piles.forEach(p => {
-                    const icon = p.isCompleted ? '<span class="text-emerald-500">✅</span>' : '<span class="text-slate-400">⏳</span>';
+                
+                // เพื่อความสวยงาม เราเรียงเสาเข็มตามชื่อให้ด้วย
+                const sortedPiles = group.piles.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
+                
+                sortedPiles.forEach(p => {
+                    const icon = p.isCompleted ? '<span class="text-emerald-500 text-[10px]">✅</span>' : '<span class="text-slate-400 text-[10px]">⏳</span>';
                     pilesListHTML += `
                         <li class="text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 pb-1 flex justify-between items-center">
-                            <span>${icon} <b>${p.id}</b></span>
-                            <span class="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 px-1.5 rounded">${p.date}</span>
+                            <span class="flex items-center gap-1">${icon} <b class="text-xs">${p.id}</b></span>
+                            <span class="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-700">${p.date}</span>
                         </li>`;
                 });
                 pilesListHTML += '</ul>';
@@ -283,8 +291,8 @@
                         <h4 class="font-bold text-lg text-slate-800 dark:text-white mb-1">📌 กลุ่มเสา: ${group.baseName}</h4>
                         <div class="text-sm text-slate-600 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-700 pb-2"><b>พื้นที่:</b> ${group.zone}</div>
                         <div class="mb-2 flex items-center justify-between">
-                            <span class="px-2 py-0.5 rounded font-bold text-xs ${bgColorClass}">${statusText}</span>
-                            <span class="text-xs font-bold text-slate-500">(${completedPiles}/${totalPiles} ต้น)</span>
+                            <span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgColorClass}">${statusText}</span>
+                            <span class="text-[11px] font-bold text-slate-500">(${completedPiles}/${totalPiles} ต้น)</span>
                         </div>
                         ${pilesListHTML}
                     </div>
