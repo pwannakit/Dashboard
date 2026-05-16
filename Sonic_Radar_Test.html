@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Sonic Radar (Smart Cross-Match)</title>
+    <title>Standalone Sonic Radar (Smart Cross-Match + Grouping)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -43,7 +43,7 @@
                 <span class="text-3xl">🗺️</span>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-800">พิกัดเสารอทดสอบ (Sonic Radar)</h1>
-                    <p class="text-slate-500 text-sm mt-0.5">แสดงเฉพาะเสาเข็มที่อายุเกิน 14 วัน และยังไม่ได้ทำการทดสอบ</p>
+                    <p class="text-slate-500 text-sm mt-0.5">แสดงเฉพาะเสาเข็มที่อายุเกิน 14 วัน (ดึงพิกัดจากเสาตัวแทนกลุ่ม)</p>
                 </div>
             </div>
             <div id="loading-status" class="bg-red-50 text-red-700 px-5 py-2.5 rounded-lg text-sm font-bold border border-red-200 shadow-sm w-full md:w-auto text-center flex items-center justify-center gap-2">
@@ -72,12 +72,10 @@
         // ==========================================
         // 🌟 ลิงก์ฐานข้อมูลทั้ง 2 ฝั่ง 🌟
         // ==========================================
-        // ไฟล์ที่ 1: ตาราง Pending (เอาไว้ดึงรายชื่อเสา 150 ต้น)
         const PENDING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzJ44c5wXJlotG5S0SsFqlEncFgYDrhMbjDlJvgN1j_fgnjwPC8p8FnNquiTwQ_FGytzP81jZ1kICG/pub?gid=921370860&single=true&output=csv";
-        // ไฟล์ที่ 2: ตาราง Bored Pile (เอาไว้เทียบรายชื่อ เพื่อดึง Latitude / Longitude)
         const BORED_PILE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
 
-        let pendingPileTargets = {}; // ตัวแปรเก็บรายชื่อเป้าหมาย "บัญชีดำ" ที่รอทดสอบ
+        let pendingPileTargets = {}; 
         let map, markerLayerGroup;
         let groupedPileData = [];
 
@@ -90,15 +88,13 @@
         // ==========================================
         // 🛠️ เครื่องมือฟอกข้อมูล (Utilities)
         // ==========================================
-        // ตัวฟอกชื่อเสาเข็มให้ตรงกันทั้ง 2 ฝั่ง
         function getMatchKey(name) {
             if (!name) return '';
             let clean = String(name).toUpperCase();
-            clean = clean.split(/-DIA/)[0]; // ตัด -dia ออก
-            return clean.replace(/\s+/g, ''); // ตัดช่องว่างออกให้หมด (เช่น 71L/1-dia1.20 กลายเป็น 71L/1)
+            clean = clean.split(/-DIA/)[0]; 
+            return clean.replace(/\s+/g, ''); 
         }
 
-        // แปลงวันที่ภาษาไทย
         function parseThaiDate(dateStr) {
             if (!dateStr) return null;
             let str = dateStr.toString().trim().replace(/"/g, '');
@@ -113,7 +109,6 @@
             return new Date(year, month, day, 0, 0, 0, 0);
         }
 
-        // คำนวณอายุคอนกรีต
         function getDiffDays(dateString) {
             const pileDate = parseThaiDate(dateString);
             if (!pileDate) return -1;
@@ -148,27 +143,24 @@
         }
 
         // ==========================================
-        // 🚀 โหลดข้อมูลแบบ Cross-Matching (ไอเดียพี่เอ็กซ์)
+        // 🚀 โหลดข้อมูลแบบ 2 สเตป (สกัดพิกัดตัวแทนกลุ่ม)
         // ==========================================
         function initMap() {
             map = L.map('map').setView([13.9540, 100.5170], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
             markerLayerGroup = L.layerGroup().addTo(map);
 
-            // โซนห้ามเข้า (จาก V2.1.3)
             L.polygon([[13.9560, 100.5140], [13.9560, 100.5160], [13.9545, 100.5160], [13.9545, 100.5140]], { color: '#ef4444', weight: 3, fillColor: '#f87171', fillOpacity: 0.4 }).addTo(map);
             L.polygon([[13.90133, 100.70020], [13.90124, 100.70025], [13.90107, 100.69962], [13.90118, 100.69957]], { color: '#f97316', weight: 3, fillColor: '#fdba74', fillOpacity: 0.4 }).addTo(map);
 
-            document.getElementById('loading-status').innerHTML = "⏳ 1. กำลังดึงรายชื่อเสาเป้าหมายจากตารางรอดำเนินการ...";
+            document.getElementById('loading-status').innerHTML = "⏳ 1. ดึงรายชื่อเสาเป้าหมายจากตารางรอดำเนินการ...";
 
-            // สเตป 1: ดึงรายชื่อเสา "บัญชีดำ" จากตาราง Pending
             Papa.parse(PENDING_CSV_URL, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: (pendingRes) => {
                     const data = pendingRes.data;
                     const pileConcreteDates = {};
                     
-                    // หากำหนดวันเทคอนกรีตเก็บไว้ก่อน
                     data.forEach(row => {
                         const projName = (row['ชื่อโปรเจค'] || '').trim();
                         const task = (row['งานที่ต้องทำ'] || '').trim();
@@ -178,7 +170,6 @@
                         }
                     });
 
-                    // กรองเอาเฉพาะเสาที่สถานะ "เลยกำหนด" และเป็นของ Sonic
                     data.forEach(row => {
                         const projName = (row['ชื่อโปรเจค'] || '').trim();
                         const task = (row['งานที่ต้องทำ'] || '').toLowerCase();
@@ -186,7 +177,6 @@
                         
                         if (projName && status === 'เลยกำหนด' && task.includes('sonic')) {
                             const key = getMatchKey(projName);
-                            // เก็บเข้าบัญชีดำ
                             pendingPileTargets[key] = {
                                 originalName: projName,
                                 concreteDate: pileConcreteDates[key] || '-'
@@ -194,9 +184,8 @@
                         }
                     });
 
-                    document.getElementById('loading-status').innerHTML = "⏳ 2. กำลังค้นหาพิกัดเสาจากตารางแผนที่...";
+                    document.getElementById('loading-status').innerHTML = "⏳ 2. จับคู่พิกัดตัวแทนกลุ่มเสาเข็ม...";
 
-                    // สเตป 2: เปิดไฟล์แผนที่ Bored Pile เพื่อหาค่า ละติจูด/ลองจิจูด มาชนกัน
                     Papa.parse(BORED_PILE_CSV_URL, {
                         download: true, header: true, skipEmptyLines: true,
                         complete: (boredRes) => {
@@ -217,36 +206,62 @@
             const tempGroups = {};
             const mapZones = new Set();
             let totalPendingCount = 0;
-            let addedPiles = new Set(); // ป้องกันการนับเบิ้ล
+            let addedPiles = new Set(); 
 
+            // 🌟 รอบที่ 1: ดึงพิกัดตัวแทนของแต่ละกลุ่มเสาเข็ม 🌟
+            const groupCoords = {};
+            boredData.forEach(row => {
+                const rawProjName = (row['ชื่อโปรเจค'] || '').trim();
+                const lat = parseFloat(row['Latitude']);
+                const lng = parseFloat(row['Longitude']);
+                
+                if (rawProjName && !isNaN(lat) && !isNaN(lng)) {
+                    // หาชื่อกลุ่ม เช่น 89L
+                    let baseName = rawProjName.split('/')[0].trim();
+                    const diaIndex = baseName.toLowerCase().indexOf('-dia');
+                    if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
+                    
+                    // บันทึกพิกัดตัวแทนให้กลุ่ม
+                    if (!groupCoords[baseName]) {
+                        groupCoords[baseName] = { lat: lat, lng: lng };
+                    }
+                }
+            });
+
+            // 🌟 รอบที่ 2: ดึงรายชื่อเสาในบัญชีดำมาแมตช์เข้ากลุ่ม 🌟
             boredData.forEach(row => {
                 const rawProjName = (row['ชื่อโปรเจค'] || '').trim();
                 const key = getMatchKey(rawProjName);
                 
-                // 🌟 หัวใจสำคัญ: ถ้ารายชื่อเสานี้ "ตรงกับบัญชีดำ" ที่เรารอเทส
+                // ถ้ารายชื่อตรงกับบัญชีดำที่รอเทส (และยังไม่ได้นับ)
                 if (key && pendingPileTargets[key] && !addedPiles.has(key)) {
                     
-                    const lat = parseFloat(row['Latitude']);
-                    const lng = parseFloat(row['Longitude']);
-                    const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
+                    let baseName = rawProjName.split('/')[0].trim();
+                    const diaIndex = baseName.toLowerCase().indexOf('-dia');
+                    if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
                     
-                    if (!isNaN(lat) && !isNaN(lng)) {
+                    // เช็กว่ากลุ่มนี้มี "พิกัดตัวแทน" หรือไม่
+                    if (groupCoords[baseName]) {
+                        const coords = groupCoords[baseName];
+                        const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
                         const zone = getStandardZoneName(rawZone);
+                        
                         if (!isExcludedZone(zone)) {
                             addedPiles.add(key);
                             totalPendingCount++;
                             mapZones.add(zone);
 
-                            // จัดกลุ่มเสา (เช่น 71L/1 -> 71L)
-                            let baseName = rawProjName.split('/')[0].trim();
-                            const diaIndex = baseName.toLowerCase().indexOf('-dia');
-                            if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
-
                             if (!tempGroups[baseName]) {
-                                tempGroups[baseName] = { baseName: baseName, zone: zone, lat: lat, lng: lng, piles: [] };
+                                tempGroups[baseName] = { 
+                                    baseName: baseName, 
+                                    zone: zone, 
+                                    lat: coords.lat, 
+                                    lng: coords.lng, 
+                                    piles: [] 
+                                };
                             }
                             
-                            // 🌟 คำนวณอายุคอนกรีต จากวันที่เทใน Pending Table 🌟
+                            // ดึงวันที่เทคอนกรีตจากข้อมูล Pending
                             let cDate = pendingPileTargets[key].concreteDate;
                             if (cDate === '-') cDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
                             
@@ -265,7 +280,6 @@
 
             groupedPileData = Object.values(tempGroups);
 
-            // อัปเดตตัวกรองโซน
             const select = document.getElementById('mapZoneFilter');
             select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
             const sortedZones = Array.from(mapZones).sort((a, b) => {
@@ -275,7 +289,6 @@
             });
             sortedZones.forEach(zone => { select.innerHTML += `<option value="${zone}">${zone}</option>`; });
 
-            // อัปเดตป้ายสถานะ (ถ้าได้ 150 ต้น แปลว่าสำเร็จ!)
             const statusBadge = document.getElementById('loading-status');
             statusBadge.className = "bg-red-50 text-red-700 px-5 py-2.5 rounded-lg text-sm font-bold border border-red-200 shadow-sm w-full md:w-auto text-center flex items-center justify-center gap-2";
             statusBadge.innerHTML = `<span class="text-xl">🚨</span> พบเสารอทดสอบ Sonic ทั้งสิ้น ${totalPendingCount} ต้น`;
