@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Sonic Radar (Step 3.1: Bulletproof Matching)</title>
+    <title>Standalone Sonic Radar (Smart Cross-Match)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -39,42 +39,45 @@
 
     <div class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg border-t-4 border-red-500">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800">🗺️ พิกัดเสารอทดสอบ (Sonic Radar) step 3.1</h1>
-                <p class="text-slate-500 text-sm mt-1">แสดงเฉพาะเสาเข็มที่อายุเกิน 14 วัน และยังไม่ได้ทำการทดสอบ</p>
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🗺️</span>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">พิกัดเสารอทดสอบ (Sonic Radar)</h1>
+                    <p class="text-slate-500 text-sm mt-0.5">แสดงเฉพาะเสาเข็มที่อายุเกิน 14 วัน และยังไม่ได้ทำการทดสอบ</p>
+                </div>
             </div>
-            <div id="loading-status" class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-bold border border-blue-200 shadow-sm w-full md:w-auto text-center">
-                ⏳ รอเริ่มการทำงาน...
+            <div id="loading-status" class="bg-red-50 text-red-700 px-5 py-2.5 rounded-lg text-sm font-bold border border-red-200 shadow-sm w-full md:w-auto text-center flex items-center justify-center gap-2">
+                <span class="animate-pulse">⏳</span> รอเริ่มการทำงาน...
             </div>
         </div>
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-            <div class="flex items-center gap-3">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div class="flex items-center gap-3 w-full md:w-auto">
                 <label class="font-bold text-sm text-slate-700">🔍 เลือกโซน:</label>
-                <select id="mapZoneFilter" onchange="renderMap()" class="p-2 rounded-lg border border-slate-300 bg-slate-50 outline-none text-sm min-w-[150px] focus:border-red-500">
+                <select id="mapZoneFilter" onchange="renderMap()" class="flex-1 md:flex-none p-2 rounded-lg border border-slate-300 bg-white outline-none text-sm min-w-[180px] focus:border-red-500 shadow-sm">
                     <option value="ALL">ภาพรวมทุกโซน</option>
                 </select>
             </div>
             
-            <div class="flex items-center gap-3 bg-red-50 p-2 px-4 rounded-lg border border-red-200 text-xs font-bold">
-                <div class="flex items-center gap-1">
-                    <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                    <span class="text-red-700 text-sm">🚨 รอทดสอบ (เกิน 14 วัน): <span id="count-pending" class="text-lg">0</span> ต้น</span>
-                </div>
+            <div class="flex items-center gap-2 bg-red-100/50 p-2 px-4 rounded-lg border border-red-200 text-sm font-bold shadow-sm">
+                <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+                <span class="text-red-700">🚨 รอทดสอบ (เกิน 14 วัน): <span id="count-pending" class="text-lg">0</span> ต้น</span>
             </div>
         </div>
         
-        <div id="map" class="w-full rounded-xl z-0" style="height: 600px; border: 1px solid #cbd5e1;"></div>
+        <div id="map" class="w-full rounded-xl z-0 shadow-inner" style="height: 600px; border: 1px solid #cbd5e1;"></div>
     </div>
 
     <script>
         // ==========================================
         // 🌟 ลิงก์ฐานข้อมูลทั้ง 2 ฝั่ง 🌟
         // ==========================================
+        // ไฟล์ที่ 1: ตาราง Pending (เอาไว้ดึงรายชื่อเสา 150 ต้น)
+        const PENDING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzJ44c5wXJlotG5S0SsFqlEncFgYDrhMbjDlJvgN1j_fgnjwPC8p8FnNquiTwQ_FGytzP81jZ1kICG/pub?gid=921370860&single=true&output=csv";
+        // ไฟล์ที่ 2: ตาราง Bored Pile (เอาไว้เทียบรายชื่อ เพื่อดึง Latitude / Longitude)
         const BORED_PILE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
-        const SONIC_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
 
-        let completedSonicPiles = new Set(); // เก็บรายชื่อเสาที่ทำ Sonic แล้ว
+        let pendingPileTargets = {}; // ตัวแปรเก็บรายชื่อเป้าหมาย "บัญชีดำ" ที่รอทดสอบ
         let map, markerLayerGroup;
         let groupedPileData = [];
 
@@ -85,17 +88,17 @@
         };
 
         // ==========================================
-        // 🌟 ตัวฟอกชื่อเสาเข็มขั้นเทพ (Bulletproof Matching) 🌟
+        // 🛠️ เครื่องมือฟอกข้อมูล (Utilities)
         // ==========================================
+        // ตัวฟอกชื่อเสาเข็มให้ตรงกันทั้ง 2 ฝั่ง
         function getMatchKey(name) {
             if (!name) return '';
             let clean = String(name).toUpperCase();
             clean = clean.split(/-DIA/)[0]; // ตัด -dia ออก
-            clean = clean.split(/\(/)[0];   // ตัดวงเล็บออก
-            return clean.replace(/[^A-Z0-9]/g, ''); // เหลือแค่ตัวอักษร A-Z และตัวเลข 0-9 ล้วนๆ 
+            return clean.replace(/\s+/g, ''); // ตัดช่องว่างออกให้หมด (เช่น 71L/1-dia1.20 กลายเป็น 71L/1)
         }
 
-        // อ่านวันที่ให้ออกมาเป็น Date Object เท่านั้น
+        // แปลงวันที่ภาษาไทย
         function parseThaiDate(dateStr) {
             if (!dateStr) return null;
             let str = dateStr.toString().trim().replace(/"/g, '');
@@ -110,6 +113,7 @@
             return new Date(year, month, day, 0, 0, 0, 0);
         }
 
+        // คำนวณอายุคอนกรีต
         function getDiffDays(dateString) {
             const pileDate = parseThaiDate(dateString);
             if (!pileDate) return -1;
@@ -144,108 +148,116 @@
         }
 
         // ==========================================
-        // โหลดข้อมูลแบบ 2 สเตป (Sonic -> BoredPile)
+        // 🚀 โหลดข้อมูลแบบ Cross-Matching (ไอเดียพี่เอ็กซ์)
         // ==========================================
         function initMap() {
             map = L.map('map').setView([13.9540, 100.5170], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
             markerLayerGroup = L.layerGroup().addTo(map);
 
-            document.getElementById('loading-status').innerHTML = "⏳ กำลังดึงฐานข้อมูล Sonic Test...";
+            // โซนห้ามเข้า (จาก V2.1.3)
+            L.polygon([[13.9560, 100.5140], [13.9560, 100.5160], [13.9545, 100.5160], [13.9545, 100.5140]], { color: '#ef4444', weight: 3, fillColor: '#f87171', fillOpacity: 0.4 }).addTo(map);
+            L.polygon([[13.90133, 100.70020], [13.90124, 100.70025], [13.90107, 100.69962], [13.90118, 100.69957]], { color: '#f97316', weight: 3, fillColor: '#fdba74', fillOpacity: 0.4 }).addTo(map);
 
-            // สเตป 1: โหลดไฟล์ Sonic เพื่อหาว่ามีต้นไหนเทสไปแล้วบ้าง
-            Papa.parse(SONIC_CSV_URL, {
+            document.getElementById('loading-status').innerHTML = "⏳ 1. กำลังดึงรายชื่อเสาเป้าหมายจากตารางรอดำเนินการ...";
+
+            // สเตป 1: ดึงรายชื่อเสา "บัญชีดำ" จากตาราง Pending
+            Papa.parse(PENDING_CSV_URL, {
                 download: true, header: true, skipEmptyLines: true,
-                complete: (sonicResults) => {
+                complete: (pendingRes) => {
+                    const data = pendingRes.data;
+                    const pileConcreteDates = {};
                     
-                    sonicResults.data.forEach(row => {
+                    // หากำหนดวันเทคอนกรีตเก็บไว้ก่อน
+                    data.forEach(row => {
                         const projName = (row['ชื่อโปรเจค'] || '').trim();
-                        const zoneInfo = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
-                        const taskInfo = String(row['งานที่ต้องทำ'] || '').toLowerCase();
-                        
-                        let testDate = (row['วันที่เริ่มงาน'] || '').trim();
-                        let parsedDate = parseThaiDate(testDate);
-                        
-                        if (!parsedDate) {
-                            testDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
-                            parsedDate = parseThaiDate(testDate);
-                        }
-
-                        // ถ้าระบุว่าเป็นงาน Sonic และมีวันที่ทดสอบ
-                        if (projName && (zoneInfo.includes('sonic') || taskInfo.includes('sonic')) && parsedDate !== null) {
-                            // ใช้ตัวฟอกชื่อสร้าง Key
-                            const key = getMatchKey(projName);
-                            completedSonicPiles.add(key);
+                        const task = (row['งานที่ต้องทำ'] || '').trim();
+                        const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                        if (projName && task.includes('เจาะเสาเข็ม') && finishDate) {
+                            pileConcreteDates[getMatchKey(projName)] = finishDate;
                         }
                     });
 
-                    document.getElementById('loading-status').innerHTML = "⏳ กำลังดึงพิกัดเสาเข็มเจาะ...";
+                    // กรองเอาเฉพาะเสาที่สถานะ "เลยกำหนด" และเป็นของ Sonic
+                    data.forEach(row => {
+                        const projName = (row['ชื่อโปรเจค'] || '').trim();
+                        const task = (row['งานที่ต้องทำ'] || '').toLowerCase();
+                        const status = (row['สถานะ'] || '').trim();
+                        
+                        if (projName && status === 'เลยกำหนด' && task.includes('sonic')) {
+                            const key = getMatchKey(projName);
+                            // เก็บเข้าบัญชีดำ
+                            pendingPileTargets[key] = {
+                                originalName: projName,
+                                concreteDate: pileConcreteDates[key] || '-'
+                            };
+                        }
+                    });
 
-                    // สเตป 2: โหลดไฟล์พิกัดเสาเข็มเจาะ
+                    document.getElementById('loading-status').innerHTML = "⏳ 2. กำลังค้นหาพิกัดเสาจากตารางแผนที่...";
+
+                    // สเตป 2: เปิดไฟล์แผนที่ Bored Pile เพื่อหาค่า ละติจูด/ลองจิจูด มาชนกัน
                     Papa.parse(BORED_PILE_CSV_URL, {
                         download: true, header: true, skipEmptyLines: true,
-                        complete: (boredResults) => {
-                            processGroupedMapData(boredResults.data);
+                        complete: (boredRes) => {
+                            processRadarMap(boredRes.data);
                         },
                         error: (err) => {
-                            document.getElementById('loading-status').className = "bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 shadow-sm";
-                            document.getElementById('loading-status').innerHTML = "❌ โหลดไฟล์พิกัดไม่สำเร็จ";
+                            document.getElementById('loading-status').innerHTML = "❌ โหลดไฟล์พิกัดเสาเข็มไม่สำเร็จ";
                         }
                     });
                 },
                 error: (err) => {
-                    document.getElementById('loading-status').className = "bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 shadow-sm";
-                    document.getElementById('loading-status').innerHTML = "❌ โหลดไฟล์ Sonic ไม่สำเร็จ";
+                    document.getElementById('loading-status').innerHTML = "❌ โหลดไฟล์ตาราง Pending ไม่สำเร็จ";
                 }
             });
         }
 
-        function processGroupedMapData(data) {
+        function processRadarMap(boredData) {
             const tempGroups = {};
             const mapZones = new Set();
-            let totalPendingCount = 0; 
+            let totalPendingCount = 0;
+            let addedPiles = new Set(); // ป้องกันการนับเบิ้ล
 
-            data.forEach(row => {
-                const projName = (row['ชื่อโปรเจค'] || '').trim();
-                const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
-                const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
-                const lat = parseFloat(row['Latitude']);
-                const lng = parseFloat(row['Longitude']);
-
-                // เอาเฉพาะเสาที่มีวันเทคอนกรีต และมีพิกัด
-                if (projName && finishDate.trim() !== '' && !isNaN(lat) && !isNaN(lng)) {
-                    let ageDays = getDiffDays(finishDate);
+            boredData.forEach(row => {
+                const rawProjName = (row['ชื่อโปรเจค'] || '').trim();
+                const key = getMatchKey(rawProjName);
+                
+                // 🌟 หัวใจสำคัญ: ถ้ารายชื่อเสานี้ "ตรงกับบัญชีดำ" ที่เรารอเทส
+                if (key && pendingPileTargets[key] && !addedPiles.has(key)) {
                     
-                    // 🌟 เงื่อนไข 1: อายุคอนกรีตเกิน 14 วัน
-                    if (ageDays > 14) {
-                        // ใช้ตัวฟอกชื่อก่อนเอาไปเทียบ
-                        const key = getMatchKey(projName);
-                        
-                        // 🌟 เงื่อนไข 2: ไม่เคยมีชื่ออยู่ในลิสต์ Sonic (ยังไม่ทดสอบ)
-                        if (!completedSonicPiles.has(key)) {
-                            
-                            const zone = getStandardZoneName(rawZone);
-                            
-                            // 🌟 เงื่อนไข 3: ไม่ใช่โซนแปลกปลอม
-                            if (!isExcludedZone(zone)) {
-                                totalPendingCount++;
-                                mapZones.add(zone);
+                    const lat = parseFloat(row['Latitude']);
+                    const lng = parseFloat(row['Longitude']);
+                    const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const zone = getStandardZoneName(rawZone);
+                        if (!isExcludedZone(zone)) {
+                            addedPiles.add(key);
+                            totalPendingCount++;
+                            mapZones.add(zone);
 
-                                let baseName = projName;
-                                if (baseName.includes('/')) baseName = baseName.split('/')[0].trim();
-                                else {
-                                    const diaIndex = baseName.toLowerCase().indexOf('-dia');
-                                    if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
-                                }
+                            // จัดกลุ่มเสา (เช่น 71L/1 -> 71L)
+                            let baseName = rawProjName.split('/')[0].trim();
+                            const diaIndex = baseName.toLowerCase().indexOf('-dia');
+                            if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
 
-                                if (!tempGroups[baseName]) tempGroups[baseName] = { baseName: baseName, zone: zone, lat: lat, lng: lng, piles: [] };
-                                
-                                tempGroups[baseName].piles.push({ 
-                                    id: projName, 
-                                    age: ageDays, 
-                                    status: rawZone 
-                                });
+                            if (!tempGroups[baseName]) {
+                                tempGroups[baseName] = { baseName: baseName, zone: zone, lat: lat, lng: lng, piles: [] };
                             }
+                            
+                            // 🌟 คำนวณอายุคอนกรีต จากวันที่เทใน Pending Table 🌟
+                            let cDate = pendingPileTargets[key].concreteDate;
+                            if (cDate === '-') cDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                            
+                            let ageDays = getDiffDays(cDate);
+                            let ageText = ageDays >= 0 ? `อายุ ${ageDays} วัน` : 'เลยกำหนด';
+
+                            tempGroups[baseName].piles.push({ 
+                                id: rawProjName, 
+                                ageText: ageText,
+                                status: rawZone 
+                            });
                         }
                     }
                 }
@@ -253,9 +265,9 @@
 
             groupedPileData = Object.values(tempGroups);
 
+            // อัปเดตตัวกรองโซน
             const select = document.getElementById('mapZoneFilter');
             select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
-            
             const sortedZones = Array.from(mapZones).sort((a, b) => {
                 const getRank = (name) => { if (name.startsWith('Zone')) return 1; if (name.startsWith('Ramp')) return 2; return 3; };
                 if (getRank(a) !== getRank(b)) return getRank(a) - getRank(b); 
@@ -263,9 +275,10 @@
             });
             sortedZones.forEach(zone => { select.innerHTML += `<option value="${zone}">${zone}</option>`; });
 
+            // อัปเดตป้ายสถานะ (ถ้าได้ 150 ต้น แปลว่าสำเร็จ!)
             const statusBadge = document.getElementById('loading-status');
-            statusBadge.className = "bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 shadow-sm w-full md:w-auto text-center";
-            statusBadge.innerHTML = `🚨 พบเสารอทดสอบ Sonic ทั้งสิ้น ${totalPendingCount} ต้น`;
+            statusBadge.className = "bg-red-50 text-red-700 px-5 py-2.5 rounded-lg text-sm font-bold border border-red-200 shadow-sm w-full md:w-auto text-center flex items-center justify-center gap-2";
+            statusBadge.innerHTML = `<span class="text-xl">🚨</span> พบเสารอทดสอบ Sonic ทั้งสิ้น ${totalPendingCount} ต้น`;
 
             renderMap();
         }
@@ -291,28 +304,28 @@
 
                 let pHTML = '<ul class="mt-2 space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-2">';
                 group.piles.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).forEach(p => {
-                    const icon = '<span class="text-red-500 text-[10px]">🚨</span>';
+                    const icon = '<span class="text-red-500 text-[10px] mt-0.5">🚨</span>';
                     
-                    let pileText = `<b class="text-xs">${formatPileName(p.id)}</b>`;
-                    if (p.status && p.status !== 'ไม่ระบุ') {
-                        pileText += ` <span class="text-[10px] text-orange-500 font-medium ml-1">${p.status}</span>`;
-                    }
-                    
+                    let pileText = `<b class="text-xs text-slate-800">${formatPileName(p.id)}</b>`;
+                    let zoneText = p.status && p.status !== 'ไม่ระบุ' ? `<span class="text-[10px] text-orange-500 font-medium whitespace-nowrap ml-1">${p.status}</span>` : '';
                     let dateBadgeClass = "bg-red-100 text-red-700 font-bold border border-red-200 shadow-sm";
 
                     pHTML += `
-                        <li class="text-sm text-slate-700 border-b border-slate-100 pb-1 flex justify-between items-center">
-                            <span class="flex items-center gap-1">${icon} ${pileText}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded ${dateBadgeClass} whitespace-nowrap">อายุ ${p.age} วัน</span>
+                        <li class="text-sm border-b border-slate-100 pb-1.5 pt-1.5 flex justify-between items-center gap-2">
+                            <div class="flex items-start gap-1 flex-1">
+                                ${icon} 
+                                <div class="leading-tight">${pileText} ${zoneText}</div>
+                            </div>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded ${dateBadgeClass} whitespace-nowrap ml-1">${p.ageText}</span>
                         </li>`;
                 }); 
                 pHTML += '</ul>';
 
                 marker.bindPopup(`
-                    <div class="p-3 min-w-[240px]">
-                        <h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4>
-                        <div class="mb-2 flex justify-between items-center">
-                            <span class="px-2 py-0.5 rounded font-bold text-[11px] bg-red-100 text-red-800">รอทดสอบ Sonic</span>
+                    <div class="p-3 min-w-[280px]">
+                        <h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2 flex items-center gap-2">📌 กลุ่มเสา: ${group.baseName}</h4>
+                        <div class="mb-2 flex justify-between items-center bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                            <span class="px-2 py-0.5 rounded font-bold text-[11px] bg-red-100 text-red-800 shadow-sm">รอทดสอบ Sonic</span>
                             <span class="text-[11px] font-bold text-slate-500">(${totalPiles} ต้น)</span>
                         </div>
                         ${pHTML}
