@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Sonic Radar (Filter Excluded Zones)</title>
+    <title>Standalone Sonic Radar (Text Updated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -237,7 +237,7 @@
                     const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
                     const zone = getStandardZoneName(rawZone);
                     
-                    // 🌟 ตัด "ยังไม่เริ่ม-เจาะ", "เข็ม-แซม" ฯลฯ ออกจากการแสดงผลและนับจำนวน
+                    // ตัด "ยังไม่เริ่ม-เจาะ", "เข็ม-แซม" ฯลฯ ออกจากการแสดงผลและนับจำนวน
                     if (!isExcludedZone(zone)) {
                         
                         let baseName = rawProjName.split('/')[0].trim();
@@ -373,9 +373,10 @@
                 }); 
                 pHTML += '</ul>';
 
+                // 🌟 แก้ไขตรงนี้: เปลี่ยนคำว่า "กลุ่มเสา:" เป็น "กลุ่มเสาเข็ม:"
                 marker.bindPopup(`
                     <div class="p-3 min-w-[280px]">
-                        <h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2 flex items-center gap-2">📌 กลุ่มเสา: ${group.baseName}</h4>
+                        <h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2 flex items-center gap-2">📌 กลุ่มเสาเข็ม: ${group.baseName}</h4>
                         <div class="mb-2 flex justify-between items-center bg-slate-50 p-1.5 rounded-lg border border-slate-100">
                             <span class="px-2 py-0.5 rounded font-bold text-[11px] bg-red-100 text-red-800 shadow-sm">รอทดสอบ Sonic</span>
                             <span class="text-[11px] font-bold text-slate-500">(${totalPiles} ต้น)</span>
