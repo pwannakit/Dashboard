@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Dashboard v2.1.2 (Map Integrated)</title>
+    <title>Bored Pile Dashboard v2.1.3 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -132,7 +132,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างเสาเข็มเจาะ</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.1.2)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.1.3)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto no-print">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
@@ -673,6 +673,36 @@
             map = L.map('map').setView([13.9540, 100.5170], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
             markerLayerGroup = L.layerGroup().addTo(map);
+
+            // =========================================================
+            // 🌟 เพิ่มโค้ดวาดพื้นที่ห้ามเข้า (Restricted Area) ตรงนี้ครับ 🌟
+            // =========================================================
+            
+            // 1. กำหนดจุดพิกัดมุมต่างๆ ของพื้นที่ (ใส่กี่จุดก็ได้ มันจะลากเส้นเชื่อมกันให้เอง)
+            const restrictedCoords = [
+                [13.9560, 100.5150], // จุดที่ 1 (มุมซ้ายบน)
+                [13.9560, 100.5190], // จุดที่ 2 (มุมขวาบน)
+                [13.9520, 100.5190], // จุดที่ 3 (มุมขวาล่าง)
+                [13.9520, 100.5150]  // จุดที่ 4 (มุมซ้ายล่าง)
+            // สามารถเพิ่มจุดที่ 5, 6, 7... ได้ตามต้องการ เพื่อสร้างรูปทรงที่ซับซ้อนขึ้น
+            ];
+// ถ้าอยากให้วาดหลายๆ กรอบ (เช่น ห้ามเข้าจุด A และจุด B) ก็แค่ก๊อปปี้ชุดโค้ดนี้สร้างตัวแปร restrictedZone2 เพิ่มได้เรื่อยๆ เลยครับ
+            // 2. สั่งวาดรูปหลายเหลี่ยม (Polygon) และตั้งค่าสี
+            const restrictedZone = L.polygon(restrictedCoords, {
+                color: '#ef4444',       // สีเส้นขอบ (สีแดงข้ม)
+                weight: 3,              // ความหนาของเส้นขอบ
+                fillColor: '#f87171',   // สีทาพื้นหลัง (สีแดงอ่อน)
+                fillOpacity: 0.4        // ความโปร่งใสของพื้นหลัง (0.0 คือใสแจ๋ว, 1.0 คือทึบสนิท)
+            }).addTo(map);
+
+            // 3. ใส่ Popup แจ้งเตือนเวลามีคนมากดคลิกที่พื้นที่สีแดง
+            restrictedZone.bindPopup(`
+                <div class="text-center p-2 min-w-[200px] dark:bg-slate-800">
+                    <div class="text-4xl mb-2">⛔</div>
+                    <h4 class="font-bold text-red-600 dark:text-red-500 text-lg mb-1">พื้นที่อันตราย / ห้ามเข้า</h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">ห้ามทำการก่อสร้าง หรือนำเครื่องจักรเข้าพื้นที่นี้โดยเด็ดขาด</p>
+                </div>
+            `);
         }
 
         function formatPileName(rawName) {
