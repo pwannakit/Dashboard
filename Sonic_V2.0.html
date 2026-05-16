@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic & Grouting Dashboard V2.0 (Radar Map Integrated)</title>
+    <title>Sonic & Grouting Dashboard V1.9 (Radar Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -126,7 +126,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="no-print">
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 งานทดสอบ Sonic Logging & Grouting</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v2.0)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.9)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-medium flex items-center gap-2 no-print">
@@ -305,7 +305,7 @@
             </div>
             
             <div id="search-content" class="collapsible-content pt-2">
-                <div class="mb-6 mt-2 no-print">
+                <div class="mb-6 mt-2 no-print flex gap-2">
                     <input type="text" id="searchInput" class="w-full p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white focus:border-purple-500 outline-none transition-all" placeholder="ตัวอย่างเช่น: 81L/2 ...">
                 </div>
 
@@ -510,9 +510,9 @@
         const BORED_PILE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
         const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
 
-        let pendingPileTargets = {}; // เก็บรายชื่อบัญชีดำรอเทส
+        let pendingPileTargets = {}; 
         let map, markerLayerGroup;
-        let groupedPileMapData = []; // ข้อมูลวาดแผนที่
+        let groupedPileMapData = []; 
 
         const EXCLUDED_ZONES_CONFIG = {
             "เข็ม-แซม (Re-Drilling Pile)": ["แซม", "เข็มแซม", "เข็ม-แซม"],
@@ -557,26 +557,26 @@
         }
 
         function formatZoneName(rawZone) {
-            let baseName = rawZone;
-            if(rawZone.includes('-')) {
-                let parts = rawZone.split('-');
-                baseName = parts.slice(1).join('-').trim(); 
-            }
-            let displayZone = baseName;
-            const zMatch = baseName.match(/^z0*(\d+)$/i);
-            if (zMatch) displayZone = 'Zone ' + zMatch[1];
-            else if (/^(or|sr|n)\d+$/i.test(baseName)) displayZone = 'Ramp-' + baseName.toUpperCase();
-            return displayZone;
-        }
-
-        function getStandardZoneName(rawZone) {
             if (!rawZone) return 'ไม่ระบุ';
             const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
-            for (const [standardName, keywords] of Object.entries(EXCLUDED_ZONES_CONFIG)) {
-                if (keywords.some(kw => text.includes(kw.toUpperCase().replace(/\s+/g, '')))) return standardName;
+            
+            if (typeof EXCLUDED_ZONES_CONFIG !== 'undefined') {
+                for (const [standardName, keywords] of Object.entries(EXCLUDED_ZONES_CONFIG)) {
+                    if (keywords.some(kw => text.includes(kw.toUpperCase().replace(/\s+/g, '')))) {
+                        return standardName;
+                    }
+                }
             }
-            if (text.includes("ZONE1")) return "Zone 1"; if (text.includes("ZONE2")) return "Zone 2"; if (text.includes("ZONE3")) return "Zone 3"; if (text.includes("ZONE4")) return "Zone 4"; if (text.includes("ZONE5")) return "Zone 5"; if (text.includes("ZONE6")) return "Zone 6"; if (text.includes("ZONE7")) return "Zone 7";
-            if (text.includes("N01")) return "Ramp-N01"; if (text.includes("OR3")) return "Ramp-OR3"; if (text.includes("OR4")) return "Ramp-OR4"; if (text.includes("OR6")) return "Ramp-OR6"; if (text.includes("OR7")) return "Ramp-OR7"; if (text.includes("SR1")) return "Ramp-SR1";
+            
+            let baseName = String(rawZone).trim();
+            if(baseName.includes('-')) {
+                let parts = baseName.split('-');
+                baseName = parts.slice(1).join('-').trim(); 
+            }
+            const zMatch = baseName.match(/^z0*(\d+)$/i);
+            if (zMatch) return 'Zone ' + zMatch[1];
+            if (/^(or|sr|n)\d+$/i.test(baseName)) return 'Ramp-' + baseName.toUpperCase();
+            
             return rawZone;
         }
 
@@ -660,8 +660,6 @@
                 complete: (res) => handleParseResult(res),
                 error: (err) => {
                     showStatus(`❌ ดึงข้อมูลไม่สำเร็จ โปรดตรวจสอบลิงก์อีกครั้ง`, 'err');
-                    const container = document.getElementById('data-source-container');
-                    if(container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
                 }
             });
         }
@@ -682,15 +680,24 @@
             if(JSON.stringify(res.data[0]).includes('<!DOCTYPE html>')) { showStatus('❌ ลิงก์ที่ใส่ไม่ใช่ไฟล์ CSV', 'err'); return; }
             
             globalDatabase = res.data;
-            processData(globalDatabase); 
             
-            showStatus('✅ โหลดข้อมูลสำเร็จ! กำลังเตรียมแผนที่...', 'ok');
-            setTimeout(() => {
-                const container = document.getElementById('data-source-container');
-                if(!container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
-            }, 800);
+            try {
+                processData(globalDatabase); 
+                document.getElementById('dashboardContent').classList.remove('hide');
+                showStatus('✅ โหลดข้อมูลสำเร็จ! กำลังเตรียมแผนที่...', 'ok');
+                
+                setTimeout(() => {
+                    const container = document.getElementById('data-source-container');
+                    if(!container.classList.contains('collapsed')) {
+                        toggleSection('data-source-container', 'toggle-data-btn');
+                    }
+                }, 800);
 
-            loadPendingData(); 
+                loadPendingData(); 
+            } catch (e) {
+                console.error("Error processing data:", e);
+                showStatus(`❌ เกิดข้อผิดพลาดในการประมวลผลข้อมูล: ${e.message}`, 'err');
+            }
         }
 
         // ==========================================
@@ -704,21 +711,26 @@
             Papa.parse(PENDING_CSV_URL, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    processPendingData(results.data);
-                    
-                    stMsg.innerHTML = "กำลังเตรียมแผนที่ (Cross-matching)... ⏳";
-                    
-                    Papa.parse(BORED_PILE_CSV_URL, {
-                        download: true, header: true, skipEmptyLines: true,
-                        complete: function(boredRes) {
-                            stMsg.style.display = 'none';
-                            processRadarMap(boredRes.data);
-                        },
-                        error: function(err) {
-                            stMsg.innerHTML = "❌ โหลดไฟล์พิกัดเสาเข็มไม่สำเร็จ";
-                            stMsg.className = "mb-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold text-center shadow-sm";
-                        }
-                    });
+                    try {
+                        processPendingData(results.data);
+                        
+                        stMsg.innerHTML = "กำลังเตรียมแผนที่ (Cross-matching)... ⏳";
+                        
+                        Papa.parse(BORED_PILE_CSV_URL, {
+                            download: true, header: true, skipEmptyLines: true,
+                            complete: function(boredRes) {
+                                stMsg.style.display = 'none';
+                                processRadarMap(boredRes.data);
+                            },
+                            error: function(err) {
+                                stMsg.innerHTML = "❌ โหลดไฟล์พิกัดเสาเข็มไม่สำเร็จ";
+                                stMsg.className = "mb-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold text-center shadow-sm";
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Error in processPendingData:", e);
+                        stMsg.innerHTML = "❌ ประมวลผลข้อมูลรอดำเนินการไม่สำเร็จ";
+                    }
                 },
                 error: function(err) {
                     stMsg.innerHTML = "❌ โหลดข้อมูลเสาที่รอทดสอบไม่สำเร็จ";
@@ -784,6 +796,7 @@
             let totalPendingCount = 0;
             let addedPiles = new Set(); 
 
+            // รอบที่ 1: ดึงพิกัดตัวแทนกลุ่ม
             const groupCoords = {};
             boredData.forEach(row => {
                 const rawProjName = (row['ชื่อโปรเจค'] || '').trim();
@@ -797,13 +810,14 @@
                 }
             });
 
+            // รอบที่ 2: ดึงเสาในบัญชีดำมาแมตช์พิกัด
             boredData.forEach(row => {
                 const rawProjName = (row['ชื่อโปรเจค'] || '').trim();
                 const key = getMatchKey(rawProjName);
                 
                 if (key && pendingPileTargets[key] && !addedPiles.has(key)) {
                     const rawZone = pendingPileTargets[key].rawZone;
-                    const zone = getStandardZoneName(rawZone);
+                    const zone = formatZoneName(rawZone);
                     
                     if (!isExcludedZone(zone)) {
                         let baseName = rawProjName.split('/')[0].trim();
@@ -833,10 +847,11 @@
                 }
             });
 
+            // รอบที่ 3: เก็บตก (ถ้ามี)
             Object.keys(pendingPileTargets).forEach(key => {
                 if (!addedPiles.has(key)) {
                     const rawZone = pendingPileTargets[key].rawZone;
-                    const zone = getStandardZoneName(rawZone);
+                    const zone = formatZoneName(rawZone);
                     if (!isExcludedZone(zone)) {
                         totalPendingCount++;
                         const dummyZone = "ไม่ระบุโซน"; mapZones.add(dummyZone);
@@ -889,7 +904,7 @@
                 group.piles.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).forEach(p => {
                     const icon = '<span class="text-red-500 text-[10px] mt-0.5">🚨</span>';
                     let pileText = `<b class="text-xs text-slate-800 dark:text-slate-200">${formatPileName(p.id)}</b>`;
-                    let zoneText = p.status && p.status !== 'ไม่ระบุ' ? `<span class="text-[10px] text-orange-500 font-medium whitespace-nowrap ml-1">${p.status}</span>` : '';
+                    let zoneText = p.status && p.status !== 'ไม่ระบุ' ? `<span class="text-[10px] text-orange-500 font-medium whitespace-nowrap ml-1">${formatZoneName(p.status)}</span>` : '';
                     let dateBadgeClass = "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 shadow-sm";
 
                     pHTML += `
@@ -917,7 +932,11 @@
                 markerLayerGroup.addLayer(marker); bounds.push([group.lat, group.lng]);
             });
 
-            if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 }); }
+            // 🌟 แก้ปัญหาแผนที่โหลดไม่เต็มจอ 🌟
+            setTimeout(() => {
+                map.invalidateSize(); 
+                if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 }); }
+            }, 400);
         }
 
         // ==========================================
@@ -1086,7 +1105,6 @@
             document.getElementById('searchTableBody').innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
             
             filterKanban(); prepareMonthlyChart(data);
-            document.getElementById('dashboardContent').classList.remove('hide');
         }
 
         function filterKanban() {
