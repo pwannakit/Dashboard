@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic & Grouting Dashboard V1.9 (Map Integrated)</title>
+    <title>Sonic & Grouting Dashboard V2.0 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -126,7 +126,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="no-print">
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 งานทดสอบ Sonic Logging & Grouting</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.9)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v2.0)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-medium flex items-center gap-2 no-print">
@@ -147,7 +147,7 @@
         <p id="printDateTime" class="text-slate-600 font-medium mt-1"></p>
     </div>
 
-    <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content collapsed hide-on-print">
+    <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
                 <h3 class="font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
@@ -513,6 +513,23 @@
         let map, markerLayerGroup;
         let groupedPileMapData = [];
 
+        // 🌟 สร้างแผนที่เริ่มต้น 🌟
+        function initMap() {
+            map = L.map('map').setView([13.9540, 100.5170], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
+            markerLayerGroup = L.layerGroup().addTo(map);
+        }
+
+        // 🌟 ฟังก์ชันคำนวณอายุคอนกรีตเสาเข็ม (นับจำนวนวัน) 🌟
+        function getDiffDays(dateString) {
+            const pileDate = parseThaiDate(dateString);
+            if (!pileDate) return -1;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = today - pileDate;
+            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+
         function exportToPDF() {
             const now = new Date();
             const thaiOptions = { 
@@ -540,8 +557,13 @@
             const currentDay = today.getDay(); 
             const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
             
-            currentWeekStart = new Date(today); currentWeekStart.setDate(diffToMonday); currentWeekStart.setHours(0, 0, 0, 0);
-            currentWeekEnd = new Date(currentWeekStart); currentWeekEnd.setDate(currentWeekStart.getDate() + 6); currentWeekEnd.setHours(23, 59, 59, 999);
+            currentWeekStart = new Date(today);
+            currentWeekStart.setDate(diffToMonday);
+            currentWeekStart.setHours(0, 0, 0, 0);
+            
+            currentWeekEnd = new Date(currentWeekStart);
+            currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+            currentWeekEnd.setHours(23, 59, 59, 999);
 
             document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
             document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
@@ -549,26 +571,11 @@
             const savedUrl = localStorage.getItem('sonicGroutingUrl');
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
             
-            initMap(); // 🌟 เปิดใช้งานแผนที่
+            // เรียกใช้งานแผนที่และดึงข้อมูล
+            initMap(); 
             loadFromUrl();
+            loadPendingData();
         });
-
-        // 🌟 ฟังก์ชันคำนวณอายุคอนกรีตเสาเข็ม (นับจำนวนวัน) 🌟
-        function getDiffDays(dateString) {
-            const pileDate = parseThaiDate(dateString);
-            if (!pileDate) return -1;
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const diffTime = today - pileDate;
-            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        }
-
-        // 🌟 สร้างแผนที่เริ่มต้น 🌟
-        function initMap() {
-            map = L.map('map').setView([13.9540, 100.5170], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
-            markerLayerGroup = L.layerGroup().addTo(map);
-        }
 
         function loadFromUrl() {
             const url = document.getElementById('sheetUrl').value.trim();
@@ -603,7 +610,6 @@
             
             globalDatabase = res.data;
             processData(globalDatabase);
-            loadPendingData(); // โหลดข้อมูลรอดำเนินการ (ใช้ทำตาราง + แผนที่)
             
             showStatus('✅ โหลดข้อมูลสำเร็จ!', 'ok');
             setTimeout(() => {
@@ -654,10 +660,10 @@
             const tempMapGroups = {};
             const mapZones = new Set();
             
-            // 🌟 เช็คก่อนว่าเสาต้นไหนเทส Sonic ไปเรียบร้อยแล้ว จะได้ไม่เอามาโชว์ในแผนที่เรดาร์
             const completedSonicPiles = new Set();
             globalDatabase.forEach(row => {
-                if (row['ผู้รับผิดชอบ'] && row['ผู้รับผิดชอบ'].toLowerCase().includes('sonic')) {
+                const zoneInfo = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
+                if (zoneInfo.includes('sonic')) {
                     if (row['วันที่เริ่มงาน'] && row['วันที่เริ่มงาน'].trim() !== '') {
                         completedSonicPiles.add((row['ชื่อโปรเจค'] || '').trim());
                     }
@@ -677,12 +683,11 @@
             data.forEach(row => {
                 const projName = (row['ชื่อโปรเจค'] || '').trim();
                 let task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
-                const rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ';
+                const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
                 const status = (row['สถานะ'] || '').trim();
                 const lat = parseFloat(row['Latitude']);
                 const lng = parseFloat(row['Longitude']);
 
-                // 1. นำข้อมูลไปสร้างกราฟและตาราง (ลอจิกเดิม)
                 if (projName && status === 'เลยกำหนด') {
                     const zone = formatZoneName(rawZone);
                     const cleanProjName = projName.split(/-dia/i)[0].trim();
@@ -694,18 +699,14 @@
                     if (!zoneStats[zone][chartTask]) zoneStats[zone][chartTask] = 0;
                     zoneStats[zone][chartTask]++;
 
-                    currentPendingTableData.push({
-                        name: cleanProjName, zone: zone, concreteDate: concreteDate, chartTask: chartTask, status: 'อายุคอนกรีตเกิน 14 วัน'
-                    });
+                    currentPendingTableData.push({ name: cleanProjName, zone: zone, concreteDate: concreteDate, chartTask: chartTask, status: 'อายุคอนกรีตเกิน 14 วัน' });
                 }
 
-                // 2. 🌟 นำข้อมูลมาสกัดลงแผนที่เรดาร์ (อายุเกิน 14 วัน + ยังไม่เคยเทส)
                 if (projName && task.includes('เจาะเสาเข็ม')) {
                     const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
                     if (finishDate) {
                         const ageDays = getDiffDays(finishDate);
                         
-                        // ถอดรหัสเงื่อนไขแผนที่: ต้องอายุเกิน 14 วัน + มีพิกัด + ยังไม่ได้ทำ Sonic
                         if (ageDays > 14 && !isNaN(lat) && !isNaN(lng) && !completedSonicPiles.has(projName)) {
                             let baseName = projName.split('/')[0].trim();
                             const diaIndex = baseName.toLowerCase().indexOf('-dia');
@@ -725,7 +726,6 @@
             drawPendingChart(zoneStats);
             renderPendingTable(); 
 
-            // 🌟 สร้างข้อมูลแผนที่และอัปเดต Dropdown 🌟
             groupedPileMapData = Object.values(tempMapGroups);
             const select = document.getElementById('mapZoneFilter');
             select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
@@ -733,7 +733,6 @@
             renderMap();
         }
 
-        // 🌟 วาดแผนที่แสดงเสาที่รอเทส 🌟
         function renderMap() {
             if (!markerLayerGroup) return;
             markerLayerGroup.clearLayers();
@@ -822,22 +821,18 @@
                     if (name.startsWith('Ramp')) return 2;
                     return 3;
                 };
-                const rankA = getRank(a);
-                const rankB = getRank(b);
+                const rankA = getRank(a), rankB = getRank(b);
                 if (rankA !== rankB) return rankA - rankB; 
                 
                 const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0;
                 const numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
-                const textA = a.replace(/[\d]/g, '');
-                const textB = b.replace(/[\d]/g, '');
+                const textA = a.replace(/[\d]/g, ''), textB = b.replace(/[\d]/g, '');
                 if (textA === textB) return numA - numB;
                 return a.localeCompare(b);
             });
 
             const allTasks = new Set();
-            sortedZones.forEach(z => {
-                Object.keys(zoneStats[z]).forEach(t => allTasks.add(t));
-            });
+            sortedZones.forEach(z => { Object.keys(zoneStats[z]).forEach(t => allTasks.add(t)); });
             const taskArray = Array.from(allTasks).sort();
 
             const colors = [
@@ -852,10 +847,7 @@
                 return {
                     label: task,
                     data: sortedZones.map(z => zoneStats[z][task] || 0),
-                    backgroundColor: color.bg,
-                    borderColor: color.border,
-                    borderWidth: 1,
-                    borderRadius: 4
+                    backgroundColor: color.bg, borderColor: color.border, borderWidth: 1, borderRadius: 4
                 };
             });
 
@@ -868,13 +860,9 @@
 
             pendingChartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: sortedZones,
-                    datasets: datasets
-                },
+                data: { labels: sortedZones, datasets: datasets },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
                             const firstPoint = elements[0];
@@ -889,29 +877,14 @@
                         event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
                     },
                     plugins: {
-                        legend: {
-                            labels: { color: textColor, font: { family: 'Sarabun', size: 14 } }
-                        },
+                        legend: { labels: { color: textColor, font: { family: 'Sarabun', size: 14 } } },
                         tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } },
-                        datalabels: {
-                            anchor: 'center', 
-                            align: 'center',
-                            color: '#ffffff',
-                            font: { family: 'Sarabun', weight: 'bold', size: 14 },
-                            formatter: function(value) { return value > 0 ? value : ''; }
-                        }
+                        datalabels: { anchor: 'center', align: 'center', color: '#ffffff', font: { family: 'Sarabun', weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } }
                     },
                     layout: { padding: { top: 30 } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 },
-                            grid: { color: gridColor }
-                        },
-                        x: {
-                            ticks: { color: textColor, font: { family: 'Sarabun', size: 12 } },
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, grid: { color: gridColor } },
+                        x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 12 } }, grid: { display: false } }
                     }
                 }
             });
@@ -929,17 +902,15 @@
 
             data.forEach(row => {
                 const projName = row['ชื่อโปรเจค'];
-                const rawZone = row['ผู้รับผิดชอบ'] || 'ไม่ระบุ';
+                const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
                 const startDateStr = row['วันที่เริ่มงาน'];
                 const finishDateStr = row['วันที่เสร็จงานจริงๆ'];
 
                 if (projName && rawZone !== 'ไม่ระบุ' && rawZone.trim() !== '') {
-                    
                     const zoneLower = rawZone.toLowerCase();
 
                     if (zoneLower.includes("sonic")) {
                         totalSonic++; 
-                        
                         let displayZone = formatZoneName(rawZone);
                         if (!zoneStats[displayZone]) zoneStats[displayZone] = { sonic: 0, grout: 0 };
                         zoneStats[displayZone].sonic++; 
@@ -956,7 +927,6 @@
                     else if (zoneLower.includes("grout")) {
                         if(finishDateStr && finishDateStr.trim().length > 2) {
                             totalGrout++;
-                            
                             let displayZone = formatZoneName(rawZone);
                             if (!zoneStats[displayZone]) zoneStats[displayZone] = { sonic: 0, grout: 0 };
                             zoneStats[displayZone].grout++; 
@@ -970,9 +940,7 @@
                         }
                     }
                     else {
-                        if (!otherZoneCounts[rawZone]) {
-                            otherZoneCounts[rawZone] = { count: 0, projects: [] };
-                        }
+                        if (!otherZoneCounts[rawZone]) { otherZoneCounts[rawZone] = { count: 0, projects: [] }; }
                         otherZoneCounts[rawZone].count++;
                         otherZoneCounts[rawZone].projects.push(projName);
                     }
@@ -980,7 +948,6 @@
             });
 
             let overridingProjects = new Set();
-            
             Object.keys(otherZoneCounts).forEach(jobType => {
                 const typeLower = jobType.toLowerCase();
                 if (typeLower.includes("high strain") || typeLower.includes("re-drilling") || typeLower.includes("dynamic")) {
@@ -1014,16 +981,17 @@
             
             filterKanban();
             prepareMonthlyChart(data);
+
+            // เมื่อคำนวณทุกอย่างเสร็จ ค่อยเปิด Dashboard ขึ้นมา
             document.getElementById('dashboardContent').classList.remove('hide');
         }
 
         function formatZoneName(rawZone) {
-            let baseName = rawZone;
-            if(rawZone.includes('-')) {
-                let parts = rawZone.split('-');
+            let baseName = String(rawZone);
+            if(baseName.includes('-')) {
+                let parts = baseName.split('-');
                 baseName = parts.slice(1).join('-').trim(); 
             }
-            
             let displayZone = baseName;
             const zMatch = baseName.match(/^z0*(\d+)$/i);
             
@@ -1048,33 +1016,25 @@
 
             const sonicBoard = document.getElementById('kanban-sonic-board');
             const groutBoard = document.getElementById('kanban-grout-board');
-            sonicBoard.innerHTML = '';
-            groutBoard.innerHTML = '';
+            sonicBoard.innerHTML = ''; groutBoard.innerHTML = '';
 
             const columns = [1, 2, 3, 4, 5, 6, 0]; 
-            
             columns.forEach(dayIdx => {
                 sonicBoard.innerHTML += `<div class="k-col"><div class="k-header day-${dayIdx}">${days[dayIdx]}</div><div id="k-sonic-${dayIdx}"></div></div>`;
                 groutBoard.innerHTML += `<div class="k-col"><div class="k-header day-${dayIdx}">${days[dayIdx]}</div><div id="k-grout-${dayIdx}"></div></div>`;
             });
 
-            let foundSonicCount = 0;
-            let foundGroutCount = 0;
-
-            const sonicGrouped = {0:{}, 1:{}, 2:{}, 3:{}, 4:{}, 5:{}, 6:{}};
-            const groutGrouped = {0:{}, 1:{}, 2:{}, 3:{}, 4:{}, 5:{}, 6:{}};
+            let foundSonicCount = 0, foundGroutCount = 0;
+            const sonicGrouped = {0:{}, 1:{}, 2:{}, 3:{}, 4:{}, 5:{}, 6:{}}, groutGrouped = {0:{}, 1:{}, 2:{}, 3:{}, 4:{}, 5:{}, 6:{}};
 
             globalDatabase.forEach(row => {
                 const projName = row['ชื่อโปรเจค'];
                 if (!projName) return;
 
-                const zone = (row['ผู้รับผิดชอบ'] || '').toLowerCase();
-                
+                const zone = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
                 let baseName = projName.split('/')[0].trim();
                 const diaIndex = baseName.toLowerCase().indexOf('-dia');
-                if (diaIndex !== -1) {
-                    baseName = baseName.substring(0, diaIndex).trim();
-                }
+                if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
 
                 if (zone.includes("sonic")) {
                     const startDateStr = row['วันที่เริ่มงาน'];
@@ -1084,7 +1044,6 @@
                             foundSonicCount++; 
                             const dayIndex = taskDate.getDay(); 
                             const displayDate = taskDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-                            
                             if(!sonicGrouped[dayIndex][baseName]) sonicGrouped[dayIndex][baseName] = { count: 0, date: displayDate };
                             sonicGrouped[dayIndex][baseName].count++;
                         }
@@ -1099,7 +1058,6 @@
                             foundGroutCount++; 
                             const dayIndex = taskDate.getDay(); 
                             const displayDate = taskDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-                            
                             if(!groutGrouped[dayIndex][baseName]) groutGrouped[dayIndex][baseName] = { count: 0, date: displayDate };
                             groutGrouped[dayIndex][baseName].count++;
                         }
@@ -1113,14 +1071,11 @@
                     let badgeHTML = data.count > 1 
                         ? `<span class="text-[11px] font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/50">+${data.count} งาน</span>` 
                         : `<span class="text-[11px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
-                    
                     sonicContainer.innerHTML += `
                         <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-blue-400" onclick="triggerSearch('${baseName}', 'sonic')">
                             <div class="font-bold text-sm mb-1.5 text-slate-800 dark:text-slate-100 break-words">📌 ${baseName}</div>
                             <div class="mb-2">${badgeHTML}</div>
-                            <div class="text-xs text-blue-600 dark:text-blue-400 font-bold border-t border-slate-100 dark:border-slate-700 pt-2 mt-1">
-                                เริ่ม: ${data.date}
-                            </div>
+                            <div class="text-xs text-blue-600 dark:text-blue-400 font-bold border-t border-slate-100 dark:border-slate-700 pt-2 mt-1">เริ่ม: ${data.date}</div>
                         </div>`;
                 }
 
@@ -1129,14 +1084,11 @@
                     let badgeHTML = data.count > 1 
                         ? `<span class="text-[11px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded-md dark:bg-orange-900/60 dark:text-orange-300 border border-orange-200 dark:border-orange-700/50">+${data.count} งาน</span>` 
                         : `<span class="text-[11px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">1 งาน</span>`;
-                    
                     groutContainer.innerHTML += `
                         <div class="k-card card-${dayIndex} cursor-pointer hover:ring-2 hover:ring-orange-400" style="border-left-color: #e67e22;" onclick="triggerSearch('${baseName}', 'grout')">
                             <div class="font-bold text-sm mb-1.5 text-slate-800 dark:text-slate-100 break-words">📌 ${baseName}</div>
                             <div class="mb-2">${badgeHTML}</div>
-                            <div class="text-xs text-orange-600 dark:text-orange-400 font-bold border-t border-slate-100 dark:border-slate-700 pt-2 mt-1">
-                                เสร็จ: ${data.date}
-                            </div>
+                            <div class="text-xs text-orange-600 dark:text-orange-400 font-bold border-t border-slate-100 dark:border-slate-700 pt-2 mt-1">เสร็จ: ${data.date}</div>
                         </div>`;
                 }
             });
@@ -1154,7 +1106,6 @@
 
         function executeSearch(keyword, filterType = 'all') {
             const tbody = document.getElementById('searchTableBody');
-            
             if (keyword === '') {
                 tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
                 return;
@@ -1162,8 +1113,9 @@
 
             const results = globalDatabase.filter(row => {
                 const name = (row['ชื่อโปรเจค'] || '').toLowerCase();
-                const jobType = (row['ผู้รับผิดชอบ'] || '').toLowerCase();
+                const jobType = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
                 const matchName = name.includes(keyword);
+                
                 let matchType = true;
                 if (filterType === 'sonic') matchType = jobType.includes('sonic');
                 if (filterType === 'grout') matchType = jobType.includes('grout');
@@ -1293,7 +1245,6 @@
         function renderOtherZoneTable(counts) {
             const tbody = document.getElementById('otherZoneTableBody');
             tbody.innerHTML = '';
-
             let items = Object.entries(counts).map(([zone, data]) => ({ zone: zone, count: data.count, projects: data.projects }));
             items.sort((a, b) => b.count - a.count); 
             let total = 0;
@@ -1327,13 +1278,14 @@
             const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
             const registerMonth = (dateObj) => {
-                const y = dateObj.getFullYear(), m = dateObj.getMonth(), sortKey = `${y}-${String(m + 1).padStart(2, '0')}`, displayLabel = `${monthNames[m]} ${y + 543}`; 
+                const y = dateObj.getFullYear(), m = dateObj.getMonth();
+                const sortKey = `${y}-${String(m + 1).padStart(2, '0')}`, displayLabel = `${monthNames[m]} ${y + 543}`; 
                 if (!monthlyCounts[sortKey]) monthlyCounts[sortKey] = { label: displayLabel, sonicCount: 0, groutCount: 0 };
                 return sortKey;
             };
 
             data.forEach(row => {
-                const projName = row['ชื่อโปรเจค'], rawZone = row['ผู้รับผิดชอบ'] || '', zone = rawZone.toLowerCase();
+                const projName = row['ชื่อโปรเจค'], rawZone = String(row['ผู้รับผิดชอบ'] || ''), zone = rawZone.toLowerCase();
                 const startDateStr = row['วันที่เริ่มงาน'], finishDateStr = row['วันที่เสร็จงานจริงๆ'];
                 if (!projName) return;
 
@@ -1425,6 +1377,84 @@
                     }
                 }
             });
+        }
+
+        function toggleSection(contentId, btnId) {
+            const container = document.getElementById(contentId);
+            const btn = document.getElementById(btnId);
+            
+            container.classList.toggle('collapsed');
+            
+            if(container.classList.contains('collapsed')) {
+                const btnText = btn.innerHTML.includes('ตาราง') ? '▶️ แสดงตาราง' : '▶️ แสดงเนื้อหา';
+                btn.innerHTML = btnText;
+                btn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
+                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
+                btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+                btn.classList.remove('bg-gray-100', 'text-gray-700');
+            } else {
+                const btnText = btn.innerHTML.includes('ตาราง') ? '🔽 ซ่อนตาราง' : '🔽 ซ่อนเนื้อหา';
+                btn.innerHTML = btnText;
+                btn.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
+                
+                if(btnId === 'toggle-other-btn') {
+                    btn.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-200', 'dark:bg-slate-700', 'dark:text-slate-300');
+                } else if(btnId === 'toggle-kpi-btn') {
+                    btn.classList.add('bg-indigo-50', 'text-indigo-600', 'border-indigo-200', 'dark:bg-slate-700');
+                } else {
+                    btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
+                }
+            }
+        }
+
+        function togglePendingSection() {
+            const container = document.getElementById('pending-content');
+            const btn = document.getElementById('toggle-pending-btn');
+            
+            container.classList.toggle('collapsed');
+            
+            if(container.classList.contains('collapsed')) {
+                btn.innerHTML = '▶️ แสดงเนื้อหา';
+                btn.className = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-300 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print';
+            } else {
+                btn.innerHTML = '🔽 ซ่อนเนื้อหา';
+                btn.className = 'bg-red-50 dark:bg-slate-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-red-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print';
+            }
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            const isDark = html.classList.contains('dark');
+            icon.textContent = isDark ? '☀️' : '🌙';
+
+            if (monthlyChartInstance) {
+                monthlyChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569';
+                monthlyChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155';
+                monthlyChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                monthlyChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                monthlyChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                monthlyChartInstance.update();
+            }
+
+            if (zoneChartInstance) {
+                zoneChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569';
+                zoneChartInstance.options.plugins.datalabels.color = isDark ? '#f8fafc' : '#334155';
+                zoneChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                zoneChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                zoneChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                zoneChartInstance.update();
+            }
+
+            if (pendingChartInstance) {
+                pendingChartInstance.options.plugins.legend.labels.color = isDark ? '#cbd5e1' : '#475569';
+                pendingChartInstance.options.plugins.datalabels.color = '#ffffff'; 
+                pendingChartInstance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                pendingChartInstance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+                pendingChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                pendingChartInstance.update();
+            }
         }
     </script>
 </body>
