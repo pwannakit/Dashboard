@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Dashboard v2.0 (Map Integrated)</title>
+    <title>Bored Pile Dashboard v2.1.1 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -132,7 +132,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างเสาเข็มเจาะ</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.1)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.0)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto no-print">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
@@ -217,7 +217,7 @@
                         <div class="absolute -right-4 -top-4 opacity-5 text-purple-500 text-8xl">🗓️</div>
                     </div>
                 </div>
-                <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-4">*ตัวเลขภาพรวมได้ทำการหักลบ "เข็ม-แซม", "ยังไม่เริ่ม-เจาะ" และ "พบปัญหา" ออกแล้วเพื่อให้แสดงเฉพาะผลงานหลัก</p>
+                <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-4">*ตัวเลขภาพรวมได้ทำการหักลบ "สถานะงานที่ต้องแก้ไข/รอคอย" ออกแล้วเพื่อให้แสดงเฉพาะผลงานหลัก</p>
             </div>
         </div>
 
@@ -477,6 +477,19 @@
     </div>
 
     <script>
+        // ================= 🌟 ตั้งค่าหมวดหมู่งานที่ต้องการ "ซ่อนจากหน้า KPI และ กราฟรายเดือน" 🌟 =================
+        // วิธีเพิ่ม: ใส่ "ชื่อมาตรฐานที่จะแสดง" : ["คำค้นหาที่ 1", "คำค้นหาที่ 2"]
+        const EXCLUDED_ZONES_CONFIG = {
+            "เข็ม-แซม (Re-Drilling Pile)": ["แซม", "เข็มแซม", "เข็ม-แซม"],
+            "ยังไม่เริ่ม-เจาะ (Not Started)": ["ยังไม่เริ่ม", "ยังไม่เริ่มเจาะ", "ยังไม่เริ่ม-เจาะ"],
+            "พบปัญหา-รอแก้ไข (Pending Fix)": ["พบปัญหา", "รอแก้ไข", "ติดปัญหา"]
+            
+            // 💡 หากอนาคตต้องการเพิ่มสถานะใหม่ ให้ลบเครื่องหมาย // ด้านล่างออก แล้วแก้คำได้เลยครับ
+            // ,"รองบประมาณ (Waiting Budget)": ["รองบ", "รอเงิน"]
+            // ,"พักงานชั่วคราว (Suspended)": ["พักงาน", "หยุดงาน"]
+        };
+        // =========================================================================================================
+
         // ================= GLOBAL VARIABLES =================
         Chart.register(ChartDataLabels);
 
@@ -545,25 +558,29 @@
             return `${year}-${month}-${day}`;
         }
 
-        // 🌟 เพิ่มฟังก์ชันคัดกรองหมวดหมู่งานที่ต้องแยกออกจาก KPI หลัก
-        function isExcludedZone(zone) {
-            if (!zone) return false;
-            const upperZone = zone.toUpperCase();
-            return upperZone.includes("เข็ม-แซม") || upperZone.includes("ยังไม่เริ่ม-เจาะ") || upperZone.includes("พบปัญหา");
-        }
-
+        // 🌟 ดึงชื่อมาตรฐาน หรือเช็คว่าเป็นคำที่ต้องหลบ KPI ไหม (ปรับโค้ดให้อิงจาก Config ด้านบน)
         function getStandardZoneName(rawZone) {
             if (!rawZone) return 'ไม่ระบุ';
             const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
             
-            // 🌟 อัปเกรดให้จับคำหลบเลี่ยง KPI
-            if (text.includes("แซม")) return "เข็ม-แซม (Re-Drilling Pile)";
-            if (text.includes("ยังไม่เริ่มเจาะ") || String(rawZone).includes("ยังไม่เริ่ม-เจาะ")) return "ยังไม่เริ่ม-เจาะ (Not Started)";
-            if (text.includes("พบปัญหารอแก้ไข") || String(rawZone).includes("พบปัญหา-รอแก้ไข")) return "พบปัญหา-รอแก้ไข (Pending Fix)";
+            // 1. เช็คจากรายการที่ตั้งค่าให้ซ่อน (EXCLUDED_ZONES_CONFIG) ก่อน
+            for (const [standardName, keywords] of Object.entries(EXCLUDED_ZONES_CONFIG)) {
+                if (keywords.some(kw => text.includes(kw.toUpperCase().replace(/\s+/g, '')))) {
+                    return standardName;
+                }
+            }
             
+            // 2. เช็คโซนปกติ
             if (text.includes("ZONE1")) return "Zone 1"; if (text.includes("ZONE2")) return "Zone 2"; if (text.includes("ZONE3")) return "Zone 3"; if (text.includes("ZONE4")) return "Zone 4"; if (text.includes("ZONE5")) return "Zone 5"; if (text.includes("ZONE6")) return "Zone 6"; if (text.includes("ZONE7")) return "Zone 7";
             if (text.includes("N01")) return "Ramp-N01"; if (text.includes("OR3")) return "Ramp-OR3"; if (text.includes("OR4")) return "Ramp-OR4"; if (text.includes("OR6")) return "Ramp-OR6"; if (text.includes("OR7")) return "Ramp-OR7"; if (text.includes("SR1")) return "Ramp-SR1";
+            
             return rawZone;
+        }
+
+        function isExcludedZone(zone) {
+            if (!zone) return false;
+            // เช็คว่าชื่อโซนนี้ อยู่ในรายชื่อหมวดหมู่ที่ต้องซ่อนหรือไม่ (จาก Object Keys ด้านบน)
+            return Object.keys(EXCLUDED_ZONES_CONFIG).includes(zone);
         }
 
         // ================= DATA LOADING =================
