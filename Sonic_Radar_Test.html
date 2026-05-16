@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Spatial Map (Step 2: Cross-check Sonic)</title>
+    <title>Standalone Spatial Map (Step 2: Cross-check Sonic Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -57,9 +57,9 @@
             </div>
             
             <div class="flex items-center gap-3 bg-slate-100 p-2 px-4 rounded-lg border border-slate-200 text-xs font-bold">
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-emerald-700">เสร็จ: <span id="count-done">0</span></span></div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-orange-500"></div><span class="text-orange-700">กำลังทำ: <span id="count-wip">0</span></span></div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-slate-400"></div><span class="text-slate-600">รอดำเนินการ: <span id="count-pending">0</span></span></div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-emerald-700">เสร็จสมบูรณ์</span></div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-orange-500"></div><span class="text-orange-700">กำลังดำเนินการ</span></div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-slate-400"></div><span class="text-slate-600">รอดำเนินการ</span></div>
             </div>
         </div>
         
@@ -73,18 +73,24 @@
         const BORED_PILE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
         const SONIC_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
 
-        // ตัวแปรสำหรับเก็บรายการเสาเข็มที่ทำ Sonic แล้ว
-        let completedSonicPiles = {};
+        let completedSonicPiles = {}; // ตัวแปรเก็บรายชื่อเสาที่ทำ Sonic แล้ว
+        let map, markerLayerGroup;
+        let groupedPileData = [];
 
-        // ตั้งค่าการกรอง Zone
         const EXCLUDED_ZONES_CONFIG = {
             "เข็ม-แซม (Re-Drilling Pile)": ["แซม", "เข็มแซม", "เข็ม-แซม"],
             "ยังไม่เริ่ม-เจาะ (Not Started)": ["ยังไม่เริ่ม", "ยังไม่เริ่มเจาะ", "ยังไม่เริ่ม-เจาะ"],
             "พบปัญหา-รอแก้ไข (Pending Fix)": ["พบปัญหา", "รอแก้ไข", "ติดปัญหา"]
         };
 
-        let map, markerLayerGroup;
-        let groupedPileData = [];
+        // 🌟 ฟังก์ชันทำความสะอาดชื่อเสาเข็ม (แก้ปัญหาพิมพ์ชื่อ 2 ไฟล์ไม่ตรงกัน) 🌟
+        function getMatchKey(name) {
+            if (!name) return '';
+            // ตัดคำว่า -dia ออกไป
+            let cleanName = name.split(/-dia/i)[0];
+            // ลบช่องว่างทั้งหมด และทำเป็นตัวพิมพ์ใหญ่
+            return cleanName.replace(/\s+/g, '').toUpperCase();
+        }
 
         function parseThaiDate(dateStr) {
             if (!dateStr) return null;
@@ -134,7 +140,7 @@
         }
 
         // ==========================================
-        // 🌟 โหลดข้อมูลแบบ 2 สเตป (Sonic -> BoredPile)
+        // โหลดข้อมูลแบบ 2 สเตป (Sonic -> BoredPile)
         // ==========================================
         function initMap() {
             map = L.map('map').setView([13.9540, 100.5170], 14);
@@ -148,15 +154,21 @@
                 download: true, header: true, skipEmptyLines: true,
                 complete: (sonicResults) => {
                     
-                    // บันทึกเสาเข็มที่ทำ Sonic แล้ว (เช็คจาก 'ผู้รับผิดชอบ' และ 'วันที่เริ่มงาน')
+                    // บันทึกเสาเข็มที่ทำ Sonic แล้ว
                     sonicResults.data.forEach(row => {
                         const projName = (row['ชื่อโปรเจค'] || '').trim();
                         const zoneInfo = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
-                        const startDate = (row['วันที่เริ่มงาน'] || '').trim();
+                        
+                        // เผื่อช่างไม่ได้ใส่วันที่เริ่มงาน ให้ไปดูช่องวันที่เสร็จงานแทน
+                        let testDate = (row['วันที่เริ่มงาน'] || '').trim();
+                        if (testDate.length < 2) {
+                            testDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                        }
 
-                        // ถ้าเป็นงาน Sonic และมีวันที่เริ่มงาน แปลว่าทำแล้วชัวร์
-                        if (projName && zoneInfo.includes('sonic') && startDate.length > 2) {
-                            completedSonicPiles[projName] = startDate;
+                        if (projName && zoneInfo.includes('sonic') && testDate.length > 2) {
+                            // 🌟 ใช้ Key ที่ทำความสะอาดแล้ว 🌟
+                            const key = getMatchKey(projName);
+                            completedSonicPiles[key] = testDate;
                         }
                     });
 
@@ -169,10 +181,10 @@
                             document.getElementById('loading-status').className = "bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg text-sm font-bold border border-emerald-200 shadow-sm";
                             document.getElementById('loading-status').innerHTML = "✅ โหลดข้อมูลครบสมบูรณ์";
                             
-                            // ส่งข้อมูลพิกัดไปประมวลผล
                             processGroupedMapData(boredResults.data);
                         },
                         error: (err) => {
+                            document.getElementById('loading-status').className = "bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 shadow-sm";
                             document.getElementById('loading-status').innerHTML = "❌ โหลดไฟล์พิกัดไม่สำเร็จ";
                         }
                     });
@@ -216,18 +228,19 @@
                     // 🌟 ลอจิกการคำนวณอายุและตรวจสอบการทำ Sonic 🌟
                     // ==========================================
                     let displayDateOrAge = finishDate.trim() !== '' ? finishDate : '-';
-                    let badgeType = 'normal'; // เก็บประเภทของป้าย ('normal', 'age', 'tested')
+                    let badgeType = 'normal'; 
 
                     if (finishDate.trim() !== '') {
                         let ageDays = getDiffDays(finishDate);
                         
                         if (ageDays > 14) {
-                            // 🌟 ตรวจสอบข้ามไฟล์: เสาต้นนี้มีรายชื่อในไฟล์ Sonic ที่ทำเสร็จแล้วไหม?
-                            if (completedSonicPiles[projName]) {
-                                displayDateOrAge = `✅ ทดสอบแล้ว ${completedSonicPiles[projName]}`;
+                            // 🌟 ใช้ Key ที่ทำความสะอาดแล้ว ในการค้นหา 🌟
+                            const key = getMatchKey(projName);
+                            
+                            if (completedSonicPiles[key]) {
+                                displayDateOrAge = `✅ ทดสอบแล้ว ${completedSonicPiles[key]}`;
                                 badgeType = 'tested';
                             } else {
-                                // ถ้ายังไม่ทดสอบ ก็ให้โชว์แค่อายุคอนกรีต
                                 displayDateOrAge = `อายุ ${ageDays} วัน`;
                                 badgeType = 'age';
                             }
@@ -286,28 +299,23 @@
                         pileText += ` <span class="text-[10px] text-orange-500 font-medium ml-1">${p.status}</span>`;
                     }
                     
-                    // ==========================================
-                    // 🌟 3. ปรับสีป้ายข้อมูลตาม Badge Type
-                    // ==========================================
-                    let dateBadgeClass = "bg-slate-50 text-slate-500 border border-slate-200"; // สีเทา (ยังไม่ถึง 14 วัน หรือข้อมูลว่าง)
+                    let dateBadgeClass = "bg-slate-50 text-slate-500 border border-slate-200"; 
                     
                     if (p.badgeType === 'age') {
-                        // อายุเกิน 14 วัน แต่ยังไม่ได้เทส (รอเทส) => สีแดง
                         dateBadgeClass = "bg-red-100 text-red-700 font-bold border border-red-200 shadow-sm";
                     } else if (p.badgeType === 'tested') {
-                        // อายุเกิน 14 วัน และเทสเสร็จแล้ว => สีเขียว
                         dateBadgeClass = "bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 shadow-sm";
                     }
 
                     pHTML += `
                         <li class="text-sm text-slate-700 border-b border-slate-100 pb-1 flex justify-between items-center">
                             <span class="flex items-center gap-1">${icon} ${pileText}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded ${dateBadgeClass}">${p.dateOrAge}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded ${dateBadgeClass} whitespace-nowrap">${p.dateOrAge}</span>
                         </li>`;
                 }); 
                 pHTML += '</ul>';
 
-                marker.bindPopup(`<div class="p-3 min-w-[260px]"><h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4><div class="mb-2 flex justify-between"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${completedPiles}/${totalPiles})</span></div>${pHTML}</div>`);
+                marker.bindPopup(`<div class="p-3 min-w-[280px]"><h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4><div class="mb-2 flex justify-between"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${completedPiles}/${totalPiles})</span></div>${pHTML}</div>`);
                 markerLayerGroup.addLayer(marker); bounds.push([group.lat, group.lng]);
             });
 
