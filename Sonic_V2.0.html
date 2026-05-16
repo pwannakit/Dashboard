@@ -501,15 +501,16 @@
         
         let pendingChartInstance = null;
         let currentPendingTableData = []; 
-        const PENDING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzJ44c5wXJlotG5S0SsFqlEncFgYDrhMbjDlJvgN1j_fgnjwPC8p8FnNquiTwQ_FGytzP81jZ1kICG/pub?gid=921370860&single=true&output=csv";
+        
+        // 🌟 1. เปลี่ยน URL เป็นฐานข้อมูลเสาเข็มเจาะ ตามที่พี่เอ็กซ์ให้มา 🌟
+        const PENDING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
+
+        const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
 
         const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
         let currentWeekStart, currentWeekEnd, currentMonthKey;
 
-        // ลิงก์ดึงข้อมูลหลัก
-        const DEFAULT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM1NHMI4D0HT6SUYWji9HjRdLY55muSNvQ-jPe56F4GYHdBd2e33IiJJEpk0fkw82OznDLNFCvnQ66/pub?gid=921370860&single=true&output=csv";
-
-        // 🌟 ตัวแปรแผนที่
+        // ตัวแปรแผนที่
         let map, markerLayerGroup;
         let groupedPileMapData = [];
 
@@ -524,14 +525,13 @@
             let year = parseInt(parts[2], 10);
             if (year < 100) year += 2000;
             if (year > 2500) year -= 543;
-            
             const thaiMonths = { 'ม.ค.': 0, 'ก.พ.': 1, 'มี.ค.': 2, 'เม.ย.': 3, 'พ.ค.': 4, 'มิ.ย.': 5, 'ก.ค.': 6, 'ส.ค.': 7, 'ก.ย.': 8, 'ต.ค.': 9, 'พ.ย.': 10, 'ธ.ค.': 11 };
             let month = thaiMonths[monthStr] !== undefined ? thaiMonths[monthStr] : (parseInt(monthStr, 10) - 1); 
             if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-            
             return new Date(year, month, day, 0, 0, 0, 0);
         }
 
+        // คำนวณอายุคอนกรีต
         function getDiffDays(dateString) {
             const pileDate = parseThaiDate(dateString);
             if (!pileDate) return -1;
@@ -574,7 +574,7 @@
             
             initMap(); 
             loadFromUrl();
-            loadPendingData();
+            // การดึงข้อมูล Pending จะถูกเรียกหลังจากโหลดข้อมูลหลักเสร็จ เพื่อให้ตัวแปร globalDatabase พร้อมใช้งานก่อน
         });
 
         function showStatus(msg, type) {
@@ -592,7 +592,7 @@
             const url = document.getElementById('sheetUrl').value.trim();
             if(!url) { showStatus('❌ กรุณาวางลิงก์ก่อนครับ', 'err'); return; }
             localStorage.setItem('sonicGroutingUrl', url); 
-            showStatus('กำลังดึงข้อมูลจากฐานข้อมูล... ⏳', 'load');
+            showStatus('กำลังดึงข้อมูลจากฐานข้อมูลหลัก... ⏳', 'load');
             Papa.parse(url, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: (res) => handleParseResult(res),
@@ -603,7 +603,7 @@
         function loadFromFile() {
             const file = document.getElementById('csvFile').files[0];
             if(!file) { showStatus('❌ กรุณาเลือกไฟล์ก่อนครับ', 'err'); return; }
-            showStatus('กำลังอ่านไฟล์... ⏳', 'load');
+            showStatus('กำลังอ่านไฟล์หลัก... ⏳', 'load');
             Papa.parse(file, {
                 header: true, skipEmptyLines: true,
                 complete: (res) => handleParseResult(res),
@@ -618,11 +618,8 @@
             try {
                 globalDatabase = res.data;
                 processData(globalDatabase);
-                showStatus('✅ โหลดข้อมูลสำเร็จ!', 'ok');
-                setTimeout(() => {
-                    const container = document.getElementById('data-source-container');
-                    if(!container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
-                }, 800);
+                showStatus('กำลังดึงข้อมูลแผนที่... ⏳', 'load');
+                loadPendingData(); // โหลดข้อมูลรอดำเนินการ หลังจากโหลดข้อมูลหลักสำเร็จ
             } catch(e) {
                 showStatus(`❌ เกิดข้อผิดพลาดในระบบ: ${e.message}`, 'err');
                 console.error(e);
@@ -643,201 +640,103 @@
         }
 
         // ==========================================
-        // 🌟 ประมวลผลข้อมูลหลัก + สร้างแผนที่เรดาร์
+        // ส่วนดึงและประมวลผลข้อมูลรอดำเนินการ (Pending & Map)
         // ==========================================
-        function processData(data) {
-            let totalSonic = 0, currentMonthSonic = 0, currentWeekSonic = 0;
-            let totalGrout = 0, currentMonthGrout = 0, currentWeekGrout = 0;
-            
-            const predefinedZones = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5", "Zone 6", "Zone 7", "Ramp-N01", "Ramp-SR1", "Ramp-OR3", "Ramp-OR4", "Ramp-OR6", "Ramp-OR7"];
-            let zoneStats = {};
-            predefinedZones.forEach(z => zoneStats[z] = { sonic: 0, grout: 0 });
-
-            let otherZoneCounts = {};
-            
-            // 🌟 1. ตรวจสอบว่าต้นไหนทำ Sonic ไปแล้วบ้าง
-            const completedSonicPiles = new Set();
-            data.forEach(row => {
-                const projName = (row['ชื่อโปรเจค'] || '').trim();
-                const zoneLower = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
-                const start = (row['วันที่เริ่มงาน'] || '').trim();
-                if (projName && zoneLower.includes('sonic') && start.length > 2) {
-                    completedSonicPiles.add(projName);
-                }
-            });
-
-            // 🌟 2. ตัวแปรเก็บข้อมูลแผนที่เรดาร์
-            const tempMapGroups = {};
-            const mapZones = new Set();
-
-            data.forEach(row => {
-                const projName = (row['ชื่อโปรเจค'] || '').trim();
-                const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
-                const zoneLower = rawZone.toLowerCase();
-                const startDateStr = (row['วันที่เริ่มงาน'] || '').trim();
-                const finishDateStr = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
-
-                if (projName && rawZone !== 'ไม่ระบุ' && rawZone.trim() !== '') {
+        function loadPendingData() {
+            Papa.parse(PENDING_CSV_URL, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    const st = document.getElementById('pending-status-message');
+                    if (st) st.style.display = 'none';
                     
-                    // --- KPI: Sonic ---
-                    if (zoneLower.includes("sonic")) {
-                        totalSonic++; 
-                        let displayZone = formatZoneName(rawZone);
-                        if (!zoneStats[displayZone]) zoneStats[displayZone] = { sonic: 0, grout: 0 };
-                        zoneStats[displayZone].sonic++; 
-                        
-                        if(startDateStr.length > 2) {
-                            const taskDate = parseThaiDate(startDateStr);
-                            if(taskDate) {
-                                const mKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
-                                if (mKey === currentMonthKey) currentMonthSonic++;
-                                if (taskDate >= currentWeekStart && taskDate <= currentWeekEnd) currentWeekSonic++;
-                            }
-                        }
-                    }
-                    // --- KPI: Grouting ---
-                    else if (zoneLower.includes("grout")) {
-                        if(finishDateStr.length > 2) {
-                            totalGrout++;
-                            let displayZone = formatZoneName(rawZone);
-                            if (!zoneStats[displayZone]) zoneStats[displayZone] = { sonic: 0, grout: 0 };
-                            zoneStats[displayZone].grout++; 
-                            
-                            const taskDate = parseThaiDate(finishDateStr);
-                            if(taskDate) {
-                                const mKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
-                                if (mKey === currentMonthKey) currentMonthGrout++;
-                                if (taskDate >= currentWeekStart && taskDate <= currentWeekEnd) currentWeekGrout++;
-                            }
-                        }
-                    }
-                    // --- Other Works & 🌟 MAP RADAR LOGIC 🌟 ---
-                    else {
-                        // นับงานอื่นๆ
-                        if (!otherZoneCounts[rawZone]) otherZoneCounts[rawZone] = { count: 0, projects: [] };
-                        otherZoneCounts[rawZone].count++;
-                        otherZoneCounts[rawZone].projects.push(projName);
+                    showStatus('✅ โหลดข้อมูลสำเร็จสมบูรณ์!', 'ok');
+                    setTimeout(() => {
+                        const container = document.getElementById('data-source-container');
+                        if(!container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
+                    }, 800);
 
-                        // 🌟 ดึงข้อมูลพิกัดสำหรับเสาเข็มที่เสร็จแล้วเกิน 14 วัน
-                        if (finishDateStr.length > 2) {
-                            const lat = parseFloat(row['Latitude']);
-                            const lng = parseFloat(row['Longitude']);
-                            const ageDays = getDiffDays(finishDateStr);
-                            
-                            if (ageDays > 14 && !isNaN(lat) && !isNaN(lng) && !completedSonicPiles.has(projName)) {
-                                let baseName = projName.split('/')[0].trim();
-                                const diaIndex = baseName.toLowerCase().indexOf('-dia');
-                                if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
-
-                                const displayZone = formatZoneName(rawZone);
-                                mapZones.add(displayZone);
-
-                                if (!tempMapGroups[baseName]) tempMapGroups[baseName] = { baseName: baseName, zone: displayZone, lat: lat, lng: lng, piles: [] };
-                                tempMapGroups[baseName].piles.push({ id: projName, age: ageDays });
-                            }
-                        }
+                    processPendingData(results.data);
+                },
+                error: function(err) {
+                    const st = document.getElementById('pending-status-message');
+                    if (st) {
+                        st.className = "mb-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold text-center shadow-sm";
+                        st.innerText = "❌ เกิดข้อผิดพลาดในการดึงข้อมูลฐานเสาเข็มเจาะ: " + err;
                     }
+                    showStatus(`❌ ดึงข้อมูลฐานเสาเข็มเจาะไม่สำเร็จ`, 'err');
                 }
             });
-
-            // กรองงานอื่นๆ ตาม Logic เดิม
-            let overridingProjects = new Set();
-            Object.keys(otherZoneCounts).forEach(jobType => {
-                const typeLower = jobType.toLowerCase();
-                if (typeLower.includes("high strain") || typeLower.includes("re-drilling") || typeLower.includes("dynamic")) {
-                    otherZoneCounts[jobType].projects.forEach(proj => overridingProjects.add(proj));
-                }
-            });
-            Object.keys(otherZoneCounts).forEach(jobType => {
-                if (jobType.toLowerCase().includes("defective")) {
-                    const filteredProjects = otherZoneCounts[jobType].projects.filter(proj => !overridingProjects.has(proj));
-                    otherZoneCounts[jobType].projects = filteredProjects;
-                    otherZoneCounts[jobType].count = filteredProjects.length;
-                    if (otherZoneCounts[jobType].count === 0) delete otherZoneCounts[jobType];
-                }
-            });
-
-            // เขียน KPI ลงหน้าจอ
-            document.getElementById('kpi-sonic-total').innerText = totalSonic.toLocaleString();
-            document.getElementById('kpi-sonic-month').innerText = currentMonthSonic.toLocaleString();
-            document.getElementById('kpi-sonic-week').innerText = currentWeekSonic.toLocaleString();
-
-            document.getElementById('kpi-grout-total').innerText = totalGrout.toLocaleString();
-            document.getElementById('kpi-grout-month').innerText = currentMonthGrout.toLocaleString();
-            document.getElementById('kpi-grout-week').innerText = currentWeekGrout.toLocaleString();
-
-            renderZoneTable(zoneStats);
-            drawZoneChart(zoneStats); 
-            renderOtherZoneTable(otherZoneCounts);
-            
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchTableBody').innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
-            
-            filterKanban();
-            prepareMonthlyChart(data);
-
-            // 🌟 เตรียมและวาดแผนที่เรดาร์
-            groupedPileMapData = Object.values(tempMapGroups);
-            const select = document.getElementById('mapZoneFilter');
-            if (select) {
-                select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
-                Array.from(mapZones).sort().forEach(zone => { select.innerHTML += `<option value="${zone}">${zone}</option>`; });
-            }
-            renderMap();
-
-            // เปิดหน้า Dashboard ทั้งหมด
-            document.getElementById('dashboardContent').classList.remove('hide');
         }
 
-        // ==========================================
-        // ส่วนจัดการข้อมูลรอดำเนินการ (Task.csv)
-        // ==========================================
         function processPendingData(data) {
             const zoneStats = {};
             currentPendingTableData = [];
+            const tempMapGroups = {};
+            const mapZones = new Set();
             
-            const pileConcreteDates = {};
-            data.forEach(row => {
-                const projName = (row['ชื่อโปรเจค'] || '').trim();
-                const task = (row['งานที่ต้องทำ'] || '').trim();
-                const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
-                
-                if (projName && task.includes('เจาะเสาเข็ม') && finishDate) {
-                    pileConcreteDates[projName] = finishDate;
+            // 🌟 1. หาเสาเข็มที่ทำ Sonic ไปแล้วจากฐานข้อมูล Sonic (เพื่อจะได้ไม่เอามาโชว์ซ้ำ)
+            const completedSonicPiles = new Set();
+            globalDatabase.forEach(row => {
+                const zoneInfo = String(row['ผู้รับผิดชอบ'] || '').toLowerCase();
+                if (zoneInfo.includes('sonic')) {
+                    if (row['วันที่เริ่มงาน'] && row['วันที่เริ่มงาน'].trim() !== '') {
+                        completedSonicPiles.add((row['ชื่อโปรเจค'] || '').trim());
+                    }
                 }
             });
 
+            // 🌟 2. ดึงข้อมูลจากฐานข้อมูลเสาเข็มเจาะ (URL ใหม่ที่พี่เอ็กซ์ให้มา)
             data.forEach(row => {
                 const projName = (row['ชื่อโปรเจค'] || '').trim();
-                let task = row['งานที่ต้องทำ'] || 'ไม่ระบุ';
                 const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
-                const status = (row['สถานะ'] || '').trim();
+                const finishDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                const lat = parseFloat(row['Latitude']);
+                const lng = parseFloat(row['Longitude']);
 
-                // 🌟 แก้ไข Bug: ตรวจสอบสถานะก่อนบันทึกลงตาราง Pending
-                if (projName && status === 'เลยกำหนด') {
-                    const zone = formatZoneName(rawZone);
-                    const cleanProjName = projName.split(/-dia/i)[0].trim();
-                    let chartTask = task;
-                    if (task.toLowerCase().includes('sonic')) chartTask = 'เสาเข็มอายุคอนกรีตเกิน 14 วัน';
-                    const concreteDate = pileConcreteDates[projName] || '-';
+                // ถ้าเสาเข็มต้นนี้เจาะเสร็จแล้ว และมีวันที่
+                if (projName && finishDate.length > 2) {
+                    const ageDays = getDiffDays(finishDate);
+                    
+                    // 🌟 เงื่อนไขหัวใจสำคัญ: อายุคอนกรีตเกิน 14 วัน + ยังไม่เคยทำ Sonic
+                    if (ageDays > 14 && !completedSonicPiles.has(projName)) {
+                        
+                        const zone = formatZoneName(rawZone);
+                        const cleanProjName = projName.split(/-dia/i)[0].trim();
+                        let chartTask = 'Sonic Logging Test';
 
-                    if (!zoneStats[zone]) zoneStats[zone] = {};
-                    if (!zoneStats[zone][chartTask]) zoneStats[zone][chartTask] = 0;
-                    zoneStats[zone][chartTask]++;
+                        // --- สร้างข้อมูลสำหรับกราฟและตาราง Pending ---
+                        if (!zoneStats[zone]) zoneStats[zone] = {};
+                        if (!zoneStats[zone][chartTask]) zoneStats[zone][chartTask] = 0;
+                        zoneStats[zone][chartTask]++;
 
-                    currentPendingTableData.push({
-                        name: cleanProjName,
-                        zone: zone,
-                        concreteDate: concreteDate, 
-                        chartTask: chartTask,   
-                        status: 'อายุคอนกรีตเกิน 14 วัน'
-                    });
+                        currentPendingTableData.push({ 
+                            name: cleanProjName, 
+                            zone: zone, 
+                            concreteDate: finishDate, 
+                            chartTask: chartTask, 
+                            status: `อายุคอนกรีต ${ageDays} วัน` 
+                        });
+
+                        // --- สร้างข้อมูลสำหรับแผนที่ (Sonic Radar) ---
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            mapZones.add(zone);
+                            let baseName = cleanProjName.split('/')[0].trim();
+                            if (!tempMapGroups[baseName]) tempMapGroups[baseName] = { baseName: baseName, zone: zone, lat: lat, lng: lng, piles: [] };
+                            tempMapGroups[baseName].piles.push({ id: projName, age: ageDays });
+                        }
+                    }
                 }
             });
 
             currentPendingTableData.sort((a, b) => a.name.localeCompare(b.name, 'th', { numeric: true, sensitivity: 'base' }));
             drawPendingChart(zoneStats);
             renderPendingTable(); 
+
+            groupedPileMapData = Object.values(tempMapGroups);
+            const select = document.getElementById('mapZoneFilter');
+            select.innerHTML = '<option value="ALL">ภาพรวมทุกโซน</option>';
+            Array.from(mapZones).sort().forEach(zone => { select.innerHTML += `<option value="${zone}">${zone}</option>`; });
+            renderMap();
         }
 
         function renderMap() {
@@ -874,26 +773,180 @@
             if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 }); }
         }
 
+        function renderPendingTable(filterZone = null, filterTask = null) {
+            const tbody = document.getElementById('pendingTable');
+            const statusText = document.getElementById('pendingTableFilterStatus');
+            tbody.innerHTML = '';
+            let filteredData = currentPendingTableData;
+            
+            if (filterZone || filterTask) {
+                if (filterZone) filteredData = filteredData.filter(d => d.zone === filterZone);
+                if (filterTask) filteredData = filteredData.filter(d => d.chartTask === filterTask); 
+                let filterLabels = [];
+                if (filterZone) filterLabels.push(filterZone);
+                if (filterTask) filterLabels.push(filterTask === 'Sonic Logging Test' ? 'Sonic Logging Test' : filterTask);
+                statusText.innerHTML = `<span class="text-blue-600 dark:text-blue-400 text-sm font-normal bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded ml-2 border border-blue-200 dark:border-blue-800 mr-3">(กำลังกรอง: ${filterLabels.join(' | ')})</span> <button class="cursor-pointer inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-bold dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700 shadow-sm no-print" onclick="renderPendingTable()">📊 ภาพรวมทุกโซน (Summary)</button>`;
+            } else {
+                statusText.innerHTML = `<span class="text-slate-400 text-sm font-normal ml-2">(แสดงข้อมูลทั้งหมด)</span>`;
+            }
+
+            if (filteredData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">✅ ไม่มีข้อมูลในหมวดหมู่นี้</td></tr>`; return; }
+
+            filteredData.forEach(d => {
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0"><td class="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">📌 ${d.name}</td><td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">${d.zone}</td><td class="px-4 py-3 text-blue-600 dark:text-blue-400">${d.concreteDate}</td><td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${d.status}</td></tr>`;
+            });
+        }
+
+        function drawPendingChart(zoneStats) {
+            const sortedZones = Object.keys(zoneStats).sort((a, b) => {
+                const getRank = (name) => { if (name.startsWith('Zone')) return 1; if (name.startsWith('Ramp')) return 2; return 3; };
+                const rankA = getRank(a), rankB = getRank(b);
+                if (rankA !== rankB) return rankA - rankB; 
+                const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0, numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
+                const textA = a.replace(/[\d]/g, ''), textB = b.replace(/[\d]/g, '');
+                if (textA === textB) return numA - numB;
+                return a.localeCompare(b);
+            });
+
+            const allTasks = new Set();
+            sortedZones.forEach(z => { Object.keys(zoneStats[z]).forEach(t => allTasks.add(t)); });
+            const taskArray = Array.from(allTasks).sort();
+            const colors = [{ bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' }];
+
+            const datasets = taskArray.map((task, index) => {
+                const color = colors[index % colors.length];
+                return { label: task, data: sortedZones.map(z => zoneStats[z][task] || 0), backgroundColor: color.bg, borderColor: color.border, borderWidth: 1, borderRadius: 4 };
+            });
+
+            const ctx = document.getElementById('pendingChart').getContext('2d');
+            if (pendingChartInstance) pendingChartInstance.destroy();
+            const isDark = document.documentElement.classList.contains('dark'), textColor = isDark ? '#cbd5e1' : '#475569', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            pendingChartInstance = new Chart(ctx, {
+                type: 'bar', data: { labels: sortedZones, datasets: datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (event, elements, chart) => { if (elements.length > 0) { const firstPoint = elements[0]; renderPendingTable(chart.data.labels[firstPoint.index], chart.data.datasets[firstPoint.datasetIndex].label); } else { renderPendingTable(); } },
+                    onHover: (event, chartElement) => { event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default'; },
+                    plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun', size: 14 } } }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } }, datalabels: { anchor: 'center', align: 'center', color: '#ffffff', font: { family: 'Sarabun', weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } } },
+                    layout: { padding: { top: 30 } },
+                    scales: { y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 12 } }, grid: { display: false } } }
+                }
+            });
+        }
+
         // ==========================================
-        // ฟังก์ชันเกี่ยวกับ UI (คลิก ซ่อน แสดง กราฟ ฯลฯ)
+        // ส่วนจัดการข้อมูลหลัก (Main KPIs, Kanban, Other Zones)
+        // ==========================================
+        function processData(data) {
+            let totalSonic = 0, currentMonthSonic = 0, currentWeekSonic = 0;
+            let totalGrout = 0, currentMonthGrout = 0, currentWeekGrout = 0;
+            
+            const predefinedZones = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5", "Zone 6", "Zone 7", "Ramp-N01", "Ramp-SR1", "Ramp-OR3", "Ramp-OR4", "Ramp-OR6", "Ramp-OR7"];
+            let zoneStats = {};
+            predefinedZones.forEach(z => zoneStats[z] = { sonic: 0, grout: 0 });
+
+            let otherZoneCounts = {};
+
+            data.forEach(row => {
+                const projName = row['ชื่อโปรเจค'];
+                const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
+                const zoneLower = rawZone.toLowerCase();
+                const startDateStr = row['วันที่เริ่มงาน'];
+                const finishDateStr = row['วันที่เสร็จงานจริงๆ'];
+
+                if (projName && rawZone !== 'ไม่ระบุ' && rawZone.trim() !== '') {
+                    if (zoneLower.includes("sonic")) {
+                        totalSonic++; 
+                        let displayZone = formatZoneName(rawZone);
+                        if (!zoneStats[displayZone]) zoneStats[displayZone] = { sonic: 0, grout: 0 };
+                        zoneStats[displayZone].sonic++; 
+                        
+                        if(startDateStr) {
+                            const taskDate = parseThaiDate(startDateStr);
+                            if(taskDate) {
+                                const mKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
+                                if (mKey === currentMonthKey) currentMonthSonic++;
+                                if (taskDate >= currentWeekStart && taskDate <= currentWeekEnd) currentWeekSonic++;
+                            }
+                        }
+                    }
+                    else if (zoneLower.includes("grout")) {
+                        if(finishDateStr && finishDateStr.trim().length > 2) {
+                            totalGrout++;
+                            let displayZone = formatZoneName(rawZone);
+                            if (!zoneStats[displayZone]) zoneStats[displayZone] = { sonic: 0, grout: 0 };
+                            zoneStats[displayZone].grout++; 
+                            
+                            const taskDate = parseThaiDate(finishDateStr);
+                            if(taskDate) {
+                                const mKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
+                                if (mKey === currentMonthKey) currentMonthGrout++;
+                                if (taskDate >= currentWeekStart && taskDate <= currentWeekEnd) currentWeekGrout++;
+                            }
+                        }
+                    }
+                    else {
+                        if (!otherZoneCounts[rawZone]) { otherZoneCounts[rawZone] = { count: 0, projects: [] }; }
+                        otherZoneCounts[rawZone].count++;
+                        otherZoneCounts[rawZone].projects.push(projName);
+                    }
+                }
+            });
+
+            let overridingProjects = new Set();
+            Object.keys(otherZoneCounts).forEach(jobType => {
+                const typeLower = jobType.toLowerCase();
+                if (typeLower.includes("high strain") || typeLower.includes("re-drilling") || typeLower.includes("dynamic")) {
+                    otherZoneCounts[jobType].projects.forEach(proj => overridingProjects.add(proj));
+                }
+            });
+
+            Object.keys(otherZoneCounts).forEach(jobType => {
+                if (jobType.toLowerCase().includes("defective")) {
+                    const filteredProjects = otherZoneCounts[jobType].projects.filter(proj => !overridingProjects.has(proj));
+                    otherZoneCounts[jobType].projects = filteredProjects;
+                    otherZoneCounts[jobType].count = filteredProjects.length;
+                    if (otherZoneCounts[jobType].count === 0) delete otherZoneCounts[jobType];
+                }
+            });
+
+            document.getElementById('kpi-sonic-total').innerText = totalSonic.toLocaleString();
+            document.getElementById('kpi-sonic-month').innerText = currentMonthSonic.toLocaleString();
+            document.getElementById('kpi-sonic-week').innerText = currentWeekSonic.toLocaleString();
+
+            document.getElementById('kpi-grout-total').innerText = totalGrout.toLocaleString();
+            document.getElementById('kpi-grout-month').innerText = currentMonthGrout.toLocaleString();
+            document.getElementById('kpi-grout-week').innerText = currentWeekGrout.toLocaleString();
+
+            renderZoneTable(zoneStats);
+            drawZoneChart(zoneStats); 
+            renderOtherZoneTable(otherZoneCounts);
+            
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchTableBody').innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">👆 พิมพ์ชื่อโปรเจคในช่องด้านบนเพื่อแสดงผลลัพธ์</td></tr>`;
+            
+            filterKanban();
+            prepareMonthlyChart(data);
+
+            document.getElementById('dashboardContent').classList.remove('hide');
+        }
+
+        // ==========================================
+        // ฟังก์ชัน UI ยิบย่อย (เหมือนเดิมทั้งหมด)
         // ==========================================
         function toggleSection(contentId, btnId) {
             const container = document.getElementById(contentId);
             const btn = document.getElementById(btnId);
-            
             container.classList.toggle('collapsed');
             
-            if(contentId === 'map-content' && !container.classList.contains('collapsed')) {
-                setTimeout(() => { map.invalidateSize(); }, 300); // 🌟 รีเฟรชขนาดแผนที่
-            }
+            if(contentId === 'map-content' && !container.classList.contains('collapsed')) { setTimeout(() => { map.invalidateSize(); }, 300); }
 
             if(container.classList.contains('collapsed')) {
                 const btnText = btn.innerHTML.includes('ตาราง') ? '▶️ แสดงตาราง' : (btnId === 'toggle-data-btn' ? '🔽 ตั้งค่าฐานข้อมูล' : '▶️ แสดงเนื้อหา');
                 btn.innerHTML = btnText;
                 btn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'dark:bg-slate-800', 'dark:text-slate-300');
-                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700');
-                btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
-                btn.classList.remove('bg-gray-100', 'text-gray-700');
+                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-slate-700', 'bg-indigo-50', 'text-indigo-600', 'border-indigo-200', 'bg-gray-100', 'text-gray-700');
             } else {
                 const btnText = btn.innerHTML.includes('ตาราง') ? '🔽 ซ่อนตาราง' : (btnId === 'toggle-data-btn' ? '🔽 ซ่อนการตั้งค่า' : '🔽 ซ่อนเนื้อหา');
                 btn.innerHTML = btnText;
@@ -908,9 +961,7 @@
         function togglePendingSection() {
             const container = document.getElementById('pending-content');
             const btn = document.getElementById('toggle-pending-btn');
-            
             container.classList.toggle('collapsed');
-            
             if(container.classList.contains('collapsed')) {
                 btn.innerHTML = '▶️ แสดงเนื้อหา';
                 btn.className = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-300 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print';
@@ -955,40 +1006,14 @@
             }
         }
 
-        // ==========================================
-        // ฟังก์ชัน UI ยิบย่อย (Kanban, Table, Charts)
-        // ==========================================
-        function formatDateForInput(d) {
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function exportToPDF() {
-            const now = new Date();
-            const thaiOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' };
-            const formattedDateTime = now.toLocaleDateString('th-TH', thaiOptions);
-            document.getElementById('printDateTime').innerText = `พิมพ์เมื่อ: ${formattedDateTime} น.`;
-            alert("💡 เคล็ดลับการ Export เป็น PDF ให้สวยงาม:\n1. ปลายทาง: เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\nระบบได้ตั้งค่าหน้ากระดาษเป็น 'แนวนอน (Landscape)' ให้เรียบร้อยแล้ว");
-            setTimeout(() => { window.print(); }, 500);
-        }
-
         function filterKanban() {
-            const startVal = document.getElementById('startDate').value; 
-            const endVal = document.getElementById('endDate').value;
+            const startVal = document.getElementById('startDate').value, endVal = document.getElementById('endDate').value;
             if(!startVal || !endVal) return;
+            const [sYear, sMonth, sDay] = startVal.split('-'), startDate = new Date(parseInt(sYear), parseInt(sMonth) - 1, parseInt(sDay), 0, 0, 0, 0);
+            const [eYear, eMonth, eDay] = endVal.split('-'), endDate = new Date(parseInt(eYear), parseInt(eMonth) - 1, parseInt(eDay), 23, 59, 59, 999);
 
-            const [sYear, sMonth, sDay] = startVal.split('-');
-            const startDate = new Date(parseInt(sYear), parseInt(sMonth) - 1, parseInt(sDay), 0, 0, 0, 0);
-
-            const [eYear, eMonth, eDay] = endVal.split('-');
-            const endDate = new Date(parseInt(eYear), parseInt(eMonth) - 1, parseInt(eDay), 23, 59, 59, 999);
-
-            const sonicBoard = document.getElementById('kanban-sonic-board');
-            const groutBoard = document.getElementById('kanban-grout-board');
-            sonicBoard.innerHTML = '';
-            groutBoard.innerHTML = '';
+            const sonicBoard = document.getElementById('kanban-sonic-board'), groutBoard = document.getElementById('kanban-grout-board');
+            sonicBoard.innerHTML = ''; groutBoard.innerHTML = '';
 
             const columns = [1, 2, 3, 4, 5, 6, 0]; 
             columns.forEach(dayIdx => {
@@ -1119,68 +1144,6 @@
             searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
             searchInput.value = projectName;
             executeSearch(projectName.toLowerCase(), jobType);
-        }
-
-        function renderPendingTable(filterZone = null, filterTask = null) {
-            const tbody = document.getElementById('pendingTable');
-            const statusText = document.getElementById('pendingTableFilterStatus');
-            tbody.innerHTML = '';
-            let filteredData = currentPendingTableData;
-            
-            if (filterZone || filterTask) {
-                if (filterZone) filteredData = filteredData.filter(d => d.zone === filterZone);
-                if (filterTask) filteredData = filteredData.filter(d => d.chartTask === filterTask); 
-                let filterLabels = [];
-                if (filterZone) filterLabels.push(filterZone);
-                if (filterTask) filterLabels.push(filterTask === 'เสาเข็มอายุคอนกรีตเกิน 14 วัน' ? 'Sonic Logging Test' : filterTask);
-                statusText.innerHTML = `<span class="text-blue-600 dark:text-blue-400 text-sm font-normal bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded ml-2 border border-blue-200 dark:border-blue-800 mr-3">(กำลังกรอง: ${filterLabels.join(' | ')})</span> <button class="cursor-pointer inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-bold dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700 shadow-sm no-print" onclick="renderPendingTable()">📊 ภาพรวมทุกโซน (Summary)</button>`;
-            } else {
-                statusText.innerHTML = `<span class="text-slate-400 text-sm font-normal ml-2">(แสดงข้อมูลทั้งหมด)</span>`;
-            }
-
-            if (filteredData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">✅ ไม่มีข้อมูลในหมวดหมู่นี้</td></tr>`; return; }
-
-            filteredData.forEach(d => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0"><td class="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">📌 ${d.name}</td><td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">${d.zone}</td><td class="px-4 py-3 text-blue-600 dark:text-blue-400">${d.concreteDate}</td><td class="px-4 py-3 font-bold text-orange-500 dark:text-orange-400">${d.status}</td></tr>`;
-            });
-        }
-
-        function drawPendingChart(zoneStats) {
-            const sortedZones = Object.keys(zoneStats).sort((a, b) => {
-                const getRank = (name) => { if (name.startsWith('Zone')) return 1; if (name.startsWith('Ramp')) return 2; return 3; };
-                const rankA = getRank(a), rankB = getRank(b);
-                if (rankA !== rankB) return rankA - rankB; 
-                const numA = parseInt(a.replace(/[^\d]/g, ''), 10) || 0, numB = parseInt(b.replace(/[^\d]/g, ''), 10) || 0;
-                const textA = a.replace(/[\d]/g, ''), textB = b.replace(/[\d]/g, '');
-                if (textA === textB) return numA - numB;
-                return a.localeCompare(b);
-            });
-
-            const allTasks = new Set();
-            sortedZones.forEach(z => { Object.keys(zoneStats[z]).forEach(t => allTasks.add(t)); });
-            const taskArray = Array.from(allTasks).sort();
-            const colors = [{ bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' }, { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgb(249, 115, 22)' }, { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' }, { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' }];
-
-            const datasets = taskArray.map((task, index) => {
-                const color = colors[index % colors.length];
-                return { label: task, data: sortedZones.map(z => zoneStats[z][task] || 0), backgroundColor: color.bg, borderColor: color.border, borderWidth: 1, borderRadius: 4 };
-            });
-
-            const ctx = document.getElementById('pendingChart').getContext('2d');
-            if (pendingChartInstance) pendingChartInstance.destroy();
-            const isDark = document.documentElement.classList.contains('dark'), textColor = isDark ? '#cbd5e1' : '#475569', gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-
-            pendingChartInstance = new Chart(ctx, {
-                type: 'bar', data: { labels: sortedZones, datasets: datasets },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    onClick: (event, elements, chart) => { if (elements.length > 0) { const firstPoint = elements[0]; renderPendingTable(chart.data.labels[firstPoint.index], chart.data.datasets[firstPoint.datasetIndex].label); } else { renderPendingTable(); } },
-                    onHover: (event, chartElement) => { event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default'; },
-                    plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun', size: 14 } } }, tooltip: { titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } }, datalabels: { anchor: 'center', align: 'center', color: '#ffffff', font: { family: 'Sarabun', weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } } },
-                    layout: { padding: { top: 30 } },
-                    scales: { y: { beginAtZero: true, ticks: { color: textColor, font: { family: 'Sarabun' }, stepSize: 1 }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 12 } }, grid: { display: false } } }
-                }
-            });
         }
 
         function drawZoneChart(zoneStats) {
