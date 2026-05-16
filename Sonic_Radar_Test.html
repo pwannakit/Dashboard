@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Sonic Radar (Smart Cross-Match + Grouping)</title>
+    <title>Standalone Sonic Radar (Smart Cross-Match + Bulletproof Count)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -129,11 +129,6 @@
             return rawZone;
         }
 
-        function isExcludedZone(zone) {
-            if (!zone) return false;
-            return Object.keys(EXCLUDED_ZONES_CONFIG).includes(zone);
-        }
-
         function formatPileName(rawName) {
             const match1 = rawName.match(/(.+)\/(\d+)-dia([\d\.]+)/i);
             if (match1) return `${match1[1]} No.B${match1[2]} (${match1[3]} m.)`;
@@ -216,12 +211,10 @@
                 const lng = parseFloat(row['Longitude']);
                 
                 if (rawProjName && !isNaN(lat) && !isNaN(lng)) {
-                    // หาชื่อกลุ่ม เช่น 89L
                     let baseName = rawProjName.split('/')[0].trim();
                     const diaIndex = baseName.toLowerCase().indexOf('-dia');
                     if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
                     
-                    // บันทึกพิกัดตัวแทนให้กลุ่ม
                     if (!groupCoords[baseName]) {
                         groupCoords[baseName] = { lat: lat, lng: lng };
                     }
@@ -233,48 +226,85 @@
                 const rawProjName = (row['ชื่อโปรเจค'] || '').trim();
                 const key = getMatchKey(rawProjName);
                 
-                // ถ้ารายชื่อตรงกับบัญชีดำที่รอเทส (และยังไม่ได้นับ)
                 if (key && pendingPileTargets[key] && !addedPiles.has(key)) {
                     
                     let baseName = rawProjName.split('/')[0].trim();
                     const diaIndex = baseName.toLowerCase().indexOf('-dia');
                     if (diaIndex !== -1) baseName = baseName.substring(0, diaIndex).trim();
                     
-                    // เช็กว่ากลุ่มนี้มี "พิกัดตัวแทน" หรือไม่
+                    // กำหนดพิกัด (ถ้าไม่มี ให้ไปโผล่ตรงกลางแผนที่ชั่วคราว จะได้ไม่ลบยอดทิ้ง)
+                    let lat = 13.9540;
+                    let lng = 100.5170;
+                    let hasCoords = false;
+
                     if (groupCoords[baseName]) {
-                        const coords = groupCoords[baseName];
-                        const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
-                        const zone = getStandardZoneName(rawZone);
-                        
-                        if (!isExcludedZone(zone)) {
-                            addedPiles.add(key);
-                            totalPendingCount++;
-                            mapZones.add(zone);
-
-                            if (!tempGroups[baseName]) {
-                                tempGroups[baseName] = { 
-                                    baseName: baseName, 
-                                    zone: zone, 
-                                    lat: coords.lat, 
-                                    lng: coords.lng, 
-                                    piles: [] 
-                                };
-                            }
-                            
-                            // ดึงวันที่เทคอนกรีตจากข้อมูล Pending
-                            let cDate = pendingPileTargets[key].concreteDate;
-                            if (cDate === '-') cDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
-                            
-                            let ageDays = getDiffDays(cDate);
-                            let ageText = ageDays >= 0 ? `อายุ ${ageDays} วัน` : 'เลยกำหนด';
-
-                            tempGroups[baseName].piles.push({ 
-                                id: rawProjName, 
-                                ageText: ageText,
-                                status: rawZone 
-                            });
-                        }
+                        lat = groupCoords[baseName].lat;
+                        lng = groupCoords[baseName].lng;
+                        hasCoords = true;
                     }
+                    
+                    // 🚨 กฎใหม่: ดึงเข้าจอทุกต้น ไม่เอา isExcludedZone มาบล็อก เพื่อให้ยอดตรงกับตารางเป๊ะๆ
+                    const rawZone = String(row['ผู้รับผิดชอบ'] || 'ไม่ระบุ');
+                    const zone = getStandardZoneName(rawZone);
+                    
+                    addedPiles.add(key);
+                    totalPendingCount++;
+                    mapZones.add(zone);
+
+                    let groupMapKey = hasCoords ? baseName : "ไม่พบพิกัด (No Location)";
+
+                    if (!tempGroups[groupMapKey]) {
+                        tempGroups[groupMapKey] = { 
+                            baseName: groupMapKey, 
+                            zone: hasCoords ? zone : "ไม่ระบุโซน", 
+                            lat: lat, 
+                            lng: lng, 
+                            hasCoords: hasCoords,
+                            piles: [] 
+                        };
+                    }
+                    
+                    let cDate = pendingPileTargets[key].concreteDate;
+                    if (cDate === '-') cDate = (row['วันที่เสร็จงานจริงๆ'] || '').trim();
+                    
+                    let ageDays = getDiffDays(cDate);
+                    // ปรับลอจิกเป็น >= 14 ตามที่พี่เอ็กซ์แนะนำครับ
+                    let ageText = ageDays >= 14 ? `อายุ ${ageDays} วัน` : (ageDays >= 0 ? `อายุ ${ageDays} วัน` : 'ตรวจสอบวันที่');
+
+                    tempGroups[groupMapKey].piles.push({ 
+                        id: rawProjName, 
+                        ageText: ageText,
+                        status: rawZone 
+                    });
+                }
+            });
+
+            // 🌟 รอบที่ 3 (ไม้ตายสุดท้าย): เก็บตกเสาที่อยู่ในบัญชีดำ แต่ดึงหาในไฟล์ Bored Pile ไม่เจอเลย! 🌟
+            Object.keys(pendingPileTargets).forEach(key => {
+                if (!addedPiles.has(key)) {
+                    totalPendingCount++;
+                    const dummyZone = "ไม่ระบุโซน";
+                    mapZones.add(dummyZone);
+                    
+                    const projName = pendingPileTargets[key].originalName;
+                    const groupMapKey = "รายชื่อไม่ตรงกัน (Unmatched)";
+
+                    if (!tempGroups[groupMapKey]) {
+                        tempGroups[groupMapKey] = {
+                            baseName: groupMapKey,
+                            zone: dummyZone,
+                            lat: 13.9540, // วางหมุดรวมไว้ตรงกลางแผนที่
+                            lng: 100.5170,
+                            hasCoords: false,
+                            piles: []
+                        };
+                    }
+
+                    tempGroups[groupMapKey].piles.push({
+                        id: projName,
+                        ageText: "ตรวจสอบชื่อในไฟล์",
+                        status: "-"
+                    });
                 }
             });
 
@@ -307,9 +337,12 @@
                 const totalPiles = group.piles.length;
                 pendingCount += totalPiles;
 
+                // หมุดปกติสีแดง ถ้าหาพิกัดไม่ได้ให้โชว์หมุดสีเทา
+                let markerBg = group.hasCoords ? '#ef4444' : '#64748b'; 
+
                 const customIcon = L.divIcon({ 
                     className: 'custom-marker', 
-                    html: `<div style="background-color: #ef4444; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.9;"><span>${totalPiles}</span></div>`, 
+                    html: `<div style="background-color: ${markerBg}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.9;"><span>${totalPiles}</span></div>`, 
                     iconSize: [25, 25] 
                 });
                 
