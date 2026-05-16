@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Spatial Map (From V2.1.3)</title>
+    <title>Standalone Spatial Map (Step 1: Concrete Age)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -40,8 +40,8 @@
     <div class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-500">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">🗺️ พิกัดเสาเข็มเจาะ (Standalone Map)</h1>
-                <p class="text-slate-500 text-sm mt-1">ดึงเฉพาะโมดูลแผนที่จาก V2.1.3 เพื่อนำไปพัฒนาต่อ</p>
+                <h1 class="text-2xl font-bold text-slate-800">🗺️ พิกัดเสาเข็มเจาะ (Step 1: อายุคอนกรีต)</h1>
+                <p class="text-slate-500 text-sm mt-1">ทดสอบการคำนวณอายุคอนกรีต > 14 วัน</p>
             </div>
             <div id="loading-status" class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-bold border border-blue-200">
                 ⏳ กำลังโหลดข้อมูล...
@@ -70,7 +70,7 @@
         // ลิงก์ฐานข้อมูลเสาเข็มเจาะ
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d3Oxo9_vdxQGl2R1aIT8U-2RarYs_Iy2MANCwBi9Dnop58DvSD7tTiRlNf-vRhYupbxeCG4V_Mwc/pub?gid=921370860&single=true&output=csv";
 
-        // ตั้งค่าการกรอง Zone (จาก V2.1.3)
+        // ตั้งค่าการกรอง Zone
         const EXCLUDED_ZONES_CONFIG = {
             "เข็ม-แซม (Re-Drilling Pile)": ["แซม", "เข็มแซม", "เข็ม-แซม"],
             "ยังไม่เริ่ม-เจาะ (Not Started)": ["ยังไม่เริ่ม", "ยังไม่เริ่มเจาะ", "ยังไม่เริ่ม-เจาะ"],
@@ -80,7 +80,33 @@
         let map, markerLayerGroup;
         let groupedPileData = [];
 
-        // 1. ฟังก์ชันจัดฟอร์แมตชื่อโซน
+        // ==========================================
+        // 🌟 เพิ่มฟังก์ชันคำนวณวัน 🌟
+        // ==========================================
+        function parseThaiDate(dateStr) {
+            if (!dateStr) return null;
+            let str = dateStr.toString().trim().replace(/"/g, '');
+            let parts = str.split(/[\/\- ]+/); 
+            if (parts.length < 3) return null;
+            let day = parseInt(parts[0], 10), monthStr = parts[1].trim(), year = parseInt(parts[2], 10);
+            if (year < 100) year += 2000;
+            if (year > 2500) year -= 543;
+            const thaiMonths = { 'ม.ค.': 0, 'ก.พ.': 1, 'มี.ค.': 2, 'เม.ย.': 3, 'พ.ค.': 4, 'มิ.ย.': 5, 'ก.ค.': 6, 'ส.ค.': 7, 'ก.ย.': 8, 'ต.ค.': 9, 'พ.ย.': 10, 'ธ.ค.': 11 };
+            let month = thaiMonths[monthStr] !== undefined ? thaiMonths[monthStr] : (parseInt(monthStr, 10) - 1); 
+            if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+            return new Date(year, month, day, 0, 0, 0, 0);
+        }
+
+        function getDiffDays(dateString) {
+            const pileDate = parseThaiDate(dateString);
+            if (!pileDate) return -1;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = today.getTime() - pileDate.getTime();
+            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+        // ==========================================
+
         function getStandardZoneName(rawZone) {
             if (!rawZone) return 'ไม่ระบุ';
             const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
@@ -97,7 +123,6 @@
             return Object.keys(EXCLUDED_ZONES_CONFIG).includes(zone);
         }
 
-        // 2. ฟังก์ชันจัดฟอร์แมตชื่อเสาเข็ม
         function formatPileName(rawName) {
             const match1 = rawName.match(/(.+)\/(\d+)-dia([\d\.]+)/i);
             if (match1) return `${match1[1]} No.B${match1[2]} (${match1[3]} m.)`;
@@ -106,13 +131,11 @@
             return rawName;
         }
 
-        // 3. เตรียมแผนที่
         function initMap() {
             map = L.map('map').setView([13.9540, 100.5170], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
             markerLayerGroup = L.layerGroup().addTo(map);
 
-            // โหลดข้อมูลทันที
             Papa.parse(CSV_URL, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: (results) => {
@@ -128,7 +151,6 @@
             });
         }
 
-        // 4. สกัดข้อมูลพิกัด (ลอจิกเดิม V2.1.3 100%)
         function processGroupedMapData(data) {
             const tempGroups = {};
             const mapZones = new Set();
@@ -157,7 +179,27 @@
                     if (!tempGroups[baseName]) tempGroups[baseName] = { baseName: baseName, zone: zone, lat: null, lng: null, piles: [] };
                     if (!isNaN(lat) && !isNaN(lng)) { tempGroups[baseName].lat = lat; tempGroups[baseName].lng = lng; }
 
-                    tempGroups[baseName].piles.push({ id: projName, isCompleted: finishDate.trim() !== '', date: finishDate.trim() !== '' ? finishDate : '-', status: rawZone });
+                    // ==========================================
+                    // 🌟 1. ลอจิกการคำนวณอายุและสลับการแสดงผล 🌟
+                    // ==========================================
+                    let displayDateOrAge = finishDate.trim() !== '' ? finishDate : '-';
+                    let isOver14Days = false;
+
+                    if (finishDate.trim() !== '') {
+                        let ageDays = getDiffDays(finishDate);
+                        if (ageDays > 14) {
+                            displayDateOrAge = `${ageDays} วัน`; // ถ้าเกิน 14 วันโชว์จำนวนวัน
+                            isOver14Days = true;
+                        }
+                    }
+
+                    tempGroups[baseName].piles.push({ 
+                        id: projName, 
+                        isCompleted: finishDate.trim() !== '', 
+                        dateOrAge: displayDateOrAge, // เก็บข้อความที่ผ่านการประมวลผลแล้ว
+                        isOver14Days: isOver14Days,  // เก็บสถานะไว้ทำสี Badge
+                        status: rawZone 
+                    });
                 }
             });
 
@@ -176,7 +218,6 @@
             renderMap();
         }
 
-        // 5. วาดแผนที่และหมุด
         function renderMap() {
             markerLayerGroup.clearLayers();
             const selectedZone = document.getElementById('mapZoneFilter').value;
@@ -204,8 +245,20 @@
                         pileText += ` <span class="text-[10px] text-orange-500 font-medium ml-1">${p.status}</span>`;
                     }
                     
-                    pHTML += `<li class="text-sm text-slate-700 border-b border-slate-100 pb-1 flex justify-between items-center"><span class="flex items-center gap-1">${icon} ${pileText}</span><span class="text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">${p.date}</span></li>`;
-                }); pHTML += '</ul>';
+                    // ==========================================
+                    // 🌟 2. แสดงผลและใส่สี (ถ้าเกิน 14 วัน กรอบจะแดงเด่นๆ)
+                    // ==========================================
+                    let dateBadgeClass = p.isOver14Days 
+                        ? "bg-red-100 text-red-700 font-bold border border-red-200" 
+                        : "bg-slate-50 text-slate-500";
+
+                    pHTML += `
+                        <li class="text-sm text-slate-700 border-b border-slate-100 pb-1 flex justify-between items-center">
+                            <span class="flex items-center gap-1">${icon} ${pileText}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded ${dateBadgeClass}">${p.dateOrAge}</span>
+                        </li>`;
+                }); 
+                pHTML += '</ul>';
 
                 marker.bindPopup(`<div class="p-3 min-w-[240px]"><h4 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4><div class="mb-2 flex justify-between"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${completedPiles}/${totalPiles})</span></div>${pHTML}</div>`);
                 markerLayerGroup.addLayer(marker); bounds.push([group.lat, group.lng]);
@@ -215,7 +268,6 @@
             if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 }); }
         }
 
-        // โหลดทุกอย่างเมื่อเปิดหน้าเว็บ
         document.addEventListener('DOMContentLoaded', initMap);
 
     </script>
