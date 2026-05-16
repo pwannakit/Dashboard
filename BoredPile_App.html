@@ -106,12 +106,9 @@
 
         /* ----- สไตล์สำหรับตั้งค่าหน้ากระดาษ Export PDF ----- */
         @media print {
-            /* 🌟 บังคับให้เป็นแนวนอน (Landscape) ทั้งเอกสาร */
             @page { size: A4 landscape; margin: 1cm; } 
-            
             body { background-color: #ffffff !important; color: #000000 !important; }
             .dark body, .dark .glass-card { background-color: #ffffff !important; color: #000000 !important; border-color: #e2e8f0 !important; }
-            
             .glass-card { 
                 box-shadow: none !important; 
                 border: 1px solid #e2e8f0 !important; 
@@ -119,15 +116,12 @@
                 margin-bottom: 24px !important; 
                 padding: 1.5rem !important;
             }
-            
             .no-print { display: none !important; }
             .hide-on-print { display: none !important; }
             .glass-card:has(.collapsed) { display: none !important; }
-            
             .collapsible-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
             canvas { max-width: 100% !important; height: auto !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
         }
@@ -138,7 +132,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างเสาเข็มเจาะ</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.0)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.1)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto no-print">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
@@ -223,7 +217,7 @@
                         <div class="absolute -right-4 -top-4 opacity-5 text-purple-500 text-8xl">🗓️</div>
                     </div>
                 </div>
-                <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-4">*ตัวเลขภาพรวมได้ทำการหักลบ "เข็ม-แซม" ออกแล้วเพื่อให้แสดงเฉพาะผลงานหลัก</p>
+                <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-4">*ตัวเลขภาพรวมได้ทำการหักลบ "เข็ม-แซม", "ยังไม่เริ่ม-เจาะ" และ "พบปัญหา" ออกแล้วเพื่อให้แสดงเฉพาะผลงานหลัก</p>
             </div>
         </div>
 
@@ -408,7 +402,7 @@
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
                 <div>
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📊 รายงานสรุปผลงานรายเดือน (Executive Summary)</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 no-print">ภาพรวมและเปรียบเทียบผลงานเสาเข็มรายเดือน (ไม่รวมเข็มแซม)</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 no-print">ภาพรวมและเปรียบเทียบผลงานเสาเข็มรายเดือน (ไม่รวมเข็มแซมและเสาที่มีปัญหา)</p>
                 </div>
                 
                 <div class="flex items-center gap-2">
@@ -551,10 +545,22 @@
             return `${year}-${month}-${day}`;
         }
 
+        // 🌟 เพิ่มฟังก์ชันคัดกรองหมวดหมู่งานที่ต้องแยกออกจาก KPI หลัก
+        function isExcludedZone(zone) {
+            if (!zone) return false;
+            const upperZone = zone.toUpperCase();
+            return upperZone.includes("เข็ม-แซม") || upperZone.includes("ยังไม่เริ่ม-เจาะ") || upperZone.includes("พบปัญหา");
+        }
+
         function getStandardZoneName(rawZone) {
             if (!rawZone) return 'ไม่ระบุ';
             const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
+            
+            // 🌟 อัปเกรดให้จับคำหลบเลี่ยง KPI
             if (text.includes("แซม")) return "เข็ม-แซม (Re-Drilling Pile)";
+            if (text.includes("ยังไม่เริ่มเจาะ") || String(rawZone).includes("ยังไม่เริ่ม-เจาะ")) return "ยังไม่เริ่ม-เจาะ (Not Started)";
+            if (text.includes("พบปัญหารอแก้ไข") || String(rawZone).includes("พบปัญหา-รอแก้ไข")) return "พบปัญหา-รอแก้ไข (Pending Fix)";
+            
             if (text.includes("ZONE1")) return "Zone 1"; if (text.includes("ZONE2")) return "Zone 2"; if (text.includes("ZONE3")) return "Zone 3"; if (text.includes("ZONE4")) return "Zone 4"; if (text.includes("ZONE5")) return "Zone 5"; if (text.includes("ZONE6")) return "Zone 6"; if (text.includes("ZONE7")) return "Zone 7";
             if (text.includes("N01")) return "Ramp-N01"; if (text.includes("OR3")) return "Ramp-OR3"; if (text.includes("OR4")) return "Ramp-OR4"; if (text.includes("OR6")) return "Ramp-OR6"; if (text.includes("OR7")) return "Ramp-OR7"; if (text.includes("SR1")) return "Ramp-SR1";
             return rawZone;
@@ -618,8 +624,10 @@
                     if (!zoneCounts[zone]) zoneCounts[zone] = { count: 0, projects: [] };
                     zoneCounts[zone].count++;
                     
-                    if (zone.includes("เข็ม-แซม")) zoneCounts[zone].projects.push(projName);
-                    else {
+                    // 🌟 กรองข้อมูลที่ต้องซ่อนจาก KPI
+                    if (isExcludedZone(zone)) {
+                        zoneCounts[zone].projects.push(projName);
+                    } else {
                         totalPiles++; 
                         if(dateStr) {
                             const taskDate = parseThaiDate(dateStr);
@@ -675,7 +683,11 @@
                     }
 
                     const zone = getStandardZoneName(rawZone);
-                    if (!zone.includes("เข็ม-แซม")) mapZones.add(zone);
+                    
+                    // 🌟 ซ่อนหมวดหมู่ปัญหาจาก Dropdown ของแผนที่
+                    if (!isExcludedZone(zone)) {
+                        mapZones.add(zone);
+                    }
 
                     if (!tempGroups[baseName]) tempGroups[baseName] = { baseName: baseName, zone: zone, lat: null, lng: null, piles: [] };
                     if (!isNaN(lat) && !isNaN(lng)) { tempGroups[baseName].lat = lat; tempGroups[baseName].lng = lng; }
@@ -723,7 +735,7 @@
                     pHTML += `<li class="text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 pb-1 flex justify-between items-center"><span class="flex items-center gap-1">${icon} <b class="text-xs">${formatPileName(p.id)}</b></span><span class="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">${p.date}</span></li>`;
                 }); pHTML += '</ul>';
 
-                marker.bindPopup(`<div class="p-3 min-w-[220px] dark:bg-slate-800"><h4 class="font-bold text-lg text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-1 mb-2">📌 กลุ่มเสาเข็ม: ${group.baseName}</h4><div class="mb-2 flex justify-between"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${completedPiles}/${totalPiles})</span></div>${pHTML}</div>`);
+                marker.bindPopup(`<div class="p-3 min-w-[220px] dark:bg-slate-800"><h4 class="font-bold text-lg text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-1 mb-2">📌 กลุ่มเสา: ${group.baseName}</h4><div class="mb-2 flex justify-between"><span class="px-2 py-0.5 rounded font-bold text-[11px] ${bgClass}">${sText}</span><span class="text-[11px] font-bold text-slate-500">(${completedPiles}/${totalPiles})</span></div>${pHTML}</div>`);
                 markerLayerGroup.addLayer(marker); bounds.push([group.lat, group.lng]);
             });
 
@@ -743,7 +755,6 @@
             });
         });
 
-        // ฟังก์ชันใหม่: ค้นหาเสาเข็มแล้วไปเปิด Popup บนแผนที่ให้ทันที
         function searchAndLocateMap() {
             const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
             if(!keyword) return alert('กรุณาพิมพ์ชื่อเสาเข็มที่ต้องการค้นหาบนแผนที่ครับ');
@@ -756,13 +767,10 @@
             }
 
             if(targetGroup) {
-                // ซูมแผนที่ไปที่หมุด
                 map.setView([targetGroup.lat, targetGroup.lng], 18);
-                // เปิดการ์ดแผนที่ถ้ามันถูกพับไว้
                 if(document.getElementById('map-content').classList.contains('collapsed')) {
                     toggleSection('map-content', 'toggle-map-btn');
                 }
-                // สั่งให้ Popup เปิด (หา layer ที่พิกัดตรงกัน)
                 markerLayerGroup.eachLayer(function(layer) {
                     if (layer.getLatLng().lat === targetGroup.lat && layer.getLatLng().lng === targetGroup.lng) {
                         setTimeout(() => layer.openPopup(), 500); 
@@ -868,9 +876,16 @@
         function prepareMonthlyChart(data) {
             const mCounts = {};
             data.forEach(r => {
-                if (r['ชื่อโปรเจค'] && r['วันที่เสร็จงานจริงๆ'] && !getStandardZoneName(r['ผู้รับผิดชอบ']).includes("เข็ม-แซม")) {
+                const zone = getStandardZoneName(r['ผู้รับผิดชอบ']);
+                
+                // 🌟 กรองข้อมูลที่ต้องซ่อนจาก Report สรุปผลรายเดือน
+                if (r['ชื่อโปรเจค'] && r['วันที่เสร็จงานจริงๆ'] && !isExcludedZone(zone)) {
                     const d = parseThaiDate(r['วันที่เสร็จงานจริงๆ']);
-                    if (d) { const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(!mCounts[k]) mCounts[k]={label:`${monthNames[d.getMonth()]} ${d.getFullYear()+543}`, count:0}; mCounts[k].count++; }
+                    if (d) { 
+                        const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; 
+                        if(!mCounts[k]) mCounts[k]={label:`${monthNames[d.getMonth()]} ${d.getFullYear()+543}`, count:0}; 
+                        mCounts[k].count++; 
+                    }
                 }
             });
             globalMonthlyData = mCounts;
