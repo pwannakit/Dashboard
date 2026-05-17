@@ -796,7 +796,7 @@
             setTimeout(() => {
                 document.getElementById('loading-status').classList.add('hidden');
                 map.invalidateSize(); // 🌟 รีเฟรชแผนที่
-            }, 200);
+            }, 0); // 👈 เปลี่ยนเลข 800 ให้น้อยลง เช่น 200 หรือ 0 ไปเลยก็ได้ครับ
         }
 
         function processData(csvData) {
