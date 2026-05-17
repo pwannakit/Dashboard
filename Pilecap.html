@@ -436,7 +436,7 @@
                 if(!container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
                 document.getElementById('dashboardContent').classList.remove('hide');
                 map.invalidateSize(); // รีเฟรชขนาดแผนที่
-            }, 200);
+            }, 0); // 👈 เปลี่ยนเลข 800 ให้น้อยลง เช่น 200 หรือ 0 ไปเลยก็ได้ครับ
         }
 
         // ======================= General Logic =======================
