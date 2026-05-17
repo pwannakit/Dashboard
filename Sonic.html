@@ -1324,6 +1324,10 @@
         function toggleSection(contentId, btnId) {
             const container = document.getElementById(contentId);
             const btn = document.getElementById(btnId);
+            if (container.style.display === 'none') {
+                container.style.display = '';
+                void container.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช UI
+            }
             container.classList.toggle('collapsed');
             
             if(contentId === 'map-content' && !container.classList.contains('collapsed')) { setTimeout(() => { map.invalidateSize(); }, 300); }
