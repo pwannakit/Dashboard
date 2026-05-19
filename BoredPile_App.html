@@ -483,10 +483,6 @@
             "เข็ม-แซม (Re-Drilling Pile)": ["แซม", "เข็มแซม", "เข็ม-แซม"],
             "ยังไม่เริ่ม-เจาะ (Not Started)": ["ยังไม่เริ่ม", "ยังไม่เริ่มเจาะ", "ยังไม่เริ่ม-เจาะ"],
             "พบปัญหา-รอแก้ไข (Pending Fix)": ["พบปัญหา", "รอแก้ไข", "ติดปัญหา"]
-            
-            // 💡 หากอนาคตต้องการเพิ่มสถานะใหม่ ให้ลบเครื่องหมาย // ด้านล่างออก แล้วแก้คำได้เลยครับ
-            // ,"รองบประมาณ (Waiting Budget)": ["รองบ", "รอเงิน"]
-            // ,"พักงานชั่วคราว (Suspended)": ["พักงาน", "หยุดงาน"]
         };
         // =========================================================================================================
 
@@ -502,7 +498,7 @@
 
         let globalDatabase = [];
         let globalMonthlyData = {}; 
-        let groupedPileData = []; // เก็บพิกัดแผนที่
+        let groupedPileData = []; 
 
         let map, markerLayerGroup;
         let monthlyChartInstance = null;
@@ -519,8 +515,8 @@
             
             const savedUrl = localStorage.getItem('boredPileUrl');
             document.getElementById('sheetUrl').value = savedUrl ? savedUrl : DEFAULT_URL;
-            loadFromUrl(); // โหลดทุกอย่างรอบเดียว
-            loadOtherWorksData(); // 🌟 โหลดข้อมูล Other Works ทันที
+            loadFromUrl(); 
+            loadOtherWorksData(); 
         });
 
         function initDateRanges() {
@@ -558,19 +554,16 @@
             return `${year}-${month}-${day}`;
         }
 
-        // 🌟 ดึงชื่อมาตรฐาน หรือเช็คว่าเป็นคำที่ต้องหลบ KPI ไหม (ปรับโค้ดให้อิงจาก Config ด้านบน)
         function getStandardZoneName(rawZone) {
             if (!rawZone) return 'ไม่ระบุ';
             const text = String(rawZone).toUpperCase().replace(/\s+/g, '');
             
-            // 1. เช็คจากรายการที่ตั้งค่าให้ซ่อน (EXCLUDED_ZONES_CONFIG) ก่อน
             for (const [standardName, keywords] of Object.entries(EXCLUDED_ZONES_CONFIG)) {
                 if (keywords.some(kw => text.includes(kw.toUpperCase().replace(/\s+/g, '')))) {
                     return standardName;
                 }
             }
             
-            // 2. เช็คโซนปกติ
             if (text.includes("ZONE1")) return "Zone 1"; if (text.includes("ZONE2")) return "Zone 2"; if (text.includes("ZONE3")) return "Zone 3"; if (text.includes("ZONE4")) return "Zone 4"; if (text.includes("ZONE5")) return "Zone 5"; if (text.includes("ZONE6")) return "Zone 6"; if (text.includes("ZONE7")) return "Zone 7";
             if (text.includes("N01")) return "Ramp-N01"; if (text.includes("OR3")) return "Ramp-OR3"; if (text.includes("OR4")) return "Ramp-OR4"; if (text.includes("OR6")) return "Ramp-OR6"; if (text.includes("OR7")) return "Ramp-OR7"; if (text.includes("SR1")) return "Ramp-SR1";
             
@@ -579,7 +572,6 @@
 
         function isExcludedZone(zone) {
             if (!zone) return false;
-            // เช็คว่าชื่อโซนนี้ อยู่ในรายชื่อหมวดหมู่ที่ต้องซ่อนหรือไม่ (จาก Object Keys ด้านบน)
             return Object.keys(EXCLUDED_ZONES_CONFIG).includes(zone);
         }
 
@@ -607,7 +599,6 @@
             if(!res.data || res.data.length === 0) { showStatus('❌ ไม่พบข้อมูลในไฟล์', 'err'); return; }
             globalDatabase = res.data;
             
-            // เรียกประมวลผล 2 ส่วน: ข้อมูลทั่วไป + ข้อมูลแผนที่
             processData(globalDatabase);
             processGroupedMapData(globalDatabase);
 
@@ -616,8 +607,8 @@
                 const container = document.getElementById('data-source-container');
                 if(!container.classList.contains('collapsed')) toggleSection('data-source-container', 'toggle-data-btn');
                 document.getElementById('dashboardContent').classList.remove('hide');
-                map.invalidateSize(); // รีเฟรชขนาดแผนที่
-            }, 0); // 👈 เปลี่ยนเลข 800 ให้น้อยลง เช่น 200 หรือ 0 ไปเลยก็ได้ครับ
+                map.invalidateSize(); 
+            }, 800); 
         }
 
         function showStatus(msg, type) {
@@ -641,7 +632,6 @@
                     if (!zoneCounts[zone]) zoneCounts[zone] = { count: 0, projects: [] };
                     zoneCounts[zone].count++;
                     
-                    // 🌟 กรองข้อมูลที่ต้องซ่อนจาก KPI
                     if (isExcludedZone(zone)) {
                         zoneCounts[zone].projects.push(projName);
                     } else {
@@ -670,62 +660,19 @@
 
         // ================= MAP DATA PROCESSING =================
         function initMap() {
-            // 1. สร้างแผนที่เริ่มต้น
-            map = L.map('map').setView([13.9540, 100.5170], 15); // ปรับเลข 15 ให้ซูมเข้ามาใกล้ขึ้นนิดนึงจะได้เห็นกรอบชัดๆ
+            map = L.map('map').setView([13.9540, 100.5170], 15); 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
             markerLayerGroup = L.layerGroup().addTo(map);
 
-            // =========================================================
-            // 🔴 พื้นที่ที่ 1: โซนห้ามเข้าเด็ดขาด (กรอบสีแดง)
-            // =========================================================
-            const redZoneCoords = [
-                [0, 0], // มุมซ้ายบน
-                [0, 0], // มุมขวาบน
-                [0, 0], // มุมขวาล่าง
-                [0, 0]  // มุมซ้ายล่าง
-            ];
+            const redZoneCoords = [[0, 0], [0, 0], [0, 0], [0, 0]];
+            const redZone = L.polygon(redZoneCoords, { color: '#ef4444', weight: 3, fillColor: '#f87171', fillOpacity: 0.4 }).addTo(map);
+            redZone.bindPopup(`<div class="text-center p-2 dark:bg-slate-800"><div class="text-3xl mb-1">⛔</div><h4 class="font-bold text-red-600 text-base">โซนอันตราย 1</h4><p class="text-xs text-slate-600 dark:text-slate-300">ห้ามเดินเครื่องจักรบริเวณนี้</p></div>`);
 
-            const redZone = L.polygon(redZoneCoords, {
-                color: '#ef4444',       // เส้นขอบสีแดง
-                weight: 3,
-                fillColor: '#f87171',   // พื้นหลังสีแดงอ่อน
-                fillOpacity: 0.4
-            }).addTo(map);
-
-            redZone.bindPopup(`
-                <div class="text-center p-2 dark:bg-slate-800">
-                    <div class="text-3xl mb-1">⛔</div>
-                    <h4 class="font-bold text-red-600 text-base">โซนอันตราย 1</h4>
-                    <p class="text-xs text-slate-600 dark:text-slate-300">ห้ามเดินเครื่องจักรบริเวณนี้</p>
-                </div>
-            `);
-
-            // =========================================================
-            // 🟠 พื้นที่ที่ 2: โซนเฝ้าระวังพิเศษ / เก็บของ (กรอบสีส้ม)
-            // =========================================================
-            const orangeZoneCoords = [
-                [13.901336704845003, 100.70020586482188], // มุมซ้ายบน
-                [13.901244605267808, 100.70025419913365], // มุมขวาบน
-                [13.901076045569353, 100.69962585308068], // มุมขวาล่าง
-                [13.90118378477221, 100.69957214828982]  // มุมซ้ายล่าง
-            ];
-
-            const orangeZone = L.polygon(orangeZoneCoords, {
-                color: '#f97316',       // เส้นขอบสีส้ม
-                weight: 3,
-                fillColor: '#fdba74',   // พื้นหลังสีส้มอ่อน
-                fillOpacity: 0.4
-            }).addTo(map);
-
-            orangeZone.bindPopup(`
-                <div class="text-center p-2 dark:bg-slate-800">
-                    <div class="text-3xl mb-1">🚧</div>
-                    <h4 class="font-bold text-orange-600 text-base">โซนเฝ้าระวัง</h4>
-                    <p class="text-xs text-slate-600 dark:text-slate-300">พื้นที่ห้ามส่งเสียงรบกวน</p>
-                </div>
-            `);
+            const orangeZoneCoords = [[13.901336704845003, 100.70020586482188], [13.901244605267808, 100.70025419913365], [13.901076045569353, 100.69962585308068], [13.90118378477221, 100.69957214828982]];
+            const orangeZone = L.polygon(orangeZoneCoords, { color: '#f97316', weight: 3, fillColor: '#fdba74', fillOpacity: 0.4 }).addTo(map);
+            orangeZone.bindPopup(`<div class="text-center p-2 dark:bg-slate-800"><div class="text-3xl mb-1">🚧</div><h4 class="font-bold text-orange-600 text-base">โซนเฝ้าระวัง</h4><p class="text-xs text-slate-600 dark:text-slate-300">พื้นที่ห้ามส่งเสียงรบกวน</p></div>`);
         }
-// =================จบ MAP DATA PROCESSING =================
+
         function formatPileName(rawName) {
             const match1 = rawName.match(/(.+)\/(\d+)-dia([\d\.]+)/i);
             if (match1) return `${match1[1]} No.B${match1[2]} (${match1[3]} m.)`;
@@ -752,7 +699,6 @@
 
                     const zone = getStandardZoneName(rawZone);
                     
-                    // 🌟 ซ่อนหมวดหมู่ปัญหาจาก Dropdown ของแผนที่
                     if (!isExcludedZone(zone)) {
                         mapZones.add(zone);
                     }
@@ -760,7 +706,6 @@
                     if (!tempGroups[baseName]) tempGroups[baseName] = { baseName: baseName, zone: zone, lat: null, lng: null, piles: [] };
                     if (!isNaN(lat) && !isNaN(lng)) { tempGroups[baseName].lat = lat; tempGroups[baseName].lng = lng; }
 
-                    // 🌟 เพิ่มสถานะ (status) เพื่อนำไปโชว์ในวงเล็บ
                     tempGroups[baseName].piles.push({ id: projName, isCompleted: finishDate.trim() !== '', date: finishDate.trim() !== '' ? finishDate : '-', status: rawZone });
                 }
             });
@@ -802,7 +747,6 @@
                 group.piles.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).forEach(p => {
                     const icon = p.isCompleted ? '<span class="text-emerald-500 text-[10px]">✅</span>' : '<span class="text-slate-400 text-[10px]">⏳</span>';
                     
-                    // 🌟 สร้างข้อความชื่อเสา + สถานะในวงเล็บ
                     let pileText = `<b class="text-xs">${formatPileName(p.id)}</b>`;
                     if (!p.isCompleted && p.status && p.status !== 'ไม่ระบุ') {
                         pileText += ` <span class="text-[10px] text-orange-500 font-medium ml-1">${p.status}</span>`;
@@ -831,7 +775,6 @@
             });
         });
 
-        // ฟังก์ชันใหม่: ค้นหาเสาเข็มแล้วไปเปิด Popup บนแผนที่ให้ทันที
         function searchAndLocateMap() {
             const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
             if(!keyword) return alert('กรุณาพิมพ์ชื่อเสาเข็มที่ต้องการค้นหาบนแผนที่ครับ');
@@ -844,13 +787,10 @@
             }
 
             if(targetGroup) {
-                // ซูมแผนที่ไปที่หมุด
                 map.setView([targetGroup.lat, targetGroup.lng], 18);
-                // เปิดการ์ดแผนที่ถ้ามันถูกพับไว้
                 if(document.getElementById('map-content').classList.contains('collapsed')) {
                     toggleSection('map-content', 'toggle-map-btn');
                 }
-                // สั่งให้ Popup เปิด (หา layer ที่พิกัดตรงกัน)
                 markerLayerGroup.eachLayer(function(layer) {
                     if (layer.getLatLng().lat === targetGroup.lat && layer.getLatLng().lng === targetGroup.lng) {
                         setTimeout(() => layer.openPopup(), 500); 
@@ -883,6 +823,18 @@
             const banner = document.getElementById('kanban-status');
             if(fCount > 0) { banner.className = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 p-3 rounded-lg text-center font-bold mb-4"; banner.innerHTML = `✅ พบงานเสร็จสิ้นจำนวน ${fCount} ต้น`; }
             else { banner.className = "bg-red-100 text-red-800 dark:bg-red-900/40 p-3 rounded-lg text-center font-bold mb-4"; banner.innerHTML = `❌ ไม่พบข้อมูลเสาเข็มที่เสร็จสิ้นในช่วงวันที่เลือก`; }
+        }
+
+        // 🌟 เพิ่มฟังก์ชันสำหรับรับคำสั่งจาก Kanban 🌟
+        function searchFromKanban(projectName) {
+            const searchContainer = document.getElementById('search-content');
+            if (searchContainer.classList.contains('collapsed')) {
+                toggleSection('search-content', 'toggle-search-btn');
+            }
+            const searchInput = document.getElementById('searchInput');
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            searchInput.value = projectName;
+            searchInput.dispatchEvent(new Event('input')); // สั่งให้ input ทำงานเพื่อค้นหาในตาราง
         }
 
         function setLastWeek() {
@@ -958,7 +910,6 @@
             data.forEach(r => {
                 const zone = getStandardZoneName(r['ผู้รับผิดชอบ']);
                 
-                // 🌟 กรองข้อมูลที่ต้องซ่อนจาก Report สรุปผลรายเดือน
                 if (r['ชื่อโปรเจค'] && r['วันที่เสร็จงานจริงๆ'] && !isExcludedZone(zone)) {
                     const d = parseThaiDate(r['วันที่เสร็จงานจริงๆ']);
                     if (d) { 
@@ -1098,12 +1049,6 @@
                 progressChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'; 
                 progressChartInstance.update();
             }
-        }
-
-        function exportToPDF() {
-            const now = new Date(); document.getElementById('printDateTime').innerText = `ข้อมูลอัปเดต ณ วันที่: ${now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })} | เวลา: ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
-            alert("💡 เคล็ดลับการ Export เป็น PDF:\n\n1. ปลายทาง: เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\n\n*ระบบตั้งค่าเป็น A4 แนวนอนให้แล้วครับ แผนที่จะพิมพ์ออกมาด้วยถ้าไม่พับซ่อนไว้!");
-            setTimeout(() => { window.print(); }, 500);
         }
 
         // ================= ADDED FUNCTIONS FOR V2.0 FIX =================
