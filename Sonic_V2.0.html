@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic & Grouting Dashboard V1.9 (Radar Map Integrated)</title>
+    <title>Sonic & Grouting Dashboard V2.0.2 (Radar Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -126,7 +126,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="no-print">
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">📡 งานทดสอบ Sonic Logging & Grouting</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v1.9)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">วิเคราะห์ข้อมูลและติดตามงานรายสัปดาห์ (v2.0.2)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-medium flex items-center gap-2 no-print">
@@ -147,7 +147,7 @@
         <p id="printDateTime" class="text-slate-600 font-medium mt-1"></p>
     </div>
 
-    <div id="data-source-container" class="max-w-7xl mx-auto mb-8 glass-card p-6 collapsible-content hide-on-print">
+   <div id="data-source-container" class="collapsible-content collapsed glass-card p-6 mb-8 hide-on-print">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5 bg-white dark:bg-slate-800/50">
                 <h3 class="font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
@@ -343,7 +343,7 @@
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 p-1.5 px-3 rounded border border-red-200 dark:border-red-800/50 text-xs font-bold no-print shadow-sm">
                         <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
-                        <span class="text-red-700 dark:text-red-400">รอทดสอบ (เกิน 14 วัน): <span id="map-count-pending" class="text-lg">0</span> ต้น</span>
+                        <span class="text-red-700 dark:text-red-400">รอทดสอบ (อายุคอนกรีตเกิน 14 วัน): <span id="map-count-pending" class="text-lg">0</span> ต้น</span>
                     </div>
                     <button onclick="toggleSection('map-content', 'toggle-map-btn')" id="toggle-map-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
                         🔽 ซ่อนเนื้อหา
@@ -375,7 +375,7 @@
                     <canvas id="pendingChart"></canvas>
                 </div>
                 
-                <div>
+                <div class="no-print">
                     <h3 class="text-xl font-bold mb-3 text-slate-800 dark:text-white flex items-center flex-wrap">
                         📋 เสาเข็มรอดำเนินงานทดสอบ (อายุคอนกรีตเกิน 14 วัน)
                         <span id="pendingTableFilterStatus" class="ml-2 flex items-center"></span>
@@ -398,7 +398,7 @@
             </div>
         </div>
 
-        <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500">
+        <div class="glass-card p-6 mb-8 border-t-4 border-cyan-500 no-print">
             <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 mt-1">
                 <h3 class="text-xl font-bold text-slate-800 dark:text-white">📋 สรุปเปรียบเทียบผลงานแยกตามบริเวณ (Zone)</h3>
                 <button onclick="toggleSection('zone-content', 'toggle-zone-btn')" id="toggle-zone-btn" class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-blue-200 dark:border-slate-600 flex items-center gap-1 shadow-sm no-print">
@@ -607,6 +607,30 @@
             return `${year}-${month}-${day}`;
         }
 
+        function setLastWeek() {
+            const startVal = document.getElementById('startDate').value; 
+            const endVal = document.getElementById('endDate').value;
+            if(!startVal || !endVal) return;
+
+            const [sYear, sMonth, sDay] = startVal.split('-');
+            let lastWeekStart = new Date(parseInt(sYear), parseInt(sMonth) - 1, parseInt(sDay), 0, 0, 0, 0);
+            lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+            
+            const [eYear, eMonth, eDay] = endVal.split('-');
+            let lastWeekEnd = new Date(parseInt(eYear), parseInt(eMonth) - 1, parseInt(eDay), 23, 59, 59, 999);
+            lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
+            
+            document.getElementById('startDate').value = formatDateForInput(lastWeekStart);
+            document.getElementById('endDate').value = formatDateForInput(lastWeekEnd);
+            filterKanban();
+        }
+
+        function setThisWeek() {
+            document.getElementById('startDate').value = formatDateForInput(currentWeekStart);
+            document.getElementById('endDate').value = formatDateForInput(currentWeekEnd);
+            filterKanban();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
             currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -632,8 +656,8 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
             markerLayerGroup = L.layerGroup().addTo(map);
 
-            L.polygon([[13.9560, 100.5140], [13.9560, 100.5160], [13.9545, 100.5160], [13.9545, 100.5140]], { color: '#ef4444', weight: 3, fillColor: '#f87171', fillOpacity: 0.4 }).addTo(map);
-            L.polygon([[13.90133, 100.70020], [13.90124, 100.70025], [13.90107, 100.69962], [13.90118, 100.69957]], { color: '#f97316', weight: 3, fillColor: '#fdba74', fillOpacity: 0.4 }).addTo(map);
+            //L.polygon([[13.9560, 100.5140], [13.9560, 100.5160], [13.9545, 100.5160], [13.9545, 100.5140]], { color: '#ef4444', weight: 3, fillColor: '#f87171', fillOpacity: 0.4 }).addTo(map);
+            //L.polygon([[13.90133, 100.70020], [13.90124, 100.70025], [13.90107, 100.69962], [13.90118, 100.69957]], { color: '#f97316', weight: 3, fillColor: '#fdba74', fillOpacity: 0.4 }).addTo(map);
         }
 
         function showStatus(msg, type) {
@@ -691,7 +715,7 @@
                     if(!container.classList.contains('collapsed')) {
                         toggleSection('data-source-container', 'toggle-data-btn');
                     }
-                }, 800);
+                }, 0);// 👈 เปลี่ยนเลข 800 ให้น้อยลง เช่น 200 หรือ 0 ไปเลยก็ได้ครับ
 
                 loadPendingData(); 
             } catch (e) {
@@ -976,7 +1000,7 @@
 
             filteredData.forEach(d => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
+                    <tr class="hover:bg-slate-50 dark:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
                         <td class="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">📌 ${d.name}</td>
                         <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">${d.zone}</td>
                         <td class="px-4 py-3 text-blue-600 dark:text-blue-400">${d.concreteDate}</td>
@@ -1238,7 +1262,7 @@
                 const data = zoneStats[zone]; totalSonic += data.sonic; totalGrout += data.grout;
                 const sonicColor = data.sonic > 0 ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-400 dark:text-slate-500';
                 const groutColor = data.grout > 0 ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-slate-400 dark:text-slate-500';
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0"><td class="px-6 py-3 whitespace-nowrap text-sm font-bold text-slate-700 dark:text-slate-300 text-center border-r border-slate-100 dark:border-slate-700">${zone}</td><td class="px-6 py-3 whitespace-nowrap text-sm text-center ${sonicColor} border-r border-slate-100 dark:border-slate-700">${data.sonic}</td><td class="px-6 py-3 whitespace-nowrap text-sm text-center ${groutColor}">${data.grout}</td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0"><td class="px-6 py-3 whitespace-nowrap text-sm font-bold text-slate-700 dark:text-slate-300 text-center border-r border-slate-100 dark:border-slate-700">${zone}</td><td class="px-6 py-3 whitespace-nowrap text-sm text-center ${sonicColor} border-r border-slate-100 dark:border-slate-700">${data.sonic}</td><td class="px-6 py-3 whitespace-nowrap text-sm text-center ${groutColor}">${data.grout}</td></tr>`;
             });
             tbody.innerHTML += `<tr class="bg-indigo-50 dark:bg-indigo-900/30 border-t-2 border-indigo-200 dark:border-indigo-800"><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-900 dark:text-indigo-300 text-center border-r border-indigo-100 dark:border-indigo-800">รวมทั้งหมด (Total)</td><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700 dark:text-blue-400 text-center border-r border-indigo-100 dark:border-indigo-800 text-lg">${totalSonic.toLocaleString()}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-700 dark:text-orange-400 text-center text-lg">${totalGrout.toLocaleString()}</td></tr>`;
         }
@@ -1251,7 +1275,7 @@
             items.forEach(item => {
                 total += item.count;
                 let projectTags = item.projects.map(proj => { return `<span class="inline-block text-[11px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-2 py-1 rounded-md shadow-sm">${proj}</span>`; }).join('');
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0"><td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-700 align-top"><div class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2"><span class="text-indigo-500 text-lg">📌</span> ${item.zone}</div><div class="flex flex-wrap gap-1.5 pl-7">${projectTags}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-600 dark:text-slate-400 font-bold align-top pt-5">${item.count.toLocaleString()}</td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0"><td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-700 align-top"><div class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2"><span class="text-indigo-500 text-lg">📌</span> ${item.zone}</div><div class="flex flex-wrap gap-1.5 pl-7">${projectTags}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-600 dark:text-slate-400 font-bold align-top pt-5">${item.count.toLocaleString()}</td></tr>`;
             });
             tbody.innerHTML += `<tr class="bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-200 dark:border-slate-700"><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-300 text-center border-r border-slate-200 dark:border-slate-700">รวมทั้งหมด (Total)</td><td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-300 text-center text-lg">${total.toLocaleString()}</td></tr>`;
         }
@@ -1298,6 +1322,10 @@
         function toggleSection(contentId, btnId) {
             const container = document.getElementById(contentId);
             const btn = document.getElementById(btnId);
+            if (container.style.display === 'none') {
+                container.style.display = '';
+                void container.offsetWidth; 
+            }
             container.classList.toggle('collapsed');
             
             if(contentId === 'map-content' && !container.classList.contains('collapsed')) { setTimeout(() => { map.invalidateSize(); }, 300); }
