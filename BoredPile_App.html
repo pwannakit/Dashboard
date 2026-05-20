@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bored Pile Dashboard v2.1.4 (Map Integrated)</title>
+    <title>Bored Pile Dashboard v2.1.5 (Map Integrated)</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -132,7 +132,7 @@
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-indigo-900 dark:text-indigo-400">🏗️ งานก่อสร้างเสาเข็มเจาะ</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.1.4)</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 no-print">วิเคราะห์ข้อมูล พิกัด และติดตามงานรายสัปดาห์ (v2.1.5)</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto no-print">
             <button onclick="exportToPDF()" class="px-4 py-2.5 rounded-lg bg-rose-50 dark:bg-slate-800 shadow-sm hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors border border-rose-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
@@ -478,7 +478,6 @@
 
     <script>
         // ================= 🌟 ตั้งค่าหมวดหมู่งานที่ต้องการ "ซ่อนจากหน้า KPI และ กราฟรายเดือน" 🌟 =================
-        // วิธีเพิ่ม: ใส่ "ชื่อมาตรฐานที่จะแสดง" : ["คำค้นหาที่ 1", "คำค้นหาที่ 2"]
         const EXCLUDED_ZONES_CONFIG = {
             "เข็ม-แซม (Re-Drilling Pile)": ["แซม", "เข็มแซม", "เข็ม-แซม"],
             "ยังไม่เริ่ม-เจาะ (Not Started)": ["ยังไม่เริ่ม", "ยังไม่เริ่มเจาะ", "ยังไม่เริ่ม-เจาะ"],
@@ -574,6 +573,20 @@
             if (!zone) return false;
             return Object.keys(EXCLUDED_ZONES_CONFIG).includes(zone);
         }
+
+        // ================= 🌟 การแก้ไขฟังก์ชัน Export PDF 🌟 =================
+        function exportToPDF() {
+            const now = new Date();
+            // แยก Option สำหรับวันที่ และ เวลา ออกจากกันเพื่อป้องกัน Error
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            
+            document.getElementById('printDateTime').innerText = `ข้อมูลอัปเดต ณ วันที่: ${now.toLocaleDateString('th-TH', dateOptions)} | เวลา: ${now.toLocaleTimeString('th-TH', timeOptions)} น.`;
+            
+            alert("💡 เคล็ดลับการ Export เป็น PDF:\n\n1. ปลายทาง: เลือก 'Save as PDF'\n2. ตัวเลือกเพิ่มเติม: ติ๊กเปิด 'Background graphics'\n\n*ระบบได้ตั้งค่าหน้ากระดาษเป็น A4 แนวนอนให้แล้วครับ");
+            setTimeout(() => { window.print(); }, 500);
+        }
+        // ===================================================================
 
         // ================= DATA LOADING =================
         function loadFromUrl() {
@@ -817,6 +830,7 @@
                 if (taskDate && taskDate >= sDate && taskDate <= eDate) {
                     fCount++; const dIdx = taskDate.getDay();
                     let sName = row['ชื่อโปรเจค']; if (sName.toLowerCase().indexOf('-dia') !== -1) sName = sName.substring(0, sName.toLowerCase().indexOf('-dia')).trim();
+                    // 🌟 เพิ่มฟังก์ชัน searchFromKanban ลงใน onClick
                     document.getElementById(`k-tasks-${dIdx}`).innerHTML += `<div class="k-card card-${dIdx} cursor-pointer" onclick="searchFromKanban('${sName}')"><div class="font-bold text-sm text-slate-800 dark:text-slate-100">📌 ${sName}</div><div class="text-xs text-slate-500 dark:text-slate-400">📅 ${taskDate.toLocaleDateString('th-TH')}</div></div>`;
                 }
             });
@@ -825,7 +839,7 @@
             else { banner.className = "bg-red-100 text-red-800 dark:bg-red-900/40 p-3 rounded-lg text-center font-bold mb-4"; banner.innerHTML = `❌ ไม่พบข้อมูลเสาเข็มที่เสร็จสิ้นในช่วงวันที่เลือก`; }
         }
 
-        // 🌟 เพิ่มฟังก์ชันสำหรับรับคำสั่งจาก Kanban 🌟
+        // 🌟 1. ฟังก์ชันรับคำสั่งค้นหาจากการกด Kanban 🌟
         function searchFromKanban(projectName) {
             const searchContainer = document.getElementById('search-content');
             if (searchContainer.classList.contains('collapsed')) {
@@ -834,7 +848,7 @@
             const searchInput = document.getElementById('searchInput');
             searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
             searchInput.value = projectName;
-            searchInput.dispatchEvent(new Event('input')); // สั่งให้ input ทำงานเพื่อค้นหาในตาราง
+            searchInput.dispatchEvent(new Event('input')); // สั่งให้ช่อง input อัปเดตตารางผลลัพธ์ทันที
         }
 
         function setLastWeek() {
